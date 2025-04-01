@@ -1,3 +1,5 @@
+
+<?php include('header.php'); ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -39,7 +41,7 @@
 <body class="services-page">
 
   
-  <?php include 'header.php'; ?>
+  
 
   <main class="main">
 
