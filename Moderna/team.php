@@ -37,6 +37,13 @@
   * License: https://bootstrapmade.com/license/
   ======================================================== -->
 </head>
+<style>
+.member-img{
+  padding: 10px;
+  margin: 20px;
+}
+
+</style>
 
 <body class="team-page">
 
@@ -47,11 +54,12 @@
     <!-- Page Title -->
     <div class="page-title dark-background">
       <div class="container position-relative">
-        <h1>Team</h1>
-        <p>Esse dolorum voluptatum ullam est sint nemo et est ipsa porro placeat quibusdam quia assumenda numquam molestias.</p>
+        <h1>學校</h1>
+        <p>提供多樣化的課程、全球教育，擁有寬敞的校園和現代化設施，強調學術、非學術卓越及全球學生交流。
+        </p>
         <nav class="breadcrumbs">
           <ol>
-            <li><a href="index.html">Home</a></li>
+            <li><a href="index.php">Home</a></li>
             <li class="current">Team</li>
           </ol>
         </nav>
@@ -67,103 +75,67 @@
 
           <div class="col-lg-4 col-md-6 member" data-aos="fade-up" data-aos-delay="100">
             <div class="member-img">
-              <img src="assets/img/team/team-1.jpg" class="img-fluid" alt="">
-              <div class="social">
-                <a href="#"><i class="bi bi-twitter-x"></i></a>
-                <a href="#"><i class="bi bi-facebook"></i></a>
-                <a href="#"><i class="bi bi-instagram"></i></a>
-                <a href="#"><i class="bi bi-linkedin"></i></a>
-              </div>
+            <a href="#"> <img src="https://th.bing.com/th/id/OIP.upf8TLA6oRjYL9hJ8CEOzgHaE8?rs=1&pid=ImgDetMain" width="500" height="278" alt=""></a>
+              
             </div>
             <div class="member-info text-center">
-              <h4>Walter White</h4>
-              <span>Chief Executive Officer</span>
-              <p>Aliquam iure quaerat voluptatem praesentium possimus unde laudantium vel dolorum distinctio dire flow</p>
+              <h4>特殊選才計劃概述</h4>
+              <p>特殊選才計劃為優秀學生提供獨特的路徑，讓他們能提前進入專業課程並獲得量身定制的支持。</p>
             </div>
           </div><!-- End Team Member -->
 
           <div class="col-lg-4 col-md-6 member" data-aos="fade-up" data-aos-delay="200">
             <div class="member-img">
-              <img src="assets/img/team/team-2.jpg" class="img-fluid" alt="">
-              <div class="social">
-                <a href="#"><i class="bi bi-twitter-x"></i></a>
-                <a href="#"><i class="bi bi-facebook"></i></a>
-                <a href="#"><i class="bi bi-instagram"></i></a>
-                <a href="#"><i class="bi bi-linkedin"></i></a>
-              </div>
+            <a href="#"><img src="https://th.bing.com/th/id/OIP.anyjmiP6wUMl5gIuhBHrogHaE3?rs=1&pid=ImgDetMain"  alt="" width="500" height="278"></a>
+              
             </div>
             <div class="member-info text-center">
-              <h4>Sarah Jhonson</h4>
-              <span>Product Manager</span>
-              <p>Labore ipsam sit consequatur exercitationem rerum laboriosam laudantium aut quod dolores exercitationem ut</p>
+              <h4>申請指南及步驟</h4>
+              <p>為未來學生提供清晰、逐步的特殊選才計劃申請流程指南。</p>
             </div>
           </div><!-- End Team Member -->
 
           <div class="col-lg-4 col-md-6 member" data-aos="fade-up" data-aos-delay="300">
             <div class="member-img">
-              <img src="assets/img/team/team-3.jpg" class="img-fluid" alt="">
-              <div class="social">
-                <a href="#"><i class="bi bi-twitter-x"></i></a>
-                <a href="#"><i class="bi bi-facebook"></i></a>
-                <a href="#"><i class="bi bi-instagram"></i></a>
-                <a href="#"><i class="bi bi-linkedin"></i></a>
-              </div>
+            <a href="#"><img src="https://th.bing.com/th/id/OIP.VOm8okUQFkV71jDcKL7f5QHaH0?rs=1&pid=ImgDetMain" width="400" height="278" alt=""></a>
+              
             </div>
             <div class="member-info text-center">
-              <h4>William Anderson</h4>
-              <span>CTO</span>
-              <p>Illum minima ea autem doloremque ipsum quidem quas aspernatur modi ut praesentium vel tque sed facilis at qui</p>
+              <h4>招生資訊</h4>
+              <p>提供申請流程、要求和相關信息</p>
             </div>
           </div><!-- End Team Member -->
 
           <div class="col-lg-4 col-md-6 member" data-aos="fade-up" data-aos-delay="400">
             <div class="member-img">
-              <img src="assets/img/team/team-4.jpg" class="img-fluid" alt="">
-              <div class="social">
-                <a href="#"><i class="bi bi-twitter-x"></i></a>
-                <a href="#"><i class="bi bi-facebook"></i></a>
-                <a href="#"><i class="bi bi-instagram"></i></a>
-                <a href="#"><i class="bi bi-linkedin"></i></a>
-              </div>
+            <a href="#">   <img src="https://th.bing.com/th/id/OIP.1TYTB70CHJ2FZX9KZvup9QHaEJ?rs=1&pid=ImgDetMain" width="500" height="278" alt=""></a>
+              
             </div>
             <div class="member-info text-center">
-              <h4>Amanda Jepson</h4>
-              <span>Accountant</span>
-              <p>Magni voluptatem accusamus assumenda cum nisi aut qui dolorem voluptate sed et veniam quasi quam consectetur</p>
+              <h4>校園環境</h4>
+              <p>提供支援性環境，幫助學生發展學術和個人發展</p>
             </div>
           </div><!-- End Team Member -->
 
           <div class="col-lg-4 col-md-6 member" data-aos="fade-up" data-aos-delay="500">
-            <div class="member-img">
-              <img src="assets/img/team/team-5.jpg" class="img-fluid" alt="">
-              <div class="social">
-                <a href="#"><i class="bi bi-twitter-x"></i></a>
-                <a href="#"><i class="bi bi-facebook"></i></a>
-                <a href="#"><i class="bi bi-instagram"></i></a>
-                <a href="#"><i class="bi bi-linkedin"></i></a>
-              </div>
+          <div class="member-img"><a href="#">
+            <img src="https://th.bing.com/th/id/OIP.gJAYcN0yvITPdWxa7sna8QHaFL?rs=1&pid=ImgDetMain" width="500" height="278" alt=""></a>
+              
             </div>
             <div class="member-info text-center">
-              <h4>Brian Doe</h4>
-              <span>Marketing</span>
-              <p>Qui consequuntur quos accusamus magnam quo est molestiae eius laboriosam sunt doloribus quia impedit laborum velit</p>
+              <h4>重要日程</h4>
+              <p>提供確切日期以提交重要時程表，例如入學申請費等等</p>
             </div>
           </div><!-- End Team Member -->
 
           <div class="col-lg-4 col-md-6 member" data-aos="fade-up" data-aos-delay="600">
-            <div class="member-img">
-              <img src="assets/img/team/team-6.jpg" class="img-fluid" alt="">
-              <div class="social">
-                <a href="#"><i class="bi bi-twitter-x"></i></a>
-                <a href="#"><i class="bi bi-facebook"></i></a>
-                <a href="#"><i class="bi bi-instagram"></i></a>
-                <a href="#"><i class="bi bi-linkedin"></i></a>
-              </div>
+          <div class="member-img" ><a href="#">
+            <img src="https://th.bing.com/th/id/R.3b07ca2a6315b9f33147a1f040a9e779?rik=EC4EUDdRZTBhKg&pid=ImgRaw&r=0" width="400" height="278" alt=""></a>
+              
             </div>
             <div class="member-info text-center">
-              <h4>Josepha Palas</h4>
-              <span>Operation</span>
-              <p>Sint sint eveniet explicabo amet consequatur nesciunt error enim rerum earum et omnis fugit eligendi cupiditate vel</p>
+              <h4>其他資訊</h4>
+              <p>提供學校最新的訊息，資訊更改等等</p>
             </div>
           </div><!-- End Team Member -->
 
