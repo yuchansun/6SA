@@ -57,12 +57,7 @@
         <h1>學校</h1>
         <p>提供多樣化的課程、全球教育，擁有寬敞的校園和現代化設施，強調學術、非學術卓越及全球學生交流。
         </p>
-        <nav class="breadcrumbs">
-          <ol>
-            <li><a href="index.php">Home</a></li>
-            <li class="current">Team</li>
-          </ol>
-        </nav>
+        
       </div>
     </div><!-- End Page Title -->
 

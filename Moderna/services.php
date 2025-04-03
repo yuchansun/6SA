@@ -56,12 +56,7 @@
       <div class="container position-relative">
         <h1>學群介紹</h1>
         <p>分析大學學系的內容，依據重視的知識、考科、興趣、未來專業發展等因素，將相似的學系集合為一學類，相似的學類組成一個學群，共有18學群。</p>
-        <nav class="breadcrumbs">
-          <ol>
-            <li><a href="index.php">Home</a></li>
-            <li class="current">Services</li>
-          </ol>
-        </nav>
+        
       </div>
     </div><!-- End Page Title -->
 
