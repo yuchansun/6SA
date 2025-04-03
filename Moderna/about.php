@@ -196,14 +196,9 @@ $conn->close();
       <tr>
         <th>學校</th>
         <th>科系</th>
-        <th>學群</th>
-        <th>計畫類別</th>
-        <th>身份</th>
-        <th>興趣</th>
-        <th>能力</th>
         <th>名額</th>
-        <th>連絡電話</th>
-        <th>詳細介紹</th>
+        <th>詳細資料</th>
+        <th>收藏</th>
       </tr>
     </thead>
     <tbody>
@@ -211,20 +206,70 @@ $conn->close();
       <tr>
         <td><?php echo htmlspecialchars($row['School_Name']); ?></td>
         <td><?php echo htmlspecialchars($row['Department']); ?></td>
-        <td><?php echo htmlspecialchars($row['Disc_Cluster']); ?></td>
-        <td><?php echo htmlspecialchars($row['Plan']); ?></td>
-        <td><?php echo htmlspecialchars($row['ID']); ?></td>
-        <td><?php echo htmlspecialchars($row['Schol_Apti']); ?></td>
-        <td><?php echo htmlspecialchars($row['Talent']); ?></td>
         <td><?php echo htmlspecialchars($row['Quota']); ?></td>
-        <td><?php echo htmlspecialchars($row['Contact']); ?></td>
         <td>
-          <a href="details.php?Sch_num=<?php echo urlencode($row['Sch_num']); ?>" class="btn btn-info btn-sm">詳細介紹</a>
+          <button class="btn btn-info btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#details-<?php echo $row['Sch_num']; ?>" aria-expanded="false" aria-controls="details-<?php echo $row['Sch_num']; ?>">
+            詳細介紹
+          </button>
+        </td>
+        <td>
+          <button class="btn btn-outline-danger btn-sm favorite-btn" data-sch-num="<?php echo $row['Sch_num']; ?>">
+            <i class="bi bi-heart"></i>
+          </button>
+        </td>
+      </tr>
+      <tr class="collapse" id="details-<?php echo $row['Sch_num']; ?>">
+        <td colspan="5">
+          <div class="card card-body">
+            <div class="row">
+              <!-- 左邊區塊 -->
+              <div class="col-md-4 text-start">
+                <p><strong>學校：</strong><?php echo htmlspecialchars($row['School_Name']); ?></p>
+                <p><strong>科系：</strong><?php echo htmlspecialchars($row['Department']); ?></p>
+                <p><strong>名額：</strong><?php echo htmlspecialchars($row['Quota']); ?></p>
+                <p><strong>電話：</strong><?php echo htmlspecialchars($row['Contact']); ?></p>
+              </div>
+              <!-- 中間區塊 -->
+              <div class="col-md-4 text-start">
+                <p><strong>興趣：</strong><?php echo htmlspecialchars($row['Schol_Apti']); ?></p>
+                <p><strong>能力：</strong><?php echo htmlspecialchars($row['Talent']); ?></p>
+                <p><strong>身份：</strong><?php echo htmlspecialchars($row['ID']); ?></p>
+                <p><strong>計畫類別：</strong><?php echo htmlspecialchars($row['Plan']); ?></p>
+                <p><strong>連結：</strong><a href="<?php echo htmlspecialchars($row['link']); ?>" target="_blank"><?php echo htmlspecialchars($row['link']); ?></a></p>
+              </div>
+              <!-- 右邊區塊 -->
+              <div class="col-md-4 text-start">
+                <!-- 預留空間，方便後續加入其他內容 -->
+              </div>
+            </div>
+          </div>
         </td>
       </tr>
       <?php endforeach; ?>
     </tbody>
   </table>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const favoriteButtons = document.querySelectorAll('.favorite-btn');
+      favoriteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+          const icon = this.querySelector('i');
+          if (icon.classList.contains('bi-heart')) {
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
+            this.classList.remove('btn-outline-danger');
+            this.classList.add('btn-danger');
+          } else {
+            icon.classList.remove('bi-heart-fill');
+            icon.classList.add('bi-heart');
+            this.classList.remove('btn-danger');
+            this.classList.add('btn-outline-danger');
+          }
+        });
+      });
+    });
+  </script>
 <?php else: ?>
     <p>沒有找到相關結果。</p>
 <?php endif; ?>
