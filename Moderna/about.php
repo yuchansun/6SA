@@ -75,7 +75,7 @@ $filters = [
     "plan" => $_GET['plan'] ?? "",
     "schol_apti" => $_GET['schol_apti'] ?? "",
     "talent" => $_GET['talent'] ?? "",
-    "identity" => $_GET['identity'] ?? "",
+    "identity" => $_GET['ID'] ?? "",
     "school_name" => $_GET['school_name'] ?? "",
     "disc_cluster" => $_GET['disc_cluster'] ?? ""
 ];
