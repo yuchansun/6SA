@@ -14,7 +14,7 @@ if ($conn->connect_error) {
 }
 
 // 查詢資料：抓取成功大學、輔仁大學和中興大學的科系錄取人數
-$sql = "SELECT school, dep, `110`, `111`, `112`, `113`, `114` FROM admi_thro_years WHERE school IN ('成功', '中興', '輔仁')";
+$sql = "SELECT school, dep, `110`, `111`, `112`, `113`, `114` FROM admi_thro_years WHERE school IN ('國防醫學院', '國防大學', '台灣大學', '清華大學', '中山大學', '成功大學')";
 $result = $conn->query($sql);
 
 $schools_data = [];
