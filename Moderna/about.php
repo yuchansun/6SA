@@ -45,12 +45,12 @@
     <!-- Page Title -->
     <div class="page-title dark-background">
       <div class="container position-relative">
-        <h1>About</h1>
+        <h1>校系簡章</h1>
         <p>Esse dolorum voluptatum ullam est sint nemo et est ipsa porro placeat quibusdam quia assumenda numquam molestias.</p>
         <nav class="breadcrumbs">
           <ol>
             <li><a href="index.html">Home</a></li>
-            <li class="current">About</li>
+            <li class="current">校系簡章</li>
           </ol>
         </nav>
       </div>
@@ -59,50 +59,207 @@
     <!-- About Section -->
     <section id="about" class="about section">
       <div class="container">
-        <h2 class="text-center mb-4">校系簡章</h2>
-        <div class="table-responsive">
-          <table class="table table-striped table-hover align-middle text-center">
+       
+        <?php
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "sa_6"; // 資料庫名稱
+
+// 資料庫連線
+$conn = new mysqli($servername, $username, $password, $dbname);
+if ($conn->connect_error) {
+    die("資料庫連線失敗: " . $conn->connect_error);
+}
+
+// 取得搜尋 & 篩選參數
+$filters = [
+    "q" => $_GET['q'] ?? "",
+    "region" => $_GET['region'] ?? "",
+    "department" => $_GET['department'] ?? "",
+    "plan" => $_GET['plan'] ?? "",
+    "schol_apti" => $_GET['schol_apti'] ?? "",
+    "talent" => $_GET['talent'] ?? "",
+    "identity" => $_GET['identity'] ?? "",
+    "school_name" => $_GET['school_name'] ?? "",
+    "disc_cluster" => $_GET['disc_cluster'] ?? ""
+];
+
+// 構建 SQL 查詢
+$sql = "SELECT * FROM sch_description WHERE 1=1";
+$params = [];
+$types = "";
+
+// 處理關鍵字搜尋
+if (!empty($filters["q"])) {
+    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Schol_Apti", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
+    $searchConditions = array_map(fn($col) => "$col LIKE ?", $searchColumns);
+    $sql .= " AND (" . implode(" OR ", $searchConditions) . ")";
+    foreach ($searchColumns as $col) {
+        $params[] = "%" . $filters["q"] . "%";
+        $types .= "s";
+    }
+}
+
+// 處理其他篩選條件
+foreach ($filters as $key => $value) {
+    if ($key !== "q" && !empty($value)) {
+        $sql .= " AND $key = ?";
+        $params[] = $value;
+        $types .= "s";
+    }
+}
+
+// 預備 SQL 語句
+$stmt = $conn->prepare($sql);
+if (!$stmt) {
+    die("SQL 錯誤: " . $conn->error);
+}
+
+// 綁定參數並執行
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+$results = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+$conn->close();
+?>
+
+<!-- 搜尋與篩選表單 -->
+<form method="GET" class="form-container">
+    <input type="text" name="q" value="<?php echo htmlspecialchars($filters["q"]); ?>" placeholder="輸入關鍵字...">
+    <button type="submit">搜尋</button>
+
+    <select name="region">
+        <option value="">選擇地區</option>
+        <option value="台北" <?php if ($filters["region"] == "台北") echo "selected"; ?>>台北</option>
+        <option value="中部" <?php if ($filters["region"] == "中部") echo "selected"; ?>>中部</option>
+        <option value="南部" <?php if ($filters["region"] == "南部") echo "selected"; ?>>南部</option>
+    </select>
+
+    <select name="school_name">
+        <option value="">選擇學校</option>
+        <option value="輔仁大學" <?php if ($filters["school_name"] == "輔仁大學") echo "selected"; ?>>輔仁大學</option>
+        <option value="台灣大學" <?php if ($filters["school_name"] == "台灣大學") echo "selected"; ?>>台灣大學</option>
+    </select>
+
+    <select name="department">
+        <option value="">選擇科系</option>
+        <option value="資訊管理" <?php if ($filters["department"] == "資訊管理") echo "selected"; ?>>資訊管理</option>
+        <option value="電機工程" <?php if ($filters["department"] == "電機工程") echo "selected"; ?>>電機工程</option>
+    </select>
+
+    <select name="disc_cluster">
+        <option value="">選擇學群</option>
+        <option value="工程" <?php if ($filters["disc_cluster"] == "工程") echo "selected"; ?>>工程</option>
+        <option value="商業" <?php if ($filters["disc_cluster"] == "商業") echo "selected"; ?>>商業</option>
+        <option value="科技學群" <?php if ($filters["disc_cluster"] == "科技學群") echo "selected"; ?>>科技學群</option>
+    </select>
+
+    <select name="plan">
+        <option value="">選擇計畫類別</option>
+        <option value="短期計畫" <?php if ($filters["plan"] == "短期計畫") echo "selected"; ?>>短期計畫</option>
+        <option value="長期計畫" <?php if ($filters["plan"] == "長期計畫") echo "selected"; ?>>長期計畫</option>
+    </select>
+
+    <select name="identity">
+        <option value="">選擇身份</option>
+        <option value="學生" <?php if ($filters["identity"] == "學生") echo "selected"; ?>>學生</option>
+        <option value="上班族" <?php if ($filters["identity"] == "上班族") echo "selected"; ?>>上班族</option>
+    </select>
+
+    <select name="schol_apti">
+        <option value="">選擇興趣</option>
+        <option value="數學" <?php if ($filters["schol_apti"] == "數學") echo "selected"; ?>>數學</option>
+        <option value="文學" <?php if ($filters["schol_apti"] == "文學") echo "selected"; ?>>文學</option>
+    </select>
+
+    <select name="talent">
+        <option value="">選擇能力</option>
+        <option value="程式設計" <?php if ($filters["talent"] == "程式設計") echo "selected"; ?>>程式設計</option>
+        <option value="資料分析" <?php if ($filters["talent"] == "資料分析") echo "selected"; ?>>資料分析</option>
+    </select>
+
+    <button type="submit">篩選</button>
+</form>
+
+<!-- 清除篩選按鈕 -->
+<form method="GET">
+    <button type="submit">清除篩選</button>
+</form>
+
+<!-- 顯示搜尋結果 -->
+<?php if (!empty($results)): ?>
+  <table class="table table-striped table-hover align-middle text-center">
             <thead class="table-dark">
               <tr>
                 <th>學校</th>
                 <th>科系</th>
+                <th>學群</th>
+                <th>計畫類別</th>
+                <th>身份</th>
+                <th>興趣</th>
+                <th>能力</th>
                 <th>名額</th>
                 <th>連絡電話</th>
                 <th>詳細介紹</th>
               </tr>
             </thead>
             <tbody>
-              <?php
-              // Database connection
-              $conn = new mysqli('localhost', 'root', '', 'sa-group6');
-              if ($conn->connect_error) {
-                die("Connection failed: " . $conn->connect_error);
-              }
-
-              // Fetch data from sch_description table
-              $sql = "SELECT Sch_num, School_Name, Department, Quota, Contact FROM sch_description";
-              $result = $conn->query($sql);
-
-              if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                  echo "<tr>
-                          <td>{$row['School_Name']}</td>
-                          <td>{$row['Department']}</td>
-                          <td>{$row['Quota']}</td>
-                          <td>{$row['Contact']}</td>
-                          <td><a href='details.php?Sch_num={$row['Sch_num']}' class='btn btn-info btn-sm'>查看詳細</a></td>
-                        </tr>";
-                }
-              } else {
-                echo "<tr><td colspan='5'>No data available</td></tr>";
-              }
-
-              $conn->close();
-              ?>
+              <?php foreach ($results as $row): ?>
+              <tr>
+                <td><?php echo htmlspecialchars($row['School_Name']); ?></td>
+                <td><?php echo htmlspecialchars($row['Department']); ?></td>
+                <td><?php echo htmlspecialchars($row['Disc_Cluster']); ?></td>
+                <td><?php echo htmlspecialchars($row['Plan']); ?></td>
+                <td><?php echo htmlspecialchars($row['ID']); ?></td>
+                <td><?php echo htmlspecialchars($row['Schol_Apti']); ?></td>
+                <td><?php echo htmlspecialchars($row['Talent']); ?></td>
+                <td><?php echo htmlspecialchars($row['Quota']); ?></td>
+                <td><?php echo htmlspecialchars($row['Contact']); ?></td>
+                <td><a href="<?php echo htmlspecialchars($row['link']); ?>">詳細介紹</a></td>
+              </tr>
+              <?php endforeach; ?>
             </tbody>
           </table>
-        </div>
-      </div>
+<?php else: ?>
+    <p>沒有找到相關結果。</p>
+<?php endif; ?>
+
+<style>
+  select, button {
+    border-radius: 20px;
+    padding: 10px 20px;
+    border: 0;
+    background-color: var(--accent-color);
+    color: var(--contrast-color);
+  }
+
+  .form-container {
+    display: flex;
+    flex-wrap: wrap; /* 讓元素換行 */
+    gap: 10px; /* 設置元素間距 */
+  }
+
+  select {
+    flex: 1 1 200px; /* 設置寬度並允許自動調整 */
+    min-width: 150px; /* 設定最小寬度 */
+  }
+
+  button {
+    flex: 0 1 100px; /* 設定按鈕寬度 */
+    cursor: pointer; /* 設定游標為手形，提示可以點擊 */
+    background-color: var(--default-color);
+    color: white; /* 設定文字顏色 */
+    border: none; /* 去掉按鈕邊框 */
+  }
+
+  button:hover {
+    background-color: #0056b3; /* 按鈕 hover 時的背景顏色 */
+  }
+</style>
+       
     </section><!-- /About Section -->
 
     <!-- Stats Section -->
