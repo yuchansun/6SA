@@ -46,13 +46,8 @@
     <div class="page-title dark-background">
       <div class="container position-relative">
         <h1>校系簡章</h1>
-        <p>Esse dolorum voluptatum ullam est sint nemo et est ipsa porro placeat quibusdam quia assumenda numquam molestias.</p>
-        <nav class="breadcrumbs">
-          <ol>
-            <li><a href="index.html">Home</a></li>
-            <li class="current">校系簡章</li>
-          </ol>
-        </nav>
+        <p>基本的特殊選才資訊查詢功能，讓使用者可以透過關鍵字與篩選條件找到適合的學校與學程。</p>
+        
       </div>
     </div><!-- End Page Title -->
 
@@ -126,68 +121,75 @@ $results = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 $conn->close();
 ?>
 
-<!-- 搜尋與篩選表單 -->
-<form method="GET" class="form-container">
-    <input type="text" name="q" value="<?php echo htmlspecialchars($filters["q"]); ?>" placeholder="輸入關鍵字...">
-    <button type="submit">搜尋</button>
 
-    <select name="region">
-        <option value="">選擇地區</option>
-        <option value="台北" <?php if ($filters["region"] == "台北") echo "selected"; ?>>台北</option>
-        <option value="中部" <?php if ($filters["region"] == "中部") echo "selected"; ?>>中部</option>
-        <option value="南部" <?php if ($filters["region"] == "南部") echo "selected"; ?>>南部</option>
-    </select>
+<div class="search-widget widget-item">
+    <form method="GET" action="">
+        <input type="text" name="q" value="<?php echo htmlspecialchars($filters['q']); ?>" placeholder="輸入關鍵字...">
+        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+    </form>
+</div><!--/搜尋小工具-->
 
-    <select name="school_name">
-        <option value="">選擇學校</option>
-        <option value="輔仁大學" <?php if ($filters["school_name"] == "輔仁大學") echo "selected"; ?>>輔仁大學</option>
-        <option value="台灣大學" <?php if ($filters["school_name"] == "台灣大學") echo "selected"; ?>>台灣大學</option>
-    </select>
+<!-- 篩選條件 -->
+<div class="filter-row" style="text-align: center;">
+    <form method="GET" action="" style="display: inline-block;">
+        <select name="region">
+            <option value="">選擇地區</option>
+            <option value="台北" <?php if ($filters["region"] == "台北") echo "selected"; ?>>台北</option>
+            <option value="中部" <?php if ($filters["region"] == "中部") echo "selected"; ?>>中部</option>
+            <option value="南部" <?php if ($filters["region"] == "南部") echo "selected"; ?>>南部</option>
+        </select>
 
-    <select name="department">
-        <option value="">選擇科系</option>
-        <option value="資訊管理" <?php if ($filters["department"] == "資訊管理") echo "selected"; ?>>資訊管理</option>
-        <option value="電機工程" <?php if ($filters["department"] == "電機工程") echo "selected"; ?>>電機工程</option>
-    </select>
+        <select name="school_name">
+            <option value="">選擇學校</option>
+            <option value="輔仁大學" <?php if ($filters["school_name"] == "輔仁大學") echo "selected"; ?>>輔仁大學</option>
+            <option value="台灣大學" <?php if ($filters["school_name"] == "台灣大學") echo "selected"; ?>>台灣大學</option>
+        </select>
 
-    <select name="disc_cluster">
-        <option value="">選擇學群</option>
-        <option value="工程" <?php if ($filters["disc_cluster"] == "工程") echo "selected"; ?>>工程</option>
-        <option value="商業" <?php if ($filters["disc_cluster"] == "商業") echo "selected"; ?>>商業</option>
-        <option value="科技學群" <?php if ($filters["disc_cluster"] == "科技學群") echo "selected"; ?>>科技學群</option>
-    </select>
+        <select name="department">
+            <option value="">選擇科系</option>
+            <option value="資訊管理" <?php if ($filters["department"] == "資訊管理") echo "selected"; ?>>資訊管理</option>
+            <option value="電機工程" <?php if ($filters["department"] == "電機工程") echo "selected"; ?>>電機工程</option>
+        </select>
 
-    <select name="plan">
-        <option value="">選擇計畫類別</option>
-        <option value="短期計畫" <?php if ($filters["plan"] == "短期計畫") echo "selected"; ?>>短期計畫</option>
-        <option value="長期計畫" <?php if ($filters["plan"] == "長期計畫") echo "selected"; ?>>長期計畫</option>
-    </select>
+        <select name="disc_cluster">
+            <option value="">選擇學群</option>
+            <option value="工程" <?php if ($filters["disc_cluster"] == "工程") echo "selected"; ?>>工程</option>
+            <option value="商業" <?php if ($filters["disc_cluster"] == "商業") echo "selected"; ?>>商業</option>
+            <option value="科技學群" <?php if ($filters["disc_cluster"] == "科技學群") echo "selected"; ?>>科技學群</option>
+        </select>
 
-    <select name="identity">
-        <option value="">選擇身份</option>
-        <option value="學生" <?php if ($filters["identity"] == "學生") echo "selected"; ?>>學生</option>
-        <option value="上班族" <?php if ($filters["identity"] == "上班族") echo "selected"; ?>>上班族</option>
-    </select>
+        <select name="plan">
+            <option value="">選擇計畫類別</option>
+            <option value="短期計畫" <?php if ($filters["plan"] == "短期計畫") echo "selected"; ?>>短期計畫</option>
+            <option value="長期計畫" <?php if ($filters["plan"] == "長期計畫") echo "selected"; ?>>長期計畫</option>
+        </select>
 
-    <select name="schol_apti">
-        <option value="">選擇興趣</option>
-        <option value="數學" <?php if ($filters["schol_apti"] == "數學") echo "selected"; ?>>數學</option>
-        <option value="文學" <?php if ($filters["schol_apti"] == "文學") echo "selected"; ?>>文學</option>
-    </select>
+        <select name="identity">
+            <option value="">選擇身份</option>
+            <option value="學生" <?php if ($filters["identity"] == "學生") echo "selected"; ?>>學生</option>
+            <option value="上班族" <?php if ($filters["identity"] == "上班族") echo "selected"; ?>>上班族</option>
+        </select>
 
-    <select name="talent">
-        <option value="">選擇能力</option>
-        <option value="程式設計" <?php if ($filters["talent"] == "程式設計") echo "selected"; ?>>程式設計</option>
-        <option value="資料分析" <?php if ($filters["talent"] == "資料分析") echo "selected"; ?>>資料分析</option>
-    </select>
+        <select name="schol_apti">
+            <option value="">選擇興趣</option>
+            <option value="數學" <?php if ($filters["schol_apti"] == "數學") echo "selected"; ?>>數學</option>
+            <option value="文學" <?php if ($filters["schol_apti"] == "文學") echo "selected"; ?>>文學</option>
+        </select>
 
-    <button type="submit">篩選</button>
-</form>
+        <select name="talent">
+            <option value="">選擇能力</option>
+            <option value="程式設計" <?php if ($filters["talent"] == "程式設計") echo "selected"; ?>>程式設計</option>
+            <option value="資料分析" <?php if ($filters["talent"] == "資料分析") echo "selected"; ?>>資料分析</option>
+        </select>
 
-<!-- 清除篩選按鈕 -->
-<form method="GET">
-    <button type="submit">清除篩選</button>
-</form>
+        <div class="button-group" style="margin-top: 20px;">
+            <button type="submit">篩選</button></form>
+            <form method="GET" style="display: inline-block;">
+                <button type="submit">清除篩選</button>
+            </form>
+        </div>
+    
+</div>
 
 <!-- 顯示搜尋結果 -->
 <?php if (!empty($results)): ?>
@@ -238,11 +240,6 @@ $conn->close();
     color: var(--contrast-color);
   }
 
-  .form-container {
-    display: flex;
-    flex-wrap: wrap; /* 讓元素換行 */
-    gap: 10px; /* 設置元素間距 */
-  }
 
   select {
     flex: 1 1 200px; /* 設置寬度並允許自動調整 */
