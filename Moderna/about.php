@@ -46,13 +46,8 @@
     <div class="page-title dark-background">
       <div class="container position-relative">
         <h1>校系簡章</h1>
-        <p>Esse dolorum voluptatum ullam est sint nemo et est ipsa porro placeat quibusdam quia assumenda numquam molestias.</p>
-        <nav class="breadcrumbs">
-          <ol>
-            <li><a href="index.html">Home</a></li>
-            <li class="current">校系簡章</li>
-          </ol>
-        </nav>
+        <p>基本的特殊選才資訊查詢功能，讓使用者可以透過關鍵字與篩選條件找到適合的學校與學程。</p>
+        
       </div>
     </div><!-- End Page Title -->
 
@@ -64,7 +59,7 @@
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "sa_6"; // 資料庫名稱
+$dbname = "sa-6"; // 資料庫名稱
 
 // 資料庫連線
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -80,7 +75,7 @@ $filters = [
     "plan" => $_GET['plan'] ?? "",
     "schol_apti" => $_GET['schol_apti'] ?? "",
     "talent" => $_GET['talent'] ?? "",
-    "identity" => $_GET['identity'] ?? "",
+    "identity" => $_GET['ID'] ?? "",
     "school_name" => $_GET['school_name'] ?? "",
     "disc_cluster" => $_GET['disc_cluster'] ?? ""
 ];
@@ -126,103 +121,157 @@ $results = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 $conn->close();
 ?>
 
-<!-- 搜尋與篩選表單 -->
-<form method="GET" class="form-container">
-    <input type="text" name="q" value="<?php echo htmlspecialchars($filters["q"]); ?>" placeholder="輸入關鍵字...">
-    <button type="submit">搜尋</button>
 
-    <select name="region">
-        <option value="">選擇地區</option>
-        <option value="台北" <?php if ($filters["region"] == "台北") echo "selected"; ?>>台北</option>
-        <option value="中部" <?php if ($filters["region"] == "中部") echo "selected"; ?>>中部</option>
-        <option value="南部" <?php if ($filters["region"] == "南部") echo "selected"; ?>>南部</option>
-    </select>
+<div class="search-widget widget-item">
+    <form method="GET" action="">
+        <input type="text" name="q" value="<?php echo htmlspecialchars($filters['q']); ?>" placeholder="輸入關鍵字...">
+        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+    </form>
+</div><!--/搜尋小工具-->
 
-    <select name="school_name">
-        <option value="">選擇學校</option>
-        <option value="輔仁大學" <?php if ($filters["school_name"] == "輔仁大學") echo "selected"; ?>>輔仁大學</option>
-        <option value="台灣大學" <?php if ($filters["school_name"] == "台灣大學") echo "selected"; ?>>台灣大學</option>
-    </select>
+<!-- 篩選條件 -->
+<div class="filter-row" style="text-align: center;">
+    <form method="GET" action="" style="display: inline-block;">
+        <select name="region">
+            <option value="">選擇地區</option>
+            <option value="台北" <?php if ($filters["region"] == "台北") echo "selected"; ?>>台北</option>
+            <option value="中部" <?php if ($filters["region"] == "中部") echo "selected"; ?>>中部</option>
+            <option value="南部" <?php if ($filters["region"] == "南部") echo "selected"; ?>>南部</option>
+        </select>
 
-    <select name="department">
-        <option value="">選擇科系</option>
-        <option value="資訊管理" <?php if ($filters["department"] == "資訊管理") echo "selected"; ?>>資訊管理</option>
-        <option value="電機工程" <?php if ($filters["department"] == "電機工程") echo "selected"; ?>>電機工程</option>
-    </select>
+        <select name="school_name">
+            <option value="">選擇學校</option>
+            <option value="輔仁大學" <?php if ($filters["school_name"] == "輔仁大學") echo "selected"; ?>>輔仁大學</option>
+            <option value="台灣大學" <?php if ($filters["school_name"] == "台灣大學") echo "selected"; ?>>台灣大學</option>
+        </select>
 
-    <select name="disc_cluster">
-        <option value="">選擇學群</option>
-        <option value="工程" <?php if ($filters["disc_cluster"] == "工程") echo "selected"; ?>>工程</option>
-        <option value="商業" <?php if ($filters["disc_cluster"] == "商業") echo "selected"; ?>>商業</option>
-        <option value="科技學群" <?php if ($filters["disc_cluster"] == "科技學群") echo "selected"; ?>>科技學群</option>
-    </select>
+        <select name="department">
+            <option value="">選擇科系</option>
+            <option value="資訊管理" <?php if ($filters["department"] == "資訊管理") echo "selected"; ?>>資訊管理</option>
+            <option value="電機工程" <?php if ($filters["department"] == "電機工程") echo "selected"; ?>>電機工程</option>
+        </select>
 
-    <select name="plan">
-        <option value="">選擇計畫類別</option>
-        <option value="短期計畫" <?php if ($filters["plan"] == "短期計畫") echo "selected"; ?>>短期計畫</option>
-        <option value="長期計畫" <?php if ($filters["plan"] == "長期計畫") echo "selected"; ?>>長期計畫</option>
-    </select>
+        <select name="disc_cluster">
+            <option value="">選擇學群</option>
+            <option value="工程" <?php if ($filters["disc_cluster"] == "工程") echo "selected"; ?>>工程</option>
+            <option value="商業" <?php if ($filters["disc_cluster"] == "商業") echo "selected"; ?>>商業</option>
+            <option value="科技學群" <?php if ($filters["disc_cluster"] == "科技學群") echo "selected"; ?>>科技學群</option>
+        </select>
 
-    <select name="identity">
-        <option value="">選擇身份</option>
-        <option value="學生" <?php if ($filters["identity"] == "學生") echo "selected"; ?>>學生</option>
-        <option value="上班族" <?php if ($filters["identity"] == "上班族") echo "selected"; ?>>上班族</option>
-    </select>
+        <select name="plan">
+            <option value="">選擇計畫類別</option>
+            <option value="短期計畫" <?php if ($filters["plan"] == "短期計畫") echo "selected"; ?>>短期計畫</option>
+            <option value="長期計畫" <?php if ($filters["plan"] == "長期計畫") echo "selected"; ?>>長期計畫</option>
+        </select>
 
-    <select name="schol_apti">
-        <option value="">選擇興趣</option>
-        <option value="數學" <?php if ($filters["schol_apti"] == "數學") echo "selected"; ?>>數學</option>
-        <option value="文學" <?php if ($filters["schol_apti"] == "文學") echo "selected"; ?>>文學</option>
-    </select>
+        <select name="identity">
+            <option value="">選擇身份</option>
+            <option value="學生" <?php if ($filters["identity"] == "學生") echo "selected"; ?>>學生</option>
+            <option value="上班族" <?php if ($filters["identity"] == "上班族") echo "selected"; ?>>上班族</option>
+        </select>
 
-    <select name="talent">
-        <option value="">選擇能力</option>
-        <option value="程式設計" <?php if ($filters["talent"] == "程式設計") echo "selected"; ?>>程式設計</option>
-        <option value="資料分析" <?php if ($filters["talent"] == "資料分析") echo "selected"; ?>>資料分析</option>
-    </select>
+        <select name="schol_apti">
+            <option value="">選擇興趣</option>
+            <option value="數學" <?php if ($filters["schol_apti"] == "數學") echo "selected"; ?>>數學</option>
+            <option value="文學" <?php if ($filters["schol_apti"] == "文學") echo "selected"; ?>>文學</option>
+        </select>
 
-    <button type="submit">篩選</button>
-</form>
+        <select name="talent">
+            <option value="">選擇能力</option>
+            <option value="程式設計" <?php if ($filters["talent"] == "程式設計") echo "selected"; ?>>程式設計</option>
+            <option value="資料分析" <?php if ($filters["talent"] == "資料分析") echo "selected"; ?>>資料分析</option>
+        </select>
 
-<!-- 清除篩選按鈕 -->
-<form method="GET">
-    <button type="submit">清除篩選</button>
-</form>
+        <div class="button-group" style="margin-top: 20px;">
+            <button type="submit">篩選</button></form>
+            <form method="GET" style="display: inline-block;">
+                <button type="submit">清除篩選</button>
+            </form>
+        </div>
+    
+</div>
 
 <!-- 顯示搜尋結果 -->
 <?php if (!empty($results)): ?>
   <table class="table table-striped table-hover align-middle text-center">
-            <thead class="table-dark">
-              <tr>
-                <th>學校</th>
-                <th>科系</th>
-                <th>學群</th>
-                <th>計畫類別</th>
-                <th>身份</th>
-                <th>興趣</th>
-                <th>能力</th>
-                <th>名額</th>
-                <th>連絡電話</th>
-                <th>詳細介紹</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($results as $row): ?>
-              <tr>
-                <td><?php echo htmlspecialchars($row['School_Name']); ?></td>
-                <td><?php echo htmlspecialchars($row['Department']); ?></td>
-                <td><?php echo htmlspecialchars($row['Disc_Cluster']); ?></td>
-                <td><?php echo htmlspecialchars($row['Plan']); ?></td>
-                <td><?php echo htmlspecialchars($row['ID']); ?></td>
-                <td><?php echo htmlspecialchars($row['Schol_Apti']); ?></td>
-                <td><?php echo htmlspecialchars($row['Talent']); ?></td>
-                <td><?php echo htmlspecialchars($row['Quota']); ?></td>
-                <td><?php echo htmlspecialchars($row['Contact']); ?></td>
-                <td><a href="<?php echo htmlspecialchars($row['link']); ?>">詳細介紹</a></td>
-              </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
+    <thead class="table-dark">
+      <tr>
+        <th>學校</th>
+        <th>科系</th>
+        <th>名額</th>
+        <th>詳細資料</th>
+        <th>收藏</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($results as $row): ?>
+      <tr>
+        <td><?php echo htmlspecialchars($row['School_Name']); ?></td>
+        <td><?php echo htmlspecialchars($row['Department']); ?></td>
+        <td><?php echo htmlspecialchars($row['Quota']); ?></td>
+        <td>
+          <button class="btn btn-info btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#details-<?php echo $row['Sch_num']; ?>" aria-expanded="false" aria-controls="details-<?php echo $row['Sch_num']; ?>">
+            詳細介紹
+          </button>
+        </td>
+        <td>
+          <button class="btn btn-outline-danger btn-sm favorite-btn" data-sch-num="<?php echo $row['Sch_num']; ?>">
+            <i class="bi bi-heart"></i>
+          </button>
+        </td>
+      </tr>
+      <tr class="collapse" id="details-<?php echo $row['Sch_num']; ?>">
+        <td colspan="5">
+          <div class="card card-body">
+            <div class="row">
+              <!-- 左邊區塊 -->
+              <div class="col-md-4 text-start">
+                <p><strong>學校：</strong><?php echo htmlspecialchars($row['School_Name']); ?></p>
+                <p><strong>科系：</strong><?php echo htmlspecialchars($row['Department']); ?></p>
+                <p><strong>名額：</strong><?php echo htmlspecialchars($row['Quota']); ?></p>
+                <p><strong>電話：</strong><?php echo htmlspecialchars($row['Contact']); ?></p>
+              </div>
+              <!-- 中間區塊 -->
+              <div class="col-md-4 text-start">
+                <p><strong>興趣：</strong><?php echo htmlspecialchars($row['Schol_Apti']); ?></p>
+                <p><strong>能力：</strong><?php echo htmlspecialchars($row['Talent']); ?></p>
+                <p><strong>身份：</strong><?php echo htmlspecialchars($row['ID']); ?></p>
+                <p><strong>計畫類別：</strong><?php echo htmlspecialchars($row['Plan']); ?></p>
+                <p><strong>連結：</strong><a href="<?php echo htmlspecialchars($row['link']); ?>" target="_blank"><?php echo htmlspecialchars($row['link']); ?></a></p>
+              </div>
+              <!-- 右邊區塊 -->
+              <div class="col-md-4 text-start">
+                <!-- 預留空間，方便後續加入其他內容 -->
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const favoriteButtons = document.querySelectorAll('.favorite-btn');
+      favoriteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+          const icon = this.querySelector('i');
+          if (icon.classList.contains('bi-heart')) {
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
+            this.classList.remove('btn-outline-danger');
+            this.classList.add('btn-danger');
+          } else {
+            icon.classList.remove('bi-heart-fill');
+            icon.classList.add('bi-heart');
+            this.classList.remove('btn-danger');
+            this.classList.add('btn-outline-danger');
+          }
+        });
+      });
+    });
+  </script>
 <?php else: ?>
     <p>沒有找到相關結果。</p>
 <?php endif; ?>
@@ -236,11 +285,6 @@ $conn->close();
     color: var(--contrast-color);
   }
 
-  .form-container {
-    display: flex;
-    flex-wrap: wrap; /* 讓元素換行 */
-    gap: 10px; /* 設置元素間距 */
-  }
 
   select {
     flex: 1 1 200px; /* 設置寬度並允許自動調整 */
@@ -260,289 +304,9 @@ $conn->close();
   }
 </style>
        
-    </section><!-- /About Section -->
+    
 
-    <!-- Stats Section -->
-    <section id="stats" class="stats section light-background">
-
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-        <div class="row gy-4">
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="232" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Clients</p>
-            </div>
-          </div><!-- End Stats Item -->
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="521" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Projects</p>
-            </div>
-          </div><!-- End Stats Item -->
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="1453" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Hours Of Support</p>
-            </div>
-          </div><!-- End Stats Item -->
-
-          <div class="col-lg-3 col-md-6">
-            <div class="stats-item text-center w-100 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="32" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Workers</p>
-            </div>
-          </div><!-- End Stats Item -->
-
-        </div>
-
-      </div>
-
-    </section><!-- /Stats Section -->
-
-    <!-- Clients Section -->
-    <section id="clients" class="clients section">
-
-      <div class="container">
-
-        <div class="swiper init-swiper">
-          <script type="application/json" class="swiper-config">
-            {
-              "loop": true,
-              "speed": 600,
-              "autoplay": {
-                "delay": 5000
-              },
-              "slidesPerView": "auto",
-              "pagination": {
-                "el": ".swiper-pagination",
-                "type": "bullets",
-                "clickable": true
-              },
-              "breakpoints": {
-                "320": {
-                  "slidesPerView": 2,
-                  "spaceBetween": 40
-                },
-                "480": {
-                  "slidesPerView": 3,
-                  "spaceBetween": 60
-                },
-                "640": {
-                  "slidesPerView": 4,
-                  "spaceBetween": 80
-                },
-                "992": {
-                  "slidesPerView": 6,
-                  "spaceBetween": 120
-                }
-              }
-            }
-          </script>
-          <div class="swiper-wrapper align-items-center">
-            <div class="swiper-slide"><img src="assets/img/clients/client-1.png" class="img-fluid" alt=""></div>
-            <div class="swiper-slide"><img src="assets/img/clients/client-2.png" class="img-fluid" alt=""></div>
-            <div class="swiper-slide"><img src="assets/img/clients/client-3.png" class="img-fluid" alt=""></div>
-            <div class="swiper-slide"><img src="assets/img/clients/client-4.png" class="img-fluid" alt=""></div>
-            <div class="swiper-slide"><img src="assets/img/clients/client-5.png" class="img-fluid" alt=""></div>
-            <div class="swiper-slide"><img src="assets/img/clients/client-6.png" class="img-fluid" alt=""></div>
-            <div class="swiper-slide"><img src="assets/img/clients/client-7.png" class="img-fluid" alt=""></div>
-            <div class="swiper-slide"><img src="assets/img/clients/client-8.png" class="img-fluid" alt=""></div>
-          </div>
-        </div>
-
-      </div>
-
-    </section><!-- /Clients Section -->
-
-    <!-- Skills Section -->
-    <section id="skills" class="skills section">
-
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Our Skills</h2>
-        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-      </div><!-- End Section Title -->
-
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-        <div class="row skills-content skills-animation">
-
-          <div class="col-lg-6">
-
-            <div class="progress">
-              <span class="skill"><span>HTML</span> <i class="val">100%</i></span>
-              <div class="progress-bar-wrap">
-                <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-            </div><!-- End Skills Item -->
-
-            <div class="progress">
-              <span class="skill"><span>CSS</span> <i class="val">90%</i></span>
-              <div class="progress-bar-wrap">
-                <div class="progress-bar" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-            </div><!-- End Skills Item -->
-
-            <div class="progress">
-              <span class="skill"><span>JavaScript</span> <i class="val">75%</i></span>
-              <div class="progress-bar-wrap">
-                <div class="progress-bar" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-            </div><!-- End Skills Item -->
-
-          </div>
-
-          <div class="col-lg-6">
-
-            <div class="progress">
-              <span class="skill"><span>PHP</span> <i class="val">80%</i></span>
-              <div class="progress-bar-wrap">
-                <div class="progress-bar" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-            </div><!-- End Skills Item -->
-
-            <div class="progress">
-              <span class="skill"><span>WordPress/CMS</span> <i class="val">90%</i></span>
-              <div class="progress-bar-wrap">
-                <div class="progress-bar" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-            </div><!-- End Skills Item -->
-
-            <div class="progress">
-              <span class="skill"><span>Photoshop</span> <i class="val">55%</i></span>
-              <div class="progress-bar-wrap">
-                <div class="progress-bar" role="progressbar" aria-valuenow="55" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-            </div><!-- End Skills Item -->
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section><!-- /Skills Section -->
-
-    <!-- Testimonials Section -->
-    <section id="testimonials" class="testimonials section">
-
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Testimonials</h2>
-        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-      </div><!-- End Section Title -->
-
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-        <div class="swiper init-swiper">
-          <script type="application/json" class="swiper-config">
-            {
-              "loop": true,
-              "speed": 600,
-              "autoplay": {
-                "delay": 5000
-              },
-              "slidesPerView": "auto",
-              "pagination": {
-                "el": ".swiper-pagination",
-                "type": "bullets",
-                "clickable": true
-              }
-            }
-          </script>
-          <div class="swiper-wrapper">
-
-            <div class="swiper-slide">
-              <div class="testimonial-item">
-                <img src="assets/img/testimonials/testimonials-1.jpg" class="testimonial-img" alt="">
-                <h3>Saul Goodman</h3>
-                <h4>Ceo &amp; Founder</h4>
-                <div class="stars">
-                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                </div>
-                <p>
-                  <i class="bi bi-quote quote-icon-left"></i>
-                  <span>Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper.</span>
-                  <i class="bi bi-quote quote-icon-right"></i>
-                </p>
-              </div>
-            </div><!-- End testimonial item -->
-
-            <div class="swiper-slide">
-              <div class="testimonial-item">
-                <img src="assets/img/testimonials/testimonials-2.jpg" class="testimonial-img" alt="">
-                <h3>Sara Wilsson</h3>
-                <h4>Designer</h4>
-                <div class="stars">
-                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                </div>
-                <p>
-                  <i class="bi bi-quote quote-icon-left"></i>
-                  <span>Export tempor illum tamen malis malis eram quae irure esse labore quem cillum quid cillum eram malis quorum velit fore eram velit sunt aliqua noster fugiat irure amet legam anim culpa.</span>
-                  <i class="bi bi-quote quote-icon-right"></i>
-                </p>
-              </div>
-            </div><!-- End testimonial item -->
-
-            <div class="swiper-slide">
-              <div class="testimonial-item">
-                <img src="assets/img/testimonials/testimonials-3.jpg" class="testimonial-img" alt="">
-                <h3>Jena Karlis</h3>
-                <h4>Store Owner</h4>
-                <div class="stars">
-                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                </div>
-                <p>
-                  <i class="bi bi-quote quote-icon-left"></i>
-                  <span>Enim nisi quem export duis labore cillum quae magna enim sint quorum nulla quem veniam duis minim tempor labore quem eram duis noster aute amet eram fore quis sint minim.</span>
-                  <i class="bi bi-quote quote-icon-right"></i>
-                </p>
-              </div>
-            </div><!-- End testimonial item -->
-
-            <div class="swiper-slide">
-              <div class="testimonial-item">
-                <img src="assets/img/testimonials/testimonials-4.jpg" class="testimonial-img" alt="">
-                <h3>Matt Brandon</h3>
-                <h4>Freelancer</h4>
-                <div class="stars">
-                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                </div>
-                <p>
-                  <i class="bi bi-quote quote-icon-left"></i>
-                  <span>Fugiat enim eram quae cillum dolore dolor amet nulla culpa multos export minim fugiat minim velit minim dolor enim duis veniam ipsum anim magna sunt elit fore quem dolore labore illum veniam.</span>
-                  <i class="bi bi-quote quote-icon-right"></i>
-                </p>
-              </div>
-            </div><!-- End testimonial item -->
-
-            <div class="swiper-slide">
-              <div class="testimonial-item">
-                <img src="assets/img/testimonials/testimonials-5.jpg" class="testimonial-img" alt="">
-                <h3>John Larson</h3>
-                <h4>Entrepreneur</h4>
-                <div class="stars">
-                  <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                </div>
-                <p>
-                  <i class="bi bi-quote quote-icon-left"></i>
-                  <span>Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat legam esse veniam culpa fore nisi cillum quid.</span>
-                  <i class="bi bi-quote quote-icon-right"></i>
-                </p>
-              </div>
-            </div><!-- End testimonial item -->
-
-          </div>
-          <div class="swiper-pagination"></div>
-        </div>
-
-      </div>
-
-    </section><!-- /Testimonials Section -->
+    
 
   </main>
 
