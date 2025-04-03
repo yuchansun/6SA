@@ -48,12 +48,7 @@
       <div class="container position-relative">
         <h1>學校簡介</h1>
         <p>介紹台灣國立，私立的大學</p>
-        <nav class="breadcrumbs">
-          <ol>
-            <li><a href="index.php">Home</a></li>
-            <li class="current">學校簡介</li>
-          </ol>
-        </nav>
+        
       </div>
     </div><!-- End Page Title -->
 
