@@ -81,7 +81,7 @@
                   <h4>中山大學</h4>
                   <a href="assets/img/school_image/中山大學.jpeg" alt="" 
                   title="中山大學在國際學術界有良好的口碑，尤其在國際關係方面。" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-                  <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                  <a href="https://www.nsysu.edu.tw" target="_blank" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
                 </div>
               </div>
             </div><!-- End Portfolio Item -->
@@ -94,7 +94,7 @@
                   <h4>台灣大學</h4>
                   <a href="assets/img/school_image/台灣大學" alt=""
                   title="台灣大學是台灣最具聲望的大學之一，提供多元的學科與研究領域" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-                  <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                  <a href="https://www.ntu.edu.tw" target="_blank" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
                 </div>
               </div>
             </div><!-- End Portfolio Item -->
@@ -106,7 +106,7 @@
                 <div class="portfolio-info">
                   <h4>國防大學</h4> 
                   <a href="assets/img/school_image/國防大學.jpg" title="國防大學是專門培養國軍指揮官的軍事院校，培養精英指揮人才。" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-                  <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                  <a href="https://www.ndu.edu.tw" target="_blank" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
                 </div>
               </div>
             </div><!-- End Portfolio Item -->
@@ -119,7 +119,7 @@
                   <h4>國防醫學院</h4>
                   <a href="assets/img/school_image/國防醫學院.jpg" title="國防醫學院致力於國軍醫療與健康服務的發展，並提供優質的醫學與生物醫學科學教育。
 " data-gallery="portfolio-gallery-book" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-                  <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                  <a href="https://www.ndmctsgh.edu.tw" target="_blank" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
                 </div>
               </div>
             </div><!-- End Portfolio Item -->
@@ -131,7 +131,7 @@
                 <div class="portfolio-info">
                   <h4>成功大學</h4>
                   <a href="assets/img/school_image/成功大學.png" title="成功大學有豐富的工程及科學學科，並致力於創新研究。" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-                  <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                  <a href="https://www.ncku.edu.tw" target="_blank" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
                 </div>
               </div>
             </div><!-- End Portfolio Item -->
@@ -143,7 +143,7 @@
                 <div class="portfolio-info">
                   <h4>東華大學</h4>
                   <a href="assets/img/school_image/東華大學.jpg" title="東華大學是一所重視人文與社會科學的學校，提供多樣化的學術領域。" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-                  <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                  <a href="https://www.ndhu.edu.tw" target="_blank" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
                 </div>
               </div>
             </div><!-- End Portfolio Item -->
@@ -155,7 +155,7 @@
                 <div class="portfolio-info">
                   <h4>清華大學</h4>
                   <a href="assets/img/school_image/清華大學.jpg" title="清華大學是台灣頂尖的學術機構，注重創新與國際合作。" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-                  <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                  <a href="https://www.nthu.edu.tw" target="_blank" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
                 </div>
               </div>
             </div><!-- End Portfolio Item -->

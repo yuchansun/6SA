@@ -13,7 +13,7 @@
         <li><a href="index.php">首頁</a></li>
         <li><a href="about.php">校系簡章</a></li>
         <li><a href="services.php">學群介紹</a></li>
-        <li><a href="portfolio.php">Portfolio</a></li>
+        <li><a href="portfolio.php">學校簡介</a></li>
         <li><a href="team.php">學校</a></li>
         <li><a href="blog.php">討論區</a></li>
         <li class="dropdown"><a href="#"><span>Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
