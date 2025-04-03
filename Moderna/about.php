@@ -1,4 +1,3 @@
-
 <?php include('header.php'); ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -17,7 +16,7 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -59,34 +58,51 @@
 
     <!-- About Section -->
     <section id="about" class="about section">
-
       <div class="container">
+        <h2 class="text-center mb-4">校系簡章</h2>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle text-center">
+            <thead class="table-dark">
+              <tr>
+                <th>學校</th>
+                <th>科系</th>
+                <th>名額</th>
+                <th>連絡電話</th>
+                <th>詳細介紹</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              // Database connection
+              $conn = new mysqli('localhost', 'root', '', 'sa-group6');
+              if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+              }
 
-        <div class="row gy-4">
-          <div class="col-lg-6 position-relative align-self-start" data-aos="fade-up" data-aos-delay="100">
-            <img src="assets/img/about.jpg" class="img-fluid" alt="">
-            <a href="https://www.youtube.com/watch?v=Y7f98aduVJ8" class="glightbox pulsating-play-btn"></a>
-          </div>
-          <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="200">
-            <h3>Voluptatem dignissimos provident quasi corporis voluptates sit assumenda.</h3>
-            <p class="fst-italic">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-              magna aliqua.
-            </p>
-            <ul>
-              <li><i class="bi bi-check2-all"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat.</span></li>
-              <li><i class="bi bi-check2-all"></i> <span>Duis aute irure dolor in reprehenderit in voluptate velit.</span></li>
-              <li><i class="bi bi-check2-all"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate trideta storacalaperda mastiro dolore eu fugiat nulla pariatur.</span></li>
-            </ul>
-            <p>
-              Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-              velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident
-            </p>
-          </div>
+              // Fetch data from sch_description table
+              $sql = "SELECT Sch_num, School_Name, Department, Quota, Contact FROM sch_description";
+              $result = $conn->query($sql);
+
+              if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                  echo "<tr>
+                          <td>{$row['School_Name']}</td>
+                          <td>{$row['Department']}</td>
+                          <td>{$row['Quota']}</td>
+                          <td>{$row['Contact']}</td>
+                          <td><a href='details.php?Sch_num={$row['Sch_num']}' class='btn btn-info btn-sm'>查看詳細</a></td>
+                        </tr>";
+                }
+              } else {
+                echo "<tr><td colspan='5'>No data available</td></tr>";
+              }
+
+              $conn->close();
+              ?>
+            </tbody>
+          </table>
         </div>
-
       </div>
-
     </section><!-- /About Section -->
 
     <!-- Stats Section -->
