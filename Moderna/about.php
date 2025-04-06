@@ -130,8 +130,8 @@ $conn->close();
   }
 
   .clear-button {
-    background-color: #1e4356;
-    color: white;
+    background-color:color-mix(in srgb, var(--default-color), transparent 94%);
+    
   }
 
   .button-group button:hover,
@@ -215,8 +215,6 @@ $conn->close();
     <!-- 搜尋按鈕 -->
     <button type="submit" class="search-button">搜尋 <i class="bi bi-search"></i></button>
     
-    <!-- 清除按鈕 -->
-    <button type="reset" class="reset-button">清空搜尋條件 <i class="bi bi-x"></i></button>
 </form>
 </div>
       <div style="display: flex; justify-content: flex-end;">
