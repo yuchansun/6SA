@@ -29,58 +29,78 @@
 
   <section id="about" class="about section">
     <div class="container">
-<?php
+    <?php
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "sa-6";
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) die("資料庫連線失敗: " . $conn->connect_error);
+$dbname = "sa-6"; // 資料庫名稱
 
+// 資料庫連線
+$conn = new mysqli($servername, $username, $password, $dbname);
+if ($conn->connect_error) {
+    die("資料庫連線失敗: " . $conn->connect_error);
+}
+
+// 取得搜尋 & 篩選參數
 $filters = [
-  "q" => $_GET['q'] ?? "",
-  "region" => $_GET['region'] ?? "",
-  "department" => $_GET['department'] ?? "",
-  "plan" => $_GET['plan'] ?? "",
-  "schol_apti" => $_GET['schol_apti'] ?? "",
-  "talent" => $_GET['talent'] ?? "",
-  "ID" => $_GET['ID'] ?? "",
-  "school_name" => $_GET['school_name'] ?? "",
-  "disc_cluster" => $_GET['disc_cluster'] ?? ""
+    "q" => $_GET['q'] ?? "",
+    "region" => $_GET['region'] ?? "",
+    "department" => $_GET['department'] ?? "",
+    "plan" => $_GET['plan'] ?? "",
+    "schol_apti" => $_GET['schol_apti'] ?? "",
+    "talent" => $_GET['talent'] ?? "",
+    "ID" => $_GET['ID'] ?? "",
+    "school_name" => $_GET['school_name'] ?? "",
+    "disc_cluster" => $_GET['disc_cluster'] ?? ""
 ];
 
-// 查詢語法包含 JOIN admi_thro_years
+// 構建 SQL 查詢，包含 JOIN 操作
 $sql = "SELECT sd.*, aty.110, aty.111, aty.112, aty.113, aty.114 
         FROM sch_description sd 
         LEFT JOIN admi_thro_years aty ON sd.Sch_num = aty.sch_num 
         WHERE 1=1";
+
 $params = [];
 $types = "";
 
+// 處理關鍵字搜尋
 if (!empty($filters["q"])) {
-  $cols = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Schol_Apti", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
-  $sql .= " AND (" . implode(" OR ", array_map(fn($c) => "$c LIKE ?", $cols)) . ")";
-  foreach ($cols as $c) {
-    $params[] = "%" . $filters["q"] . "%";
-    $types .= "s";
-  }
-}
-foreach ($filters as $k => $v) {
-  if ($k !== "q" && !empty($v)) {
-    $sql .= " AND $k = ?";
-    $params[] = $v;
-    $types .= "s";
+  $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Schol_Apti", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
+  $searchConditions = array_map(fn($col) => "sd.$col LIKE ?", $searchColumns);
+  $sql .= " AND (" . implode(" OR ", $searchConditions) . ")";
+  foreach ($searchColumns as $col) {
+      $params[] = "%" . $filters["q"] . "%";
+      $types .= "s";
   }
 }
 
+
+// 處理其他篩選條件
+foreach ($filters as $key => $value) {
+    if ($key !== "q" && !empty($value)) {
+        $sql .= " AND $key = ?";
+        $params[] = $value;
+        $types .= "s";
+    }
+}
+
+// 預備 SQL 語句
 $stmt = $conn->prepare($sql);
-if (!$stmt) die("SQL 錯誤: " . $conn->error);
-if (!empty($params)) $stmt->bind_param($types, ...$params);
+if (!$stmt) {
+    die("SQL 錯誤: " . $conn->error);
+}
+
+// 綁定參數並執行
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
 $stmt->execute();
 $result = $stmt->get_result();
 $results = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 $conn->close();
 ?>
+
+
 
 <!-- 篩選 UI（略）... -->
 <style>
