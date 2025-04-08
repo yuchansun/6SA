@@ -33,7 +33,7 @@
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "sa-6"; // 資料庫名稱
+$dbname = "sa-6";
 
 // 資料庫連線
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -54,7 +54,15 @@ $filters = [
     "disc_cluster" => $_GET['disc_cluster'] ?? ""
 ];
 
-// 構建 SQL 查詢，包含 JOIN 操作
+
+$keywordMapping = [
+    "清大" => "清華大學",
+    "台大" => "台灣大學",
+    "交大" => "交通大學",
+    "成大" => "成功大學",
+];
+
+
 $sql = "SELECT sd.*, aty.110, aty.111, aty.112, aty.113, aty.114 
         FROM sch_description sd 
         LEFT JOIN admi_thro_years aty ON sd.Sch_num = aty.sch_num 
@@ -65,15 +73,31 @@ $types = "";
 
 // 處理關鍵字搜尋
 if (!empty($filters["q"])) {
-  $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Schol_Apti", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
-  $searchConditions = array_map(fn($col) => "sd.$col LIKE ?", $searchColumns);
-  $sql .= " AND (" . implode(" OR ", $searchConditions) . ")";
-  foreach ($searchColumns as $col) {
-      $params[] = "%" . $filters["q"] . "%";
-      $types .= "s";
-  }
-}
+    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Schol_Apti", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
+    $searchConditions = [];
 
+    $searchTerms = preg_split('/\s+/', trim($filters["q"]));
+    $expandedTerms = [];
+
+    foreach ($searchTerms as $term) {
+        $expandedTerms[] = $term;
+        if (isset($keywordMapping[$term])) {
+            $expandedTerms[] = $keywordMapping[$term];
+        }
+    }
+
+    foreach ($expandedTerms as $term) {
+        foreach ($searchColumns as $col) {
+            $searchConditions[] = "sd.$col LIKE ?";
+            $params[] = "%" . $term . "%";
+            $types .= "s";
+        }
+    }
+
+    if (!empty($searchConditions)) {
+        $sql .= " AND (" . implode(" OR ", $searchConditions) . ")";
+    }
+}
 
 // 處理其他篩選條件
 foreach ($filters as $key => $value) {
@@ -102,15 +126,7 @@ $conn->close();
 
 
 
-<!-- 篩選 UI（略）... -->
-<style>
-  .filter-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative; /* 讓清除按鈕能與搜尋按鈕並排 */
-  }
-
+<style> 
   .filter-form {
     display: flex;
     flex-wrap: wrap;
@@ -118,10 +134,7 @@ $conn->close();
     justify-content: center;
   }
 
-  .button-group {
-    display: flex;
-    gap: 10px;
-  }
+
 
   .search-button, .clear-button {
     background-color: color-mix(in srgb, var(--default-color), transparent 94%);
@@ -129,14 +142,12 @@ $conn->close();
     padding: 8px;
   }
 
-  .clear-button {
-    background-color:color-mix(in srgb, var(--default-color), transparent 94%);
-    
-  }
 
-  .button-group button:hover,
+  .search-button:hover ,
   .clear-button:hover {
     opacity: 0.8;
+    background-color:var(--accent-color);
+     color:white;
   }
 
   .search-input {
@@ -187,8 +198,9 @@ $conn->close();
 
     <select name="plan">
         <option value="">選擇計畫類別</option>
-        <option value="短期計畫" <?php if ($filters["plan"] == "短期計畫") echo "selected"; ?>>短期計畫</option>
-        <option value="長期計畫" <?php if ($filters["plan"] == "長期計畫") echo "selected"; ?>>長期計畫</option>
+        <option value="特殊選才" <?php if ($filters["plan"] == "特殊選才") echo "selected"; ?>>特殊選才</option>
+        <option value="願景計畫" <?php if ($filters["plan"] == "願景計畫") echo "selected"; ?>>願景計畫</option>
+        <option value="資安外加" <?php if ($filters["plan"] == "資安外加") echo "selected"; ?>>資安外加</option>
     </select>
 
     <select name="ID">
@@ -222,6 +234,7 @@ $conn->close();
         <button type="submit" class="clear-button">重置 <i class="bi bi-arrow-clockwise"></i></button>
         </form>
        </div>
+
 <?php if (!empty($results)): ?>
 <table class="table table-striped table-hover align-middle text-center mt-4">
   <thead class="table-dark">
