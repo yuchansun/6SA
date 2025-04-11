@@ -40,6 +40,28 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
     die("資料庫連線失敗: " . $conn->connect_error);
 }
+// 抓取下拉選單的項目
+function getDistinctOptions($conn, $column, $table = "sch_description") {
+  $sql = "SELECT DISTINCT `$column` FROM `$table` WHERE `$column` IS NOT NULL AND `$column` <> ''";
+  $result = $conn->query($sql);
+  $options = [];
+  if ($result) {
+      while ($row = $result->fetch_assoc()) {
+          $options[] = $row[$column];
+      }
+  }
+  return $options;
+}
+
+$regionOptions = getDistinctOptions($conn, 'Region');
+$schoolOptions = getDistinctOptions($conn, 'School_Name');
+$departmentOptions = getDistinctOptions($conn, 'Department');
+$discClusterOptions = getDistinctOptions($conn, 'Disc_Cluster');
+$planOptions = getDistinctOptions($conn, 'Plan');
+$idOptions = getDistinctOptions($conn, 'ID');
+$aptiOptions = getDistinctOptions($conn, 'Schol_Apti');
+$talentOptions = getDistinctOptions($conn, 'Talent');
+
 
 // 取得搜尋 & 篩選參數
 $filters = [
@@ -126,107 +148,85 @@ $conn->close();
 
 
 
-<style> 
-  .filter-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-  }
-
-
-
-  .search-button, .clear-button {
-    background-color: color-mix(in srgb, var(--default-color), transparent 94%);
-    border-radius: 20px;
-    padding: 8px;
-  }
-
-
-  .search-button:hover ,
-  .clear-button:hover {
-    opacity: 0.8;
-    background-color:var(--accent-color);
-     color:white;
-  }
-
-  .search-input {
-    border-radius: 20px;
-    padding: 8px;
-    border: none;
-    background-color: color-mix(in srgb, var(--default-color), transparent 94%);
-  }
-
-  select, button {
-    border-radius: 20px;
-    padding: 10px 20px;
-    border: 0;
-    background-color: color-mix(in srgb, var(--default-color), transparent 94%);
-  }
-
-
-</style>
-
 
 <div class="filter-container">
 <form method="GET" action="" class="filter-form">
     <select name="region">
         <option value="">選擇地區</option>
-        <option value="台北" <?php if ($filters["region"] == "台北") echo "selected"; ?>>台北</option>
-        <option value="中部" <?php if ($filters["region"] == "中部") echo "selected"; ?>>中部</option>
-        <option value="南部" <?php if ($filters["region"] == "南部") echo "selected"; ?>>南部</option>
+        <?php foreach ($regionOptions as $option): ?>
+            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["region"] == $option) ? "selected" : "" ?>>
+                <?= htmlspecialchars($option) ?>
+            </option>
+        <?php endforeach; ?>
     </select>
 
     <select name="school_name">
         <option value="">選擇學校</option>
-        <option value="輔仁大學" <?php if ($filters["school_name"] == "輔仁大學") echo "selected"; ?>>輔仁大學</option>
-        <option value="台灣大學" <?php if ($filters["school_name"] == "台灣大學") echo "selected"; ?>>台灣大學</option>
+        <?php foreach ($schoolOptions as $option): ?>
+            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["school_name"] == $option) ? "selected" : "" ?>>
+                <?= htmlspecialchars($option) ?>
+            </option>
+        <?php endforeach; ?>
     </select>
 
     <select name="department">
         <option value="">選擇科系</option>
-        <option value="資訊管理" <?php if ($filters["department"] == "資訊管理") echo "selected"; ?>>資訊管理</option>
-        <option value="電機工程" <?php if ($filters["department"] == "電機工程") echo "selected"; ?>>電機工程</option>
+        <?php foreach ($departmentOptions as $option): ?>
+            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["department"] == $option) ? "selected" : "" ?>>
+                <?= htmlspecialchars($option) ?>
+            </option>
+        <?php endforeach; ?>
     </select>
 
     <select name="disc_cluster">
         <option value="">選擇學群</option>
-        <option value="工程" <?php if ($filters["disc_cluster"] == "工程") echo "selected"; ?>>工程</option>
-        <option value="商業" <?php if ($filters["disc_cluster"] == "商業") echo "selected"; ?>>商業</option>
-        <option value="科技學群" <?php if ($filters["disc_cluster"] == "科技學群") echo "selected"; ?>>科技學群</option>
+        <?php foreach ($discClusterOptions as $option): ?>
+            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["disc_cluster"] == $option) ? "selected" : "" ?>>
+                <?= htmlspecialchars($option) ?>
+            </option>
+        <?php endforeach; ?>
     </select>
 
     <select name="plan">
         <option value="">選擇計畫類別</option>
-        <option value="特殊選才" <?php if ($filters["plan"] == "特殊選才") echo "selected"; ?>>特殊選才</option>
-        <option value="願景計畫" <?php if ($filters["plan"] == "願景計畫") echo "selected"; ?>>願景計畫</option>
-        <option value="資安外加" <?php if ($filters["plan"] == "資安外加") echo "selected"; ?>>資安外加</option>
+        <?php foreach ($planOptions as $option): ?>
+            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["plan"] == $option) ? "selected" : "" ?>>
+                <?= htmlspecialchars($option) ?>
+            </option>
+        <?php endforeach; ?>
     </select>
 
     <select name="ID">
         <option value="">選擇身份</option>
-        <option value="學生" <?php if ($filters["ID"] == "學生") echo "selected"; ?>>學生</option>
-        <option value="上班族" <?php if ($filters["ID"] == "上班族") echo "selected"; ?>>上班族</option>
+        <?php foreach ($idOptions as $option): ?>
+            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["ID"] == $option) ? "selected" : "" ?>>
+                <?= htmlspecialchars($option) ?>
+            </option>
+        <?php endforeach; ?>
     </select>
 
     <select name="schol_apti">
         <option value="">選擇興趣</option>
-        <option value="數學" <?php if ($filters["schol_apti"] == "數學") echo "selected"; ?>>數學</option>
-        <option value="文學" <?php if ($filters["schol_apti"] == "文學") echo "selected"; ?>>文學</option>
+        <?php foreach ($aptiOptions as $option): ?>
+            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["schol_apti"] == $option) ? "selected" : "" ?>>
+                <?= htmlspecialchars($option) ?>
+            </option>
+        <?php endforeach; ?>
     </select>
 
     <select name="talent">
         <option value="">選擇能力</option>
-        <option value="程式設計" <?php if ($filters["talent"] == "程式設計") echo "selected"; ?>>程式設計</option>
-        <option value="資料分析" <?php if ($filters["talent"] == "資料分析") echo "selected"; ?>>資料分析</option>
+        <?php foreach ($talentOptions as $option): ?>
+            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["talent"] == $option) ? "selected" : "" ?>>
+                <?= htmlspecialchars($option) ?>
+            </option>
+        <?php endforeach; ?>
     </select>
 
-    <input type="text" name="q" value="<?php echo htmlspecialchars($filters['q']); ?>" 
-           placeholder="輸入關鍵字..." class="search-input">
+    <input type="text" name="q" value="<?= htmlspecialchars($filters['q']) ?>" placeholder="輸入關鍵字..." class="search-input">
     
     <!-- 搜尋按鈕 -->
     <button type="submit" class="search-button">搜尋 <i class="bi bi-search"></i></button>
-    
 </form>
 </div>
       <div style="display: flex; justify-content: flex-end;">
@@ -252,27 +252,64 @@ $conn->close();
           </button>
         </td>
         <td>
-        <button class="favorite-btn" style="background-color:none" data-sch-num="<?php echo $row['Sch_num']; ?>" onclick="toggleStar(this)">
-        <i class="bi bi-star"></i> <!-- 初始為空心星星 -->
+        <button class="favorite-btn" style="background-color:none"
+  data-sch-num="<?php echo $row['Sch_num']; ?>"
+  onclick="toggleStar(this)">
+  <i class="bi bi-star"></i> <!-- 初始為空心星星 -->
 </button>
 
+
 <script>
-  function toggleStar(button) {
-    var star = button.querySelector('i');
-    if (star.classList.contains('bi-star')) {
+function toggleStar(button) {
+  const star = button.querySelector('i');
+  const schNum = button.getAttribute('data-sch-num');
+  
+  // 取得目前收藏清單
+  let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+  if (star.classList.contains('bi-star')) {
+    // 改成填滿星星
+    star.classList.remove('bi-star');
+    star.classList.add('bi-star-fill');
+    star.style.color = '#FFCC00';
+
+    // 加入收藏
+    if (!favorites.includes(schNum)) {
+      favorites.push(schNum);
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+    }
+  } else {
+    // 改成空心星星
+    star.classList.remove('bi-star-fill');
+    star.classList.add('bi-star');
+    star.style.color = 'black';
+
+    // 移除收藏
+    favorites = favorites.filter(fav => fav !== schNum);
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }
+}
+
+// 頁面載入時，讓收藏的學校變黃星星
+window.onload = function() {
+  const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+  const buttons = document.querySelectorAll('.favorite-btn');
+
+  buttons.forEach(button => {
+    const schNum = button.getAttribute('data-sch-num');
+    const star = button.querySelector('i');
+
+    if (favorites.includes(schNum)) {
       star.classList.remove('bi-star');
       star.classList.add('bi-star-fill');
-      star.style.color = '#FFCC00'; 
-    } else {
-      star.classList.remove('bi-star-fill');
-      star.classList.add('bi-star');
-      star.style.color = 'black'; 
+      star.style.color = '#FFCC00';
     }
-  }
+  });
+};
 </script>
 
 
-        </td>
+
 </tr>
 <tr class="collapse" id="details-<?= $row['Sch_num']; ?>">
   <td colspan="5">
@@ -341,6 +378,47 @@ document.addEventListener("DOMContentLoaded", function () {
   <?php endforeach; ?>
 });
 </script>
+
+<style> 
+  .filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+
+
+  .search-button, .clear-button {
+    background-color: color-mix(in srgb, var(--default-color), transparent 94%);
+    border-radius: 20px;
+    padding: 8px;
+  }
+
+
+  .search-button:hover ,
+  .clear-button:hover {
+    opacity: 0.8;
+    background-color:var(--accent-color);
+     color:white;
+  }
+
+  .search-input {
+    border-radius: 20px;
+    padding: 8px;
+    border: none;
+    background-color: color-mix(in srgb, var(--default-color), transparent 94%);
+  }
+
+  select, button {
+    border-radius: 20px;
+    padding: 10px 20px;
+    border: 0;
+    background-color: color-mix(in srgb, var(--default-color), transparent 94%);
+  }
+
+
+</style>
 
 </div></section>
 </main>
