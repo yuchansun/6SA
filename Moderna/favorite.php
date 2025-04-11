@@ -36,11 +36,9 @@ window.onload = function () {
     return;
   }
 
-  // 將收藏學校一一顯示出來（這裡用 fetch 或 Ajax 向後端查詢詳細資料會更好）
   const container = document.getElementById('favorite-list');
   
   favorites.forEach(schNum => {
-    // 可改成從後端查詢資料，這裡先簡單示範：
     const schoolHTML = `
       <div class="favorite-item">
         <p>學校代碼：${schNum}</p>
@@ -51,21 +49,15 @@ window.onload = function () {
   });
 };
 
-// 移除收藏
+// ✅ 正確的刪除函式（只保留這一個）
 function removeFavorite(schNum) {
   let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
   favorites = favorites.filter(fav => fav !== schNum);
   localStorage.setItem('favorites', JSON.stringify(favorites));
-  location.reload(); // 重新整理畫面
+  location.reload();
 }
-function removeFavorite(schNum) {
-  let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-  favorites = favorites.filter(fav => fav.sch_num !== schNum);
-  localStorage.setItem('favorites', JSON.stringify(favorites));
-  location.reload(); // 重新整理畫面
-}
-
 </script>
+
     <!-- Portfolio Details Section -->
     <section id="portfolio-details" class="portfolio-details section">
 
