@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>About - Moderna Bootstrap Template</title>
+  <title>校系簡章</title>
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -252,45 +252,66 @@ $conn->close();
           </button>
         </td>
         <td>
-        <button class="favorite-btn" style="background-color:none"
+      <!-- 收藏按鈕 -->
+<button class="favorite-btn" style="background-color:none"
   data-sch-num="<?php echo $row['Sch_num']; ?>"
   onclick="toggleStar(this)">
-  <i class="bi bi-star"></i> <!-- 初始為空心星星 -->
+  <i class="bi bi-star"></i>
 </button>
 
+<!-- 中央通知 -->
+<div id="notification" style="
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #444;
+  padding: 16px 28px;
+  border-radius: 10px;
+  display: none;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+">
+  <a href="favorite.php" id="notification-link" style="
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: block;
+  ">
+    已加入收藏！點我查看
+  </a>
+</div>
 
 <script>
 function toggleStar(button) {
   const star = button.querySelector('i');
   const schNum = button.getAttribute('data-sch-num');
-  
-  // 取得目前收藏清單
   let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
   if (star.classList.contains('bi-star')) {
-    // 改成填滿星星
     star.classList.remove('bi-star');
     star.classList.add('bi-star-fill');
     star.style.color = '#FFCC00';
 
-    // 加入收藏
     if (!favorites.includes(schNum)) {
       favorites.push(schNum);
       localStorage.setItem('favorites', JSON.stringify(favorites));
+      showNotification("已加入收藏！點我查看", "favorite.php");
     }
   } else {
-    // 改成空心星星
     star.classList.remove('bi-star-fill');
     star.classList.add('bi-star');
     star.style.color = 'black';
 
-    // 移除收藏
     favorites = favorites.filter(fav => fav !== schNum);
     localStorage.setItem('favorites', JSON.stringify(favorites));
+    showNotification("已解除收藏", "#", false);
   }
 }
 
-// 頁面載入時，讓收藏的學校變黃星星
 window.onload = function() {
   const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
   const buttons = document.querySelectorAll('.favorite-btn');
@@ -306,9 +327,31 @@ window.onload = function() {
     }
   });
 };
+
+function showNotification(message, link, clickable = true) {
+  const notification = document.getElementById('notification');
+  const linkEl = document.getElementById('notification-link');
+
+  linkEl.textContent = message;
+  linkEl.href = link;
+
+  if (clickable) {
+    linkEl.style.pointerEvents = "auto";
+    linkEl.style.opacity = "1";
+    linkEl.style.cursor = "pointer";
+  } else {
+    linkEl.style.pointerEvents = "none";
+    linkEl.style.opacity = "0.7";
+    linkEl.style.cursor = "default";
+  }
+
+  notification.style.display = 'block';
+
+  setTimeout(() => {
+    notification.style.display = 'none';
+  }, 3000);
+}
 </script>
-
-
 
 </tr>
 <tr class="collapse" id="details-<?= $row['Sch_num']; ?>">
