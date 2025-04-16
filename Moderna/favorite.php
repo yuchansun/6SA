@@ -104,7 +104,7 @@ $conn->close();
   <div style="position: relative; padding-top: 30px;">
     <i class="bi bi-star-fill"
        onclick="toggleFavorite('${school.Sch_num}', this)"
-       style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 22px; color: gold;"
+       style="position: absolute; top: 0px; right: -5px; cursor: pointer; font-size: 22px;color: gold;"
        title="取消收藏"></i>
 
     <h3 style="margin-top: 0;">${school.School_Name} ${school.Department}</h3>
