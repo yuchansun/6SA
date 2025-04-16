@@ -232,6 +232,10 @@ h6 {
   z-index: 997;
 }
 
+.transparent-header {
+  background-color: transparent !important;
+}
+
 .header .logo {
   line-height: 1;
 }
@@ -251,7 +255,7 @@ h6 {
 /* Global Header on Scroll
 ------------------------------*/
 .scrolled .header {
-  --background-color: #1e4356;
+  --background-color: #5c92ad;
 }
 
 /*--------------------------------------------------------------
