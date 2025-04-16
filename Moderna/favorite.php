@@ -101,19 +101,25 @@ $conn->close();
         const todoId = `todo-${school.Sch_num}`;
 
         div.innerHTML = `
-          <h3>${school.School_Name} ${school.Department}</h3>
-          <ul>
-            <li><strong>學校名稱</strong>: ${school.School_Name}</li>
-            <li><strong>科系</strong>: ${school.Department}</li>
-            <li><strong>地區</strong>: ${school.Region}</li>
-            <li><button onclick="removeFavorite('${school.Sch_num}')">取消收藏</button></li>
-          </ul>
+  <div style="position: relative; padding-top: 30px;">
+    <i class="bi bi-star-fill"
+       onclick="toggleFavorite('${school.Sch_num}', this)"
+       style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 22px; color: gold;"
+       title="取消收藏"></i>
 
-          <div class="todo-section">
-            <h5>To-Do List</h5>
-            <ul id="${todoId}" class="todo-list"></ul>
-          </div>
-        `;
+    <h3 style="margin-top: 0;">${school.School_Name} ${school.Department}</h3>
+    <ul>
+      <li><strong>學校名稱</strong>: ${school.School_Name}</li>
+      <li><strong>科系</strong>: ${school.Department}</li>
+      <li><strong>地區</strong>: ${school.Region}</li>
+    </ul>
+
+    <div class="todo-section">
+      <h5>To-Do List</h5>
+      <ul id="${todoId}" class="todo-list"></ul>
+    </div>
+  </div>
+`;
 
         container.appendChild(div);
         renderTodos(school.Sch_num);  // 取得並顯示該校系的 To-Do List
@@ -122,12 +128,20 @@ $conn->close();
   };
 
   // 取消收藏
-  function removeFavorite(schNum) {
-    let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+  function toggleFavorite(schNum, iconElement) {
+  let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+  if (favorites.includes(schNum)) {
     favorites = favorites.filter(fav => fav !== schNum);
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    location.reload();
+
+    iconElement.classList.remove('bi-star-fill');
+    iconElement.classList.add('bi-star');
+    iconElement.style.color = 'gray';
+
+    setTimeout(() => location.reload(), 300);
   }
+}
 
   // 渲染 To-Do List
   function renderTodos(schNum) {
