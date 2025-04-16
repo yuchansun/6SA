@@ -33,7 +33,7 @@
             <li><a href="#">Dropdown 4</a></li>
           </ul>
         </li>
-        <li><a href="contact.php">Contact</a></li>
+        <li><a href="contact.php">登入</a></li>
       </ul>
       <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
     </nav>
