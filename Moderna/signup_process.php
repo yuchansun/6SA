@@ -21,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        echo "This email is already registered.";
+        $error = "This email is already registered. Please try logging in or use a different email.";
+    }
     } else {
         // Insert the new user into the database with Nickname and Roles
         $stmt = $conn->prepare("INSERT INTO account (`E-mail`, `Password`, `Nickname`, `Roles`) VALUES (?, ?, ?, ?)");
@@ -31,7 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Optionally, you can log the user in after sign-up by starting a session
         $_SESSION['user'] = $account;
 
-        echo "Sign-up successful! You can now log in.";
+        header("Location: contact.php?welcome=" . urlencode($nickname));
+exit();  // Display a success message
         // Redirect to the login page or wherever you want after successful sign-up
         // header("Location: login.php"); // Uncomment this to redirect
     }
