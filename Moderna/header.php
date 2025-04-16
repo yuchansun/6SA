@@ -1,5 +1,5 @@
 <!-- header.php -->
-<header id="header" class="header d-flex align-items-center fixed-top">
+<header id="header" class="header d-flex align-items-center fixed-top" style="background-color: rgb(30, 67, 86);">
   <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
     <a href="index.php" class="logo d-flex align-items-center">
@@ -33,7 +33,7 @@
             <li><a href="#">Dropdown 4</a></li>
           </ul>
         </li>
-        <li><a href="contact.php">Contact</a></li>
+        <li><a href="contact.php">登入</a></li>
       </ul>
       <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
     </nav>
