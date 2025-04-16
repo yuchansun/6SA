@@ -12,25 +12,14 @@
       <ul>
         <li><a href="index.php">首頁</a></li>
         <li><a href="about.php">校系簡章</a></li>
-        <li><a href="services.php">學群介紹</a></li>
-        <li><a href="portfolio.php">學校簡介</a></li>
-        <li><a href="team.php">學校</a></li>
+        <li><a href="favorite.php">我的最愛</a></li>
         <li><a href="blog.php">討論區</a></li>
-        <li class="dropdown"><a href="#"><span>Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+        <li class="dropdown"><a href="#"><span>學群及學校介紹</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
           <ul>
-            <li><a href="#">Dropdown 1</a></li>
-            <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-              <ul>
-                <li><a href="#">Deep Dropdown 1</a></li>
-                <li><a href="#">Deep Dropdown 2</a></li>
-                <li><a href="#">Deep Dropdown 3</a></li>
-                <li><a href="#">Deep Dropdown 4</a></li>
-                <li><a href="#">Deep Dropdown 5</a></li>
-              </ul>
-            </li>
-            <li><a href="#">Dropdown 2</a></li>
-            <li><a href="#">Dropdown 3</a></li>
-            <li><a href="#">Dropdown 4</a></li>
+            <li><a href="services.php">學群介紹</a></li>
+            <li><a href="portfolio.php">學校簡介</a></li>
+            <!-- <li><a href="#">Dropdown 3</a></li>
+            <li><a href="#">Dropdown 4</a></li> -->
           </ul>
         </li>
         <li><a href="contact.php">登入</a></li>
