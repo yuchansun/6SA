@@ -155,7 +155,7 @@ $result = $conn->query($sql);
       </div><!-- End Section Title -->
 
       <div class="container">
-
+        <!-- 適合走特殊選才的六大類型 -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
             <img src="assets/img/features-1.svg" class="img-fluid" alt="">
@@ -163,8 +163,7 @@ $result = $conn->query($sql);
           <div class="col-md-7" data-aos="fade-up" data-aos-delay="100">
             <h3>適合走特殊選才的六大類型</h3>
             <p class="fst-italic">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-              magna aliqua.
+            特殊選才的入學方式特別適合擁有以下特質的學生，這些特點有助於在申請過程中展現出與所選校系的契合度。
             </p>
             <ul>
               <li><i class="bi bi-check"></i><span> 特頂學科才能</span></li>
@@ -176,7 +175,7 @@ $result = $conn->query($sql);
             </ul>
           </div>
         </div><!-- Features Item -->
-
+        <!--  -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
             <img src="assets/img/features-2.svg" class="img-fluid" alt="">
@@ -193,23 +192,24 @@ $result = $conn->query($sql);
               culpa qui officia deserunt mollit anim id est laborum
             </p>
           </div>
-        </div><!-- Features Item -->
-
+        </div>
+        <!-- Features Item -->
+        <!-- 特殊選才申請流程 -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 d-flex align-items-center" data-aos="zoom-out">
             <img src="assets/img/features-3.svg" class="img-fluid" alt="">
           </div>
           <div class="col-md-7" data-aos="fade-up">
             <h3>特殊選才申請流程</h3>
-            <p>Cupiditate placeat cupiditate placeat est ipsam culpa. Delectus quia minima quod. Sunt saepe odit aut quia voluptatem hic voluptas dolor doloremque.</p>
+            <p>由於各特殊選才科系招考的確切時間不同，需留意報名、審查及放榜的具體時間，才能及早準備書面審查資料與面試練習。特殊選才的日程主要集中於每年的 10月~12月，以下是相關的大致時程，提供有意申請的學生作為參考。</p>
             <ul>
-              <li><i class="bi bi-check"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat.</span></li>
-              <li><i class="bi bi-check"></i><span> Duis aute irure dolor in reprehenderit in voluptate velit.</span></li>
-              <li><i class="bi bi-check"></i> <span>Facilis ut et voluptatem aperiam. Autem soluta ad fugiat</span>.</li>
+              <li><i class="bi bi-check"></i> <span>報名時間 : 每年10月 ~ 12月初</span></li>
+              <li><i class="bi bi-check"></i><span>審查時間 : 11月 ~ 12月</span></li>
+              <li><i class="bi bi-check"></i> <span>放榜時間 : 11月 ~ 12月，最遲至隔年1月</span>.</li>
             </ul>
           </div>
         </div><!-- Features Item -->
-
+        <!-- 備審資料 -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out">
             <img src="assets/img/features-4.svg" class="img-fluid" alt="">
@@ -217,13 +217,18 @@ $result = $conn->query($sql);
           <div class="col-md-7 order-2 order-md-1" data-aos="fade-up">
             <h3>備審資料</h3>
             <p class="fst-italic">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-              magna aliqua.
+            關於特殊選才備審資料每間學校要求不盡相同，不過通常都包含以下幾種必備文件：
             </p>
+            <ul>
+              <li><i class="bi bi-check"></i> <span>高中學歷證明正本</span></li>
+              <li><i class="bi bi-check"></i><span>高中歷年成績單正本</span></li>
+              <li><i class="bi bi-check"></i> <span>高中教師或專業領域人士、教授推薦函</span>.</li>
+              <li><i class="bi bi-check"></i> <span>其他有利審查的資料</span></li>
+
+            </ul>
             <p>
-              Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-              velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-              culpa qui officia deserunt mollit anim id est laborum
+            其他有利審查的資料用來證明自身獨特才能或潛力的相關證明文件，讓教授能從中看到你的潛力與專長，大致包括以下 5 個項目。
+            個人簡歷、自傳、申請動機、讀書計畫、有利的佐證資料。	
             </p>
           </div>
         </div><!-- Features Item -->
