@@ -91,6 +91,40 @@ if (isset($_GET['search'])) {
       padding-top: 10px;
       margin-top: 10px;
     }
+    .btn-like {
+      background: none;
+      border: none;
+      color: #007bff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .btn-like i {
+      margin-right: 5px;
+    }
+    .btn-like:hover {
+      color: #0056b3;
+    }
+    .post-item .meta {
+      font-size: 0.9em;
+      color: #6c757d;
+    }
+    .comment-item .meta {
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+    .post-item p {
+      font-size: 1.5em; /* 放大 50% */
+      color: #212529;
+    }
+    .comment-item p {
+      font-size: 1.35em; /* 放大 50% */
+      color: #212529;
+    }
+    .post-item h3 {
+      font-size: 3em; /* 放大 100% */
+    }
   </style>
 </head>
 
@@ -142,7 +176,9 @@ if (isset($_GET['search'])) {
                     <span>由 <?= htmlspecialchars($post['Nickname']) ?> 發布於 <?= $post['Post_Time'] ?></span>
                   </div>
                   <p><?= nl2br(htmlspecialchars($post['Content'])) ?></p>
-                  <button class="btn btn-outline-primary btn-sm" onclick="likePost(<?= $post['Post_ID'] ?>, this)">讚 (<?= $post['Likes'] ?>)</button>
+                  <button class="btn-like" onclick="likePost(<?= $post['Post_ID'] ?>, this)">
+                    <i class="bi bi-heart"></i> <span><?= $post['Likes'] ?></span>
+                  </button>
 
                   <!-- 顯示留言 -->
                   <div class="comments">
@@ -151,8 +187,10 @@ if (isset($_GET['search'])) {
                     while ($comment = $commentsQuery->fetch_assoc()): ?>
                       <div class="comment-item">
                         <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
-                        <span class="text-muted">留言時間: <?= $comment['Comment_Time'] ?></span>
-                        <button class="btn btn-outline-primary btn-sm" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">讚 (<?= $comment['Likes'] ?>)</button>
+                        <div class="meta">留言時間: <?= $comment['Comment_Time'] ?></div>
+                        <button class="btn-like" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">
+                          <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+                        </button>
                       </div>
                     <?php endwhile; ?>
                   </div>
@@ -179,7 +217,7 @@ if (isset($_GET['search'])) {
               .then(response => response.json())
               .then(data => {
                 if (data.success) {
-                  button.innerHTML = `讚 (${data.likes})`;
+                  button.querySelector('span').textContent = data.likes;
                 }
               });
           }
@@ -190,102 +228,11 @@ if (isset($_GET['search'])) {
               .then(response => response.json())
               .then(data => {
                 if (data.success) {
-                  button.innerHTML = `讚 (${data.likes})`;
+                  button.querySelector('span').textContent = data.likes;
                 }
               });
           }
           </script>
-
-          <!-- 浮動式按鈕 -->
-          <button type="button" class="btn btn-primary floating-btn" data-bs-toggle="modal" data-bs-target="#commentModal">
-            <span>按此新增貼文</span> <i class="bi bi-plus"></i>
-          </button>
-
-          <!-- 彈跳視窗 -->
-          <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="commentModalLabel">Post Comment</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <form method="POST" action="">
-                    <div class="mb-3">
-                      <input type="text" name="title" class="form-control" placeholder="Your Title*" required>
-                    </div>
-                    <div class="mb-3">
-                      <textarea name="comment" class="form-control" placeholder="Your Comment*" required></textarea>
-                    </div>
-                    <div class="text-center">
-                      <button type="submit" class="btn btn-primary">Submit</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <style>
-            .floating-btn {
-              position: fixed;
-              top: 50%;
-              left: 0;
-              transform: translateY(-50%);
-              z-index: 1050;
-              border-radius: 0 50% 50% 0;
-              width: auto;
-              height: 60px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              padding: 0 15px;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-            .floating-btn i {
-              margin-left: 5px;
-            }
-            .modal-content {
-              border-radius: 15px;
-              box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-              background: linear-gradient(135deg, #ffffff, #f8f9fa);
-              padding: 20px;
-            }
-            .modal-header {
-              border-bottom: none;
-              text-align: center;
-            }
-            .modal-title {
-              font-size: 24px;
-              font-weight: bold;
-              color: #007bff;
-            }
-            .btn-close {
-              background-color: #f8f9fa;
-              border-radius: 50%;
-              padding: 5px;
-            }
-            .modal-body {
-              padding: 20px;
-            }
-            .form-control {
-              border-radius: 10px;
-              border: 1px solid #ced4da;
-              padding: 10px;
-            }
-            .btn-primary {
-              background: linear-gradient(45deg, #007bff, #00d4ff);
-              border: none;
-              border-radius: 20px;
-              padding: 10px 20px;
-              font-size: 16px;
-              transition: all 0.3s ease;
-            }
-            .btn-primary:hover {
-              background: linear-gradient(45deg, #0056b3, #0099cc);
-              transform: scale(1.05);
-            }
-          </style>
 
         </div>
 
@@ -307,6 +254,12 @@ if (isset($_GET['search'])) {
 
               </div>
             </div><!--/Blog Author Widget -->
+            <button type="button" class="btn btn-primary floating-btn" data-bs-toggle="modal" data-bs-target="#commentModal">
+              <span>按此新增貼文</span> <i class="bi bi-plus"></i>
+            </button>
+
+            <!-- 增加空白間距 -->
+            <div style="height: 20px;"></div>
 
             <!-- Search Widget -->
             <div class="search-widget widget-item">
@@ -316,23 +269,58 @@ if (isset($_GET['search'])) {
                 <input type="text" name="search" placeholder="搜尋文章標題..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
                 <button type="submit" title="Search"><i class="bi bi-search"></i></button>
               </form>
-
             </div><!--/Search Widget -->
 
-            <!-- Categories Widget -->
-            <div class="categories-widget widget-item">
+            <!-- 浮動式按鈕 -->
+            
 
-              <h3 class="widget-title">Categories</h3>
-              <ul class="mt-3">
-                <li><a href="#">General <span>(25)</span></a></li>
-                <li><a href="#">Lifestyle <span>(12)</span></a></li>
-                <li><a href="#">Travel <span>(5)</span></a></li>
-                <li><a href="#">Design <span>(22)</span></a></li>
-                <li><a href="#">Creative <span>(8)</span></a></li>
-                <li><a href="#">Educaion <span>(14)</span></a></li>
-              </ul>
+            <!-- 彈跳視窗 -->
+            <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="commentModalLabel">發布貼文</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form method="POST" action="">
+                      <div class="mb-3">
+                        <input type="text" name="title" class="form-control" placeholder="輸入你的標題" required>
+                      </div>
+                      <div class="mb-3">
+                        <textarea name="comment" class="form-control" placeholder="輸入你的內容" required></textarea>
+                      </div>
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">發送</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            </div><!--/Categories Widget -->
+            <style>
+              .floating-btn {
+                margin-top: 15px;
+                display: inline-block;
+                background: linear-gradient(45deg, #007bff, #00d4ff);
+                color: #fff;
+                border: none;
+                border-radius: 20px;
+                padding: 10px 20px;
+                font-size: 16px;
+                transition: all 0.3s ease;
+              }
+              .floating-btn:hover {
+                background: linear-gradient(45deg, #0056b3, #0099cc);
+                transform: scale(1.05);
+              }
+              .floating-btn i {
+                margin-left: 5px;
+              }
+            </style>
+
+            
 
             <!-- Recent Posts Widget -->
             <div class="recent-posts-widget widget-item">
