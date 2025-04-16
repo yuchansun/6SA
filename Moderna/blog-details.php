@@ -1,5 +1,47 @@
-
 <?php include('header.php'); ?>
+<?php
+// 連接資料庫
+require_once 'db.php';
+
+// 處理新增貼文提交
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'], $_POST['comment'])) {
+    $title = $conn->real_escape_string($_POST['title']);
+    $content = $conn->real_escape_string($_POST['comment']);
+    $userId = 1; // 假設用戶 ID 為 1，應根據實際情況動態獲取
+
+    $insertPost = $conn->prepare("INSERT INTO posts (Title, Content, User_ID, Post_Time) VALUES (?, ?, ?, NOW())");
+    $insertPost->bind_param("ssi", $title, $content, $userId);
+    $insertPost->execute();
+    header("Location: blog-details.php");
+    exit;
+}
+
+// 處理留言提交
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['comment'])) {
+    $postId = intval($_POST['post_id']);
+    $comment = $conn->real_escape_string($_POST['comment']);
+    $userId = 1; // 假設用戶 ID 為 1，應根據實際情況動態獲取
+
+    $insertComment = $conn->prepare("INSERT INTO comments (Post_ID, Content, User_ID, Comment_Time) VALUES (?, ?, ?, NOW())");
+    $insertComment->bind_param("isi", $postId, $comment, $userId);
+    $insertComment->execute();
+    header("Location: blog-details.php");
+    exit;
+}
+
+// 獲取所有貼文
+$postsQuery = $conn->query("SELECT p.*, a.Nickname FROM posts p JOIN account a ON p.User_ID = a.User_ID ORDER BY Post_Time DESC");
+
+// 搜尋功能
+$searchResults = [];
+if (isset($_GET['search'])) {
+    $searchTerm = $conn->real_escape_string($_GET['search']);
+    $searchQuery = $conn->query("SELECT p.*, a.Nickname FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE p.Title LIKE '%$searchTerm%' ORDER BY Post_Time DESC");
+    while ($row = $searchQuery->fetch_assoc()) {
+        $searchResults[] = $row;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -17,7 +59,7 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -36,6 +78,20 @@
   * Author: BootstrapMade.com
   * License: https://bootstrapmade.com/license/
   ======================================================== -->
+  <style>
+    .post-item {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .comment-item {
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body class="blog-details-page">
@@ -47,8 +103,8 @@
     <!-- Page Title -->
     <div class="page-title dark-background">
       <div class="container position-relative">
-        <h1>Blog Details</h1>
-        <p>Esse dolorum voluptatum ullam est sint nemo et est ipsa porro placeat quibusdam quia assumenda numquam molestias.</p>
+        <h1>討論區</h1>
+        <p>在這裡分享你的想法，並與他人互動</p>
        
       </div>
     </div><!-- End Page Title -->
@@ -58,221 +114,178 @@
 
         <div class="col-lg-8">
 
-          <!-- Blog Details Section -->
-          <section id="blog-details" class="blog-details section">
-            <div class="container">
-
-              <article class="article">
-
-                <div class="post-img">
-                  <img src="assets/img/blog/blog-1.jpg" alt="" class="img-fluid">
-                </div>
-
-                <h2 class="title">Dolorum optio tempore voluptas dignissimos cumque fuga qui quibusdam quia</h2>
-
-                <div class="meta-top">
-                  <ul>
-                    <li class="d-flex align-items-center"><i class="bi bi-person"></i> <a href="blog-details.html">John Doe</a></li>
-                    <li class="d-flex align-items-center"><i class="bi bi-clock"></i> <a href="blog-details.html"><time datetime="2020-01-01">Jan 1, 2022</time></a></li>
-                    <li class="d-flex align-items-center"><i class="bi bi-chat-dots"></i> <a href="blog-details.html">12 Comments</a></li>
-                  </ul>
-                </div><!-- End meta top -->
-
-                <div class="content">
-                  <p>
-                    Similique neque nam consequuntur ad non maxime aliquam quas. Quibusdam animi praesentium. Aliquam et laboriosam eius aut nostrum quidem aliquid dicta.
-                    Et eveniet enim. Qui velit est ea dolorem doloremque deleniti aperiam unde soluta. Est cum et quod quos aut ut et sit sunt. Voluptate porro consequatur assumenda perferendis dolore.
-                  </p>
-
-                  <p>
-                    Sit repellat hic cupiditate hic ut nemo. Quis nihil sunt non reiciendis. Sequi in accusamus harum vel aspernatur. Excepturi numquam nihil cumque odio. Et voluptate cupiditate.
-                  </p>
-
-                  <blockquote>
-                    <p>
-                      Et vero doloremque tempore voluptatem ratione vel aut. Deleniti sunt animi aut. Aut eos aliquam doloribus minus autem quos.
-                    </p>
-                  </blockquote>
-
-                  <p>
-                    Sed quo laboriosam qui architecto. Occaecati repellendus omnis dicta inventore tempore provident voluptas mollitia aliquid. Id repellendus quia. Asperiores nihil magni dicta est suscipit perspiciatis. Voluptate ex rerum assumenda dolores nihil quaerat.
-                    Dolor porro tempora et quibusdam voluptas. Beatae aut at ad qui tempore corrupti velit quisquam rerum. Omnis dolorum exercitationem harum qui qui blanditiis neque.
-                    Iusto autem itaque. Repudiandae hic quae aspernatur ea neque qui. Architecto voluptatem magni. Vel magnam quod et tempora deleniti error rerum nihil tempora.
-                  </p>
-
-                  <h3>Et quae iure vel ut odit alias.</h3>
-                  <p>
-                    Officiis animi maxime nulla quo et harum eum quis a. Sit hic in qui quos fugit ut rerum atque. Optio provident dolores atque voluptatem rem excepturi molestiae qui. Voluptatem laborum omnis ullam quibusdam perspiciatis nulla nostrum. Voluptatum est libero eum nesciunt aliquid qui.
-                    Quia et suscipit non sequi. Maxime sed odit. Beatae nesciunt nesciunt accusamus quia aut ratione aspernatur dolor. Sint harum eveniet dicta exercitationem minima. Exercitationem omnis asperiores natus aperiam dolor consequatur id ex sed. Quibusdam rerum dolores sint consequatur quidem ea.
-                    Beatae minima sunt libero soluta sapiente in rem assumenda. Et qui odit voluptatem. Cum quibusdam voluptatem voluptatem accusamus mollitia aut atque aut.
-                  </p>
-                  <img src="assets/img/blog/blog-inside-post.jpg" class="img-fluid" alt="">
-
-                  <h3>Ut repellat blanditiis est dolore sunt dolorum quae.</h3>
-                  <p>
-                    Rerum ea est assumenda pariatur quasi et quam. Facilis nam porro amet nostrum. In assumenda quia quae a id praesentium. Quos deleniti libero sed occaecati aut porro autem. Consectetur sed excepturi sint non placeat quia repellat incidunt labore. Autem facilis hic dolorum dolores vel.
-                    Consectetur quasi id et optio praesentium aut asperiores eaque aut. Explicabo omnis quibusdam esse. Ex libero illum iusto totam et ut aut blanditiis. Veritatis numquam ut illum ut a quam vitae.
-                  </p>
-                  <p>
-                    Alias quia non aliquid. Eos et ea velit. Voluptatem maxime enim omnis ipsa voluptas incidunt. Nulla sit eaque mollitia nisi asperiores est veniam.
-                  </p>
-
-                </div><!-- End post content -->
-
-                <div class="meta-bottom">
-                  <i class="bi bi-folder"></i>
-                  <ul class="cats">
-                    <li><a href="#">Business</a></li>
-                  </ul>
-
-                  <i class="bi bi-tags"></i>
-                  <ul class="tags">
-                    <li><a href="#">Creative</a></li>
-                    <li><a href="#">Tips</a></li>
-                    <li><a href="#">Marketing</a></li>
-                  </ul>
-                </div><!-- End meta bottom -->
-
-              </article>
-
-            </div>
-          </section><!-- /Blog Details Section -->
-
-          <!-- Blog Comments Section -->
-          <section id="blog-comments" class="blog-comments section">
-
-            <div class="container">
-
-              <h4 class="comments-count">8 Comments</h4>
-
-              <div id="comment-1" class="comment">
-                <div class="d-flex">
-                  <div class="comment-img"><img src="assets/img/blog/comments-1.jpg" alt=""></div>
-                  <div>
-                    <h5><a href="">Georgia Reader</a> <a href="#" class="reply"><i class="bi bi-reply-fill"></i> Reply</a></h5>
-                    <time datetime="2020-01-01">01 Jan,2022</time>
-                    <p>
-                      Et rerum totam nisi. Molestiae vel quam dolorum vel voluptatem et et. Est ad aut sapiente quis molestiae est qui cum soluta.
-                      Vero aut rerum vel. Rerum quos laboriosam placeat ex qui. Sint qui facilis et.
-                    </p>
-                  </div>
-                </div>
-              </div><!-- End comment #1 -->
-
-              <div id="comment-2" class="comment">
-                <div class="d-flex">
-                  <div class="comment-img"><img src="assets/img/blog/comments-2.jpg" alt=""></div>
-                  <div>
-                    <h5><a href="">Aron Alvarado</a> <a href="#" class="reply"><i class="bi bi-reply-fill"></i> Reply</a></h5>
-                    <time datetime="2020-01-01">01 Jan,2022</time>
-                    <p>
-                      Ipsam tempora sequi voluptatem quis sapiente non. Autem itaque eveniet saepe. Officiis illo ut beatae.
-                    </p>
-                  </div>
-                </div>
-
-                <div id="comment-reply-1" class="comment comment-reply">
-                  <div class="d-flex">
-                    <div class="comment-img"><img src="assets/img/blog/comments-3.jpg" alt=""></div>
-                    <div>
-                      <h5><a href="">Lynda Small</a> <a href="#" class="reply"><i class="bi bi-reply-fill"></i> Reply</a></h5>
-                      <time datetime="2020-01-01">01 Jan,2022</time>
-                      <p>
-                        Enim ipsa eum fugiat fuga repellat. Commodi quo quo dicta. Est ullam aspernatur ut vitae quia mollitia id non. Qui ad quas nostrum rerum sed necessitatibus aut est. Eum officiis sed repellat maxime vero nisi natus. Amet nesciunt nesciunt qui illum omnis est et dolor recusandae.
-
-                        Recusandae sit ad aut impedit et. Ipsa labore dolor impedit et natus in porro aut. Magnam qui cum. Illo similique occaecati nihil modi eligendi. Pariatur distinctio labore omnis incidunt et illum. Expedita et dignissimos distinctio laborum minima fugiat.
-
-                        Libero corporis qui. Nam illo odio beatae enim ducimus. Harum reiciendis error dolorum non autem quisquam vero rerum neque.
-                      </p>
+          <!-- 搜尋結果 -->
+          <?php if (!empty($searchResults)): ?>
+            <section id="search-results" class="search-results section">
+              <div class="container">
+                <h3>搜尋結果：</h3>
+                <?php foreach ($searchResults as $post): ?>
+                  <div class="post-item">
+                    <h3><?= htmlspecialchars($post['Title']) ?></h3>
+                    <div class="meta">
+                      <span>由 <?= htmlspecialchars($post['Nickname']) ?> 發布於 <?= $post['Post_Time'] ?></span>
                     </div>
+                    <p><?= nl2br(htmlspecialchars($post['Content'])) ?></p>
                   </div>
+                <?php endforeach; ?>
+              </div>
+            </section>
+          <?php endif; ?>
 
-                  <div id="comment-reply-2" class="comment comment-reply">
-                    <div class="d-flex">
-                      <div class="comment-img"><img src="assets/img/blog/comments-4.jpg" alt=""></div>
-                      <div>
-                        <h5><a href="">Sianna Ramsay</a> <a href="#" class="reply"><i class="bi bi-reply-fill"></i> Reply</a></h5>
-                        <time datetime="2020-01-01">01 Jan,2022</time>
-                        <p>
-                          Et dignissimos impedit nulla et quo distinctio ex nemo. Omnis quia dolores cupiditate et. Ut unde qui eligendi sapiente omnis ullam. Placeat porro est commodi est officiis voluptas repellat quisquam possimus. Perferendis id consectetur necessitatibus.
-                        </p>
+          <!-- 顯示貼文 -->
+          <section id="blog-posts" class="blog-posts section">
+            <div class="container">
+              <?php while ($post = $postsQuery->fetch_assoc()): ?>
+                <div class="post-item">
+                  <h3><?= htmlspecialchars($post['Title']) ?></h3>
+                  <div class="meta">
+                    <span>由 <?= htmlspecialchars($post['Nickname']) ?> 發布於 <?= $post['Post_Time'] ?></span>
+                  </div>
+                  <p><?= nl2br(htmlspecialchars($post['Content'])) ?></p>
+                  <button class="btn btn-outline-primary btn-sm" onclick="likePost(<?= $post['Post_ID'] ?>, this)">讚 (<?= $post['Likes'] ?>)</button>
+
+                  <!-- 顯示留言 -->
+                  <div class="comments">
+                    <?php
+                    $commentsQuery = $conn->query("SELECT c.*, a.Nickname FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = " . $post['Post_ID'] . " ORDER BY Comment_Time ASC");
+                    while ($comment = $commentsQuery->fetch_assoc()): ?>
+                      <div class="comment-item">
+                        <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
+                        <span class="text-muted">留言時間: <?= $comment['Comment_Time'] ?></span>
+                        <button class="btn btn-outline-primary btn-sm" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">讚 (<?= $comment['Likes'] ?>)</button>
                       </div>
+                    <?php endwhile; ?>
+                  </div>
+
+                  <!-- 新增留言表單 -->
+                  <form method="POST" action="">
+                    <input type="hidden" name="post_id" value="<?= $post['Post_ID'] ?>">
+                    <div class="mb-3">
+                      <textarea name="comment" class="form-control" placeholder="新增留言..." required></textarea>
                     </div>
-
-                  </div><!-- End comment reply #2-->
-
-                </div><!-- End comment reply #1-->
-
-              </div><!-- End comment #2-->
-
-              <div id="comment-3" class="comment">
-                <div class="d-flex">
-                  <div class="comment-img"><img src="assets/img/blog/comments-5.jpg" alt=""></div>
-                  <div>
-                    <h5><a href="">Nolan Davidson</a> <a href="#" class="reply"><i class="bi bi-reply-fill"></i> Reply</a></h5>
-                    <time datetime="2020-01-01">01 Jan,2022</time>
-                    <p>
-                      Distinctio nesciunt rerum reprehenderit sed. Iste omnis eius repellendus quia nihil ut accusantium tempore. Nesciunt expedita id dolor exercitationem aspernatur aut quam ut. Voluptatem est accusamus iste at.
-                      Non aut et et esse qui sit modi neque. Exercitationem et eos aspernatur. Ea est consequuntur officia beatae ea aut eos soluta. Non qui dolorum voluptatibus et optio veniam. Quam officia sit nostrum dolorem.
-                    </p>
-                  </div>
+                    <div class="text-end">
+                      <button type="submit" class="btn btn-primary">送出留言</button>
+                    </div>
+                  </form>
                 </div>
-
-              </div><!-- End comment #3 -->
-
-              <div id="comment-4" class="comment">
-                <div class="d-flex">
-                  <div class="comment-img"><img src="assets/img/blog/comments-6.jpg" alt=""></div>
-                  <div>
-                    <h5><a href="">Kay Duggan</a> <a href="#" class="reply"><i class="bi bi-reply-fill"></i> Reply</a></h5>
-                    <time datetime="2020-01-01">01 Jan,2022</time>
-                    <p>
-                      Dolorem atque aut. Omnis doloremque blanditiis quia eum porro quis ut velit tempore. Cumque sed quia ut maxime. Est ad aut cum. Ut exercitationem non in fugiat.
-                    </p>
-                  </div>
-                </div>
-
-              </div><!-- End comment #4 -->
-
+              <?php endwhile; ?>
             </div>
+          </section>
 
-          </section><!-- /Blog Comments Section -->
+          <script>
+          function likePost(postId, button) {
+            // AJAX 請求來更新文章的點讚數
+            fetch(`like_post.php?post_id=${postId}`)
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  button.innerHTML = `讚 (${data.likes})`;
+                }
+              });
+          }
 
-          <!-- Comment Form Section -->
-          <section id="comment-form" class="comment-form section">
-            <div class="container">
+          function likeComment(commentId, button) {
+            // AJAX 請求來更新留言的點讚數
+            fetch(`like_comment.php?comment_id=${commentId}`)
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  button.innerHTML = `讚 (${data.likes})`;
+                }
+              });
+          }
+          </script>
 
-              <form action="">
+          <!-- 浮動式按鈕 -->
+          <button type="button" class="btn btn-primary floating-btn" data-bs-toggle="modal" data-bs-target="#commentModal">
+            <span>按此新增貼文</span> <i class="bi bi-plus"></i>
+          </button>
 
-                <h4>Post Comment</h4>
-                <p>Your email address will not be published. Required fields are marked * </p>
-                <div class="row">
-                  <div class="col-md-6 form-group">
-                    <input name="name" type="text" class="form-control" placeholder="Your Name*">
-                  </div>
-                  <div class="col-md-6 form-group">
-                    <input name="email" type="text" class="form-control" placeholder="Your Email*">
-                  </div>
+          <!-- 彈跳視窗 -->
+          <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="commentModalLabel">Post Comment</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="row">
-                  <div class="col form-group">
-                    <input name="website" type="text" class="form-control" placeholder="Your Website">
-                  </div>
+                <div class="modal-body">
+                  <form method="POST" action="">
+                    <div class="mb-3">
+                      <input type="text" name="title" class="form-control" placeholder="Your Title*" required>
+                    </div>
+                    <div class="mb-3">
+                      <textarea name="comment" class="form-control" placeholder="Your Comment*" required></textarea>
+                    </div>
+                    <div class="text-center">
+                      <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                  </form>
                 </div>
-                <div class="row">
-                  <div class="col form-group">
-                    <textarea name="comment" class="form-control" placeholder="Your Comment*"></textarea>
-                  </div>
-                </div>
-
-                <div class="text-center">
-                  <button type="submit" class="btn btn-primary">Post Comment</button>
-                </div>
-
-              </form>
-
+              </div>
             </div>
-          </section><!-- /Comment Form Section -->
+          </div>
+
+          <style>
+            .floating-btn {
+              position: fixed;
+              top: 50%;
+              left: 0;
+              transform: translateY(-50%);
+              z-index: 1050;
+              border-radius: 0 50% 50% 0;
+              width: auto;
+              height: 60px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 0 15px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .floating-btn i {
+              margin-left: 5px;
+            }
+            .modal-content {
+              border-radius: 15px;
+              box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+              background: linear-gradient(135deg, #ffffff, #f8f9fa);
+              padding: 20px;
+            }
+            .modal-header {
+              border-bottom: none;
+              text-align: center;
+            }
+            .modal-title {
+              font-size: 24px;
+              font-weight: bold;
+              color: #007bff;
+            }
+            .btn-close {
+              background-color: #f8f9fa;
+              border-radius: 50%;
+              padding: 5px;
+            }
+            .modal-body {
+              padding: 20px;
+            }
+            .form-control {
+              border-radius: 10px;
+              border: 1px solid #ced4da;
+              padding: 10px;
+            }
+            .btn-primary {
+              background: linear-gradient(45deg, #007bff, #00d4ff);
+              border: none;
+              border-radius: 20px;
+              padding: 10px 20px;
+              font-size: 16px;
+              transition: all 0.3s ease;
+            }
+            .btn-primary:hover {
+              background: linear-gradient(45deg, #0056b3, #0099cc);
+              transform: scale(1.05);
+            }
+          </style>
 
         </div>
 
@@ -285,16 +298,11 @@
 
               <div class="d-flex flex-column align-items-center">
                 <img src="assets/img/blog/blog-author.jpg" class="rounded-circle flex-shrink-0" alt="">
-                <h4>Jane Smith</h4>
-                <div class="social-links">
-                  <a href="https://x.com/#"><i class="bi bi-twitter-x"></i></a>
-                  <a href="https://facebook.com/#"><i class="bi bi-facebook"></i></a>
-                  <a href="https://instagram.com/#"><i class="biu bi-instagram"></i></a>
-                  <a href="https://instagram.com/#"><i class="biu bi-linkedin"></i></a>
-                </div>
+                <h4>登入者匿名或名稱</h4>
+                
 
                 <p>
-                  Itaque quidem optio quia voluptatibus dolorem dolor. Modi eum sed possimus accusantium. Quas repellat voluptatem officia numquam sint aspernatur voluptas. Esse et accusantium ut unde voluptas.
+                  登入者介紹 看需不需要
                 </p>
 
               </div>
@@ -304,8 +312,8 @@
             <div class="search-widget widget-item">
 
               <h3 class="widget-title">Search</h3>
-              <form action="">
-                <input type="text">
+              <form action="" method="GET">
+                <input type="text" name="search" placeholder="搜尋文章標題..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
                 <button type="submit" title="Search"><i class="bi bi-search"></i></button>
               </form>
 
@@ -329,7 +337,7 @@
             <!-- Recent Posts Widget -->
             <div class="recent-posts-widget widget-item">
 
-              <h3 class="widget-title">Recent Posts</h3>
+              <h3 class="widget-title">近期紀錄</h3>
 
               <div class="post-item">
                 <img src="assets/img/blog/blog-recent-1.jpg" alt="" class="flex-shrink-0">
