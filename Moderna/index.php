@@ -27,7 +27,8 @@
 
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
-
+  <!--  -->
+  
   <!-- =======================================================
   * Template Name: Moderna
   * Template URL: https://bootstrapmade.com/free-bootstrap-template-corporate-moderna/
@@ -39,180 +40,142 @@
 
 <body class="index-page">
 
+<?php
+// 資料庫連線設定
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "sa-6"; // 替換為你的資料庫名稱
+// 建立連線
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// 檢查連線
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// 從 latest_news 資料表中抓取資料
+$sql = "SELECT title, content, link FROM latest_news LIMIT 3";
+$result = $conn->query($sql);
+?>
 
   <main class="main">
 
-    <!-- Hero Section -->
+    <!-- 最新消息 -->
     <section id="hero" class="hero section dark-background">
 
-      <!-- <img src="assets/img/hero-bg.jpg" alt="" data-aos="fade-in"> -->
+      <div id="hero-carousel" class="carousel carousel-fade" data-bs-ride="carousel" data-bs-interval="5000" data-bs-pause="false">
 
-      <div id="hero-carousel" class="carousel carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
-
-        <div class="container position-relative">
-
-          <div class="carousel-item active">
-            <div class="carousel-container">
-              <h2>歡迎來到特殊選才</h2>
-              <p>Ut velit est quam dolor ad a aliquid qui aliquid. Sequi ea ut et est quaerat sequi nihil ut aliquam. Occaecati alias dolorem mollitia ut. Similique ea voluptatem. Esse doloremque accusamus repellendus deleniti vel. Minus et tempore modi architecto.</p>
-              <a href="#about" class="btn-get-started">Read More</a>
-            </div>
-          </div><!-- End Carousel Item -->
-
-          <div class="carousel-item">
-            <div class="carousel-container">
-              <h2>Lorem Ipsum Dolor</h2>
-              <p>Ut velit est quam dolor ad a aliquid qui aliquid. Sequi ea ut et est quaerat sequi nihil ut aliquam. Occaecati alias dolorem mollitia ut. Similique ea voluptatem. Esse doloremque accusamus repellendus deleniti vel. Minus et tempore modi architecto.</p>
-              <a href="#about" class="btn-get-started">Read More</a>
-            </div>
-          </div><!-- End Carousel Item -->
-
-          <div class="carousel-item">
-            <div class="carousel-container">
-              <h2>Sequi ea ut et est quaerat</h2>
-              <p>Ut velit est quam dolor ad a aliquid qui aliquid. Sequi ea ut et est quaerat sequi nihil ut aliquam. Occaecati alias dolorem mollitia ut. Similique ea voluptatem. Esse doloremque accusamus repellendus deleniti vel. Minus et tempore modi architecto.</p>
-              <a href="#about" class="btn-get-started">Read More</a>
-            </div>
-          </div><!-- End Carousel Item -->
-
-          <a class="carousel-control-prev" href="#hero-carousel" role="button" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon bi bi-chevron-left" aria-hidden="true"></span>
-          </a>
-
-          <a class="carousel-control-next" href="#hero-carousel" role="button" data-bs-slide="next">
-            <span class="carousel-control-next-icon bi bi-chevron-right" aria-hidden="true"></span>
-          </a>
-
-          <ol class="carousel-indicators"></ol>
-
-        </div>
-
+      <div class="carousel-inner">
+        <?php
+        if ($result->num_rows > 0) {
+            $isActive = true; // 用於設定第一個項目為 active
+            while ($row = $result->fetch_assoc()) {
+                ?>
+                <div class="carousel-item <?php echo $isActive ? 'active' : ''; ?>">
+                  <div class="carousel-container">
+                    <h2><?php echo htmlspecialchars($row['title']); ?></h2>
+                    <p><?php echo htmlspecialchars($row['content']); ?></p>
+                    <a href="<?php echo htmlspecialchars($row['link']); ?>" class="btn-get-started">連結網址</a>
+                  </div>
+                </div>
+                <?php
+                $isActive = false; // 之後的項目不再是 active
+            }
+        } else {
+            ?>
+            <p>No news available.</p>
+            <?php
+        }
+        ?>
+      </div>
+      <a class="carousel-control-prev" href="#hero-carousel" role="button" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon bi bi-chevron-left" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </a>
+      <a class="carousel-control-next" href="#hero-carousel" role="button" data-bs-slide="next">
+        <span class="carousel-control-next-icon bi bi-chevron-right" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </a>
+      
+      <div class="carousel-indicators ">
+      <button type="button" data-bs-target="#hero-carousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+      <button type="button" data-bs-target="#hero-carousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+      <button type="button" data-bs-target="#hero-carousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
       </div>
 
-    </section><!-- /Hero Section -->
 
-    <!-- Featured Services Section -->
-    <section id="featured-services" class="featured-services section">
+    </div>
+    </div>
+    </section><!-- /最新消息 -->
 
-      <div class="container">
-
-        <div class="row gy-4">
-
-          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
-            <div class="service-item item-cyan position-relative">
-              <div class="icon">
-                <i class="bi bi-activity"></i>
-              </div>
-              <a href="service-details.html" class="stretched-link">
-                <h3>Nesciunt Mete</h3>
-              </a>
-              <p>Provident nihil minus qui consequatur non omnis maiores. Eos accusantium minus dolores iure perferendis tempore et consequatur.</p>
-            </div>
-          </div><!-- End Service Item -->
-
-          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
-            <div class="service-item item-orange position-relative">
-              <div class="icon">
-                <i class="bi bi-broadcast"></i>
-              </div>
-              <a href="service-details.html" class="stretched-link">
-                <h3>Eosle Commodi</h3>
-              </a>
-              <p>Ut autem aut autem non a. Sint sint sit facilis nam iusto sint. Libero corrupti neque eum hic non ut nesciunt dolorem.</p>
-            </div>
-          </div><!-- End Service Item -->
-
-          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
-            <div class="service-item item-teal position-relative">
-              <div class="icon">
-                <i class="bi bi-easel"></i>
-              </div>
-              <a href="service-details.html" class="stretched-link">
-                <h3>Ledo Markt</h3>
-              </a>
-              <p>Ut excepturi voluptatem nisi sed. Quidem fuga consequatur. Minus ea aut. Vel qui id voluptas adipisci eos earum corrupti.</p>
-            </div>
-          </div><!-- End Service Item -->
-
-          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
-            <div class="service-item item-red position-relative">
-              <div class="icon">
-                <i class="bi bi-bounding-box-circles"></i>
-              </div>
-              <a href="service-details.html" class="stretched-link">
-                <h3>Asperiores Commodit</h3>
-              </a>
-              <p>Non et temporibus minus omnis sed dolor esse consequatur. Cupiditate sed error ea fuga sit provident adipisci neque.</p>
-              <a href="service-details.html" class="stretched-link"></a>
-            </div>
-          </div><!-- End Service Item -->
-        </div>
-
+    <div>
+        <section>
+        </section>
       </div>
 
-    </section><!-- /Featured Services Section -->
-
-    <!-- About Section -->
+    <!-- 特殊選才是什麼? -->
     <section id="about" class="about section light-background">
 
       <div class="container">
 
         <div class="row gy-4">
           <div class="col-lg-6 position-relative align-self-start" data-aos="fade-up" data-aos-delay="100">
-            <img src="assets/img/about.jpg" class="img-fluid" alt="">
-            <a href="https://www.youtube.com/watch?v=Y7f98aduVJ8" class="glightbox pulsating-play-btn"></a>
+            <img src="assets\img\螢幕擷取畫面 2025-04-15 234805.png" class="img-fluid" alt="">
+            <a href="https://youtu.be/DX90XM9JJR0" class="glightbox pulsating-play-btn"></a>
           </div>
           <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="200">
-            <h3>Voluptatem dignissimos provident quasi corporis voluptates sit assumenda.</h3>
-            <p class="fst-italic">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-              magna aliqua.
-            </p>
+            <h3>特殊選才是什麼?</h3>
+            <p>
+            「特殊選才」是一種專為具有獨特才能、經歷或背景的學生設計的多元入學方式。與學測、指考等傳統的入學考試不同的是，特殊選才允許學生透過備審資料和面試申請入學，無須提供學測成績，讓各大學能根據自身的需求靈活選拔出較為「偏才」或「專才」的學生。</p>
             <ul>
-              <li><i class="bi bi-check2-all"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat.</span></li>
-              <li><i class="bi bi-check2-all"></i> <span>Duis aute irure dolor in reprehenderit in voluptate velit.</span></li>
-              <li><i class="bi bi-check2-all"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate trideta storacalaperda mastiro dolore eu fugiat nulla pariatur.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>唯一不用大考的升學管道</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>特選名額逐年攀升</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>各校獨立招生</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>書審面視為關鍵標準</span></li>
             </ul>
             <p>
-              Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-              velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident
+            以包容多元為核心精神的「特殊選才」，等於為那些在特定領域表現優秀的學生及來自弱勢背景的學子，提供了更多升學機會，也提升大學各校系在招生上的多樣性與創新能力。自 104 學年度首次試行以來，參與的學校逐年增加，招生名額至 113 學年度已擴增至 1,618 個，反映出各大學院校對擁有各類才能學生的重視。
             </p>
           </div>
         </div>
 
       </div>
 
-    </section><!-- /About Section -->
+    </section><!-- /特殊選才是什麼? -->
 
-    <!-- Features Section -->
+
+
+    <!-- 特殊選才總整理 -->
     <section id="features" class="features section">
-
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
-        <h2>Features</h2>
-        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+        <h2>特殊選才總整理</h2>
+        <p></p>
       </div><!-- End Section Title -->
 
       <div class="container">
-
+        <!-- 適合走特殊選才的六大類型 -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
             <img src="assets/img/features-1.svg" class="img-fluid" alt="">
           </div>
           <div class="col-md-7" data-aos="fade-up" data-aos-delay="100">
-            <h3>Voluptatem dignissimos provident quasi corporis voluptates sit assumenda.</h3>
+            <h3>適合走特殊選才的六大類型</h3>
             <p class="fst-italic">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-              magna aliqua.
+            特殊選才的入學方式特別適合擁有以下特質的學生，這些特點有助於在申請過程中展現出與所選校系的契合度。
             </p>
             <ul>
-              <li><i class="bi bi-check"></i><span> Ullamco laboris nisi ut aliquip ex ea commodo consequat.</span></li>
-              <li><i class="bi bi-check"></i> <span>Duis aute irure dolor in reprehenderit in voluptate velit.</span></li>
-              <li><i class="bi bi-check"></i> <span>Ullam est qui quos consequatur eos accusamus.</span></li>
+              <li><i class="bi bi-check"></i><span> 特頂學科才能</span></li>
+              <li><i class="bi bi-check"></i> <span>語言藝能專長</span></li>
+              <li><i class="bi bi-check"></i><span> 創新領導能力</span></li>
+              <li><i class="bi bi-check"></i> <span>優良行為表現</span></li>
+              <li><i class="bi bi-check"></i><span> 逆境求學精神</span></li>
+              <li><i class="bi bi-check"></i> <span>特殊教育背景</span></li>
             </ul>
           </div>
         </div><!-- Features Item -->
-
+        <!--  -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
             <img src="assets/img/features-2.svg" class="img-fluid" alt="">
@@ -229,37 +192,43 @@
               culpa qui officia deserunt mollit anim id est laborum
             </p>
           </div>
-        </div><!-- Features Item -->
-
+        </div>
+        <!-- Features Item -->
+        <!-- 特殊選才申請流程 -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 d-flex align-items-center" data-aos="zoom-out">
             <img src="assets/img/features-3.svg" class="img-fluid" alt="">
           </div>
           <div class="col-md-7" data-aos="fade-up">
-            <h3>Sunt consequatur ad ut est nulla consectetur reiciendis animi voluptas</h3>
-            <p>Cupiditate placeat cupiditate placeat est ipsam culpa. Delectus quia minima quod. Sunt saepe odit aut quia voluptatem hic voluptas dolor doloremque.</p>
+            <h3>特殊選才申請流程</h3>
+            <p>由於各特殊選才科系招考的確切時間不同，需留意報名、審查及放榜的具體時間，才能及早準備書面審查資料與面試練習。特殊選才的日程主要集中於每年的 10月~12月，以下是相關的大致時程，提供有意申請的學生作為參考。</p>
             <ul>
-              <li><i class="bi bi-check"></i> <span>Ullamco laboris nisi ut aliquip ex ea commodo consequat.</span></li>
-              <li><i class="bi bi-check"></i><span> Duis aute irure dolor in reprehenderit in voluptate velit.</span></li>
-              <li><i class="bi bi-check"></i> <span>Facilis ut et voluptatem aperiam. Autem soluta ad fugiat</span>.</li>
+              <li><i class="bi bi-check"></i> <span>報名時間 : 每年10月 ~ 12月初</span></li>
+              <li><i class="bi bi-check"></i><span>審查時間 : 11月 ~ 12月</span></li>
+              <li><i class="bi bi-check"></i> <span>放榜時間 : 11月 ~ 12月，最遲至隔年1月</span>.</li>
             </ul>
           </div>
         </div><!-- Features Item -->
-
+        <!-- 備審資料 -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out">
             <img src="assets/img/features-4.svg" class="img-fluid" alt="">
           </div>
           <div class="col-md-7 order-2 order-md-1" data-aos="fade-up">
-            <h3>Quas et necessitatibus eaque impedit ipsum animi consequatur incidunt in</h3>
+            <h3>備審資料</h3>
             <p class="fst-italic">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-              magna aliqua.
+            關於特殊選才備審資料每間學校要求不盡相同，不過通常都包含以下幾種必備文件：
             </p>
+            <ul>
+              <li><i class="bi bi-check"></i> <span>高中學歷證明正本</span></li>
+              <li><i class="bi bi-check"></i><span>高中歷年成績單正本</span></li>
+              <li><i class="bi bi-check"></i> <span>高中教師或專業領域人士、教授推薦函</span>.</li>
+              <li><i class="bi bi-check"></i> <span>其他有利審查的資料</span></li>
+
+            </ul>
             <p>
-              Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-              velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-              culpa qui officia deserunt mollit anim id est laborum
+            其他有利審查的資料用來證明自身獨特才能或潛力的相關證明文件，讓教授能從中看到你的潛力與專長，大致包括以下 5 個項目。
+            個人簡歷、自傳、申請動機、讀書計畫、有利的佐證資料。	
             </p>
           </div>
         </div><!-- Features Item -->
@@ -270,85 +239,8 @@
 
   </main>
 
-  <footer id="footer" class="footer dark-background">
-
-    <div class="footer-newsletter">
-      <div class="container">
-        <div class="row justify-content-center text-center">
-          <div class="col-lg-6">
-            <h4>Join Our Newsletter</h4>
-            <p>Subscribe to our newsletter and receive the latest news about our products and services!</p>
-            <form action="forms/newsletter.php" method="post" class="php-email-form">
-              <div class="newsletter-form"><input type="email" name="email"><input type="submit" value="Subscribe"></div>
-              <div class="loading">Loading</div>
-              <div class="error-message"></div>
-              <div class="sent-message">Your subscription request has been sent. Thank you!</div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="container footer-top">
-      <div class="row gy-4">
-        <div class="col-lg-4 col-md-6 footer-about">
-          <a href="index.html" class="d-flex align-items-center">
-            <span class="sitename">Moderna</span>
-          </a>
-          <div class="footer-contact pt-3">
-            <p>A108 Adam Street</p>
-            <p>New York, NY 535022</p>
-            <p class="mt-3"><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
-            <p><strong>Email:</strong> <span>info@example.com</span></p>
-          </div>
-        </div>
-
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>Useful Links</h4>
-          <ul>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Home</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">About us</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Services</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Terms of service</a></li>
-          </ul>
-        </div>
-
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>Our Services</h4>
-          <ul>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Web Design</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Web Development</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Product Management</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Marketing</a></li>
-          </ul>
-        </div>
-
-        <div class="col-lg-4 col-md-12">
-          <h4>Follow Us</h4>
-          <p>Cras fermentum odio eu feugiat lide par naso tierra videa magna derita valies</p>
-          <div class="social-links d-flex">
-            <a href=""><i class="bi bi-twitter-x"></i></a>
-            <a href=""><i class="bi bi-facebook"></i></a>
-            <a href=""><i class="bi bi-instagram"></i></a>
-            <a href=""><i class="bi bi-linkedin"></i></a>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="container copyright text-center mt-4">
-      <p>© <span>Copyright</span> <strong class="px-1 sitename">Moderna</strong> <span>All Rights Reserved</span></p>
-      <div class="credits">
-        <!-- All the links in the footer should remain intact. -->
-        <!-- You can delete the links only if you've purchased the pro version. -->
-        <!-- Licensing information: https://bootstrapmade.com/license/ -->
-        <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
-        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-      </div>
-    </div>
-
-  </footer>
+  <!-- Footer -->
+<?php include('footer.php'); ?>
 
   <!-- Scroll Top -->
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
