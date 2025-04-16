@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： 127.0.0.1
--- 產生時間： 2025-04-15 17:41:13
+-- 產生時間： 2025 年 04 月 15 日 17:17
 -- 伺服器版本： 10.4.32-MariaDB
 -- PHP 版本： 8.2.12
 
@@ -83,21 +83,6 @@ INSERT INTO `admi_thro_years` (`sch_num`, `school`, `dep`, `110`, `111`, `112`, 
 -- --------------------------------------------------------
 
 --
--- 資料表結構 `comments`
---
-
-CREATE TABLE `comments` (
-  `Comment_ID` int(11) NOT NULL,
-  `Post_ID` int(11) NOT NULL,
-  `User_ID` int(11) NOT NULL,
-  `Content` text NOT NULL,
-  `Comment_Time` datetime NOT NULL DEFAULT current_timestamp(),
-  `Likes` int(11) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- 資料表結構 `discussion_area`
 --
 
@@ -150,42 +135,14 @@ INSERT INTO `disc_cluster_introduction` (`Disc_Cluster_name`, `Name`) VALUES
 -- --------------------------------------------------------
 
 --
--- 資料表結構 `latest news`
---
-
-CREATE TABLE `latest news` (
-  `title` varchar(20) NOT NULL,
-  `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `links` varchar(2083) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- 傾印資料表的資料 `latest news`
---
-
-INSERT INTO `latest news` (`title`, `content`, `links`) VALUES
-('114特殊選才簡章更新完畢！', '今年特殊選才簡章已經公告完畢，台大、清大、政大名額增加，特殊選才資格門檻降低！114特殊選才共59所大學參與，核定名額達到2,156名！114特殊選才共計有29個校系資安外加名額，對資安有興趣的同學別錯過利用特殊選才免試入學的機會！', 'https://www.reallygood.com.tw/newExam/inside?str=932DEFBF9A06471E3A1436C3808D1BB7'),
-('114特殊選才簡章更新完畢！', '今年特殊選才簡章已經公告完畢，台大、清大、政大名額增加，特殊選才資格門檻降低！114特殊選才共59所大學參與，核定名額達到2,156名！114特殊選才共計有29個校系資安外加名額，對資安有興趣的同學別錯過利用特殊選才免試入學的機會！', 'https://www.reallygood.com.tw/newExam/inside?str=932DEFBF9A06471E3A1436C3808D1BB7');
-
--- --------------------------------------------------------
-
---
 -- 資料表結構 `latest_news`
 --
 
 CREATE TABLE `latest_news` (
-  `title` varchar(35) NOT NULL,
-  `content` varchar(255) NOT NULL,
-  `link` varchar(255) DEFAULT NULL
+  `title` varchar(20) NOT NULL,
+  `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `links` varchar(2083) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- 傾印資料表的資料 `latest_news`
---
-
-INSERT INTO `latest_news` (`title`, `content`, `link`) VALUES
-('114 特殊選才簡章最新公告！全網最完整書審面試、考古題整理', '2024 年特殊選才即將開始，各個學校也陸陸續續公布特殊選才簡章。這篇文章幫大家蒐集114 年特殊選才簡章，分享學長姐們的準備方式，另外也幫大家整理出幾個特殊選才社群資源及網路上實用的資源、特殊選才考古題等，以幫助你在書審及面試中取得最佳成績。', 'https://blog.luckertw.com/114-special-recruit/'),
-('114特殊選才簡章更新完畢！', '今年特殊選才簡章已經公告完畢，114特殊選才共59所大學參與，核定名額達到2,156名！114特殊選才共計有29個校系資安外加名額，對資安有興趣的同學別錯過利用特殊選才免試入學的機會！', 'https://www.reallygood.com.tw/newExam/inside?str=932DEFBF9A06471E3A1436C3808D1BB7');
 
 -- --------------------------------------------------------
 
@@ -240,21 +197,6 @@ INSERT INTO `my_favorites` (`User_ID`, `Sch_num`) VALUES
 -- --------------------------------------------------------
 
 --
--- 資料表結構 `posts`
---
-
-CREATE TABLE `posts` (
-  `Post_ID` int(11) NOT NULL,
-  `Title` varchar(255) NOT NULL,
-  `Content` text NOT NULL,
-  `User_ID` int(11) NOT NULL,
-  `Post_Time` datetime NOT NULL DEFAULT current_timestamp(),
-  `Likes` int(11) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- 資料表結構 `school_introduction`
 --
 
@@ -286,36 +228,36 @@ INSERT INTO `school_introduction` (`SchoolName`, `Sch_Intro`, `Dep_num`) VALUES
 CREATE TABLE `sch_description` (
   `Sch_num` varchar(20) NOT NULL,
   `School_Name` varchar(20) NOT NULL,
+  `p_type` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `Department` varchar(20) NOT NULL,
   `Region` varchar(10) NOT NULL,
+  `address` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `Disc_Cluster` varchar(10) NOT NULL,
   `Schol_Apti` varchar(10) DEFAULT NULL,
+  `Exam_Item` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `Talent` varchar(10) DEFAULT NULL,
   `ID` varchar(10) DEFAULT NULL,
   `Plan` varchar(10) DEFAULT NULL,
   `Quota` int(11) NOT NULL,
+  `announce` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `Contact` varchar(225) DEFAULT NULL,
   `link` varchar(225) DEFAULT NULL,
-  `110` int(80) NOT NULL,
-  `111` int(80) NOT NULL,
-  `112` int(80) NOT NULL,
-  `113` int(80) NOT NULL,
-  `114` int(80) NOT NULL
+  `note` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- 傾印資料表的資料 `sch_description`
 --
 
-INSERT INTO `sch_description` (`Sch_num`, `School_Name`, `Department`, `Region`, `Disc_Cluster`, `Schol_Apti`, `Talent`, `ID`, `Plan`, `Quota`, `Contact`, `link`, `110`, `111`, `112`, `113`, `114`) VALUES
-('S001', '國防醫學院', '醫學系', '台北', '醫學類', '臨床興趣', '醫療技能', '學生', '全日制', 30, '02-12345678', 'www.ndm.edu.tw', 0, 0, 0, 0, 0),
-('S002', '國防大學', '國際事務學系', '台北', '國際關係', '外交興趣', '領導能力', '學生', '全日制', 25, '02-23456789', 'www.ndu.edu.tw', 0, 0, 0, 0, 0),
-('S003', '台灣大學', '資訊工程學系', '台北', '工程學群', '程式設計興趣', '邏輯推理', '學生', '全日制', 40, '02-34567890', 'www.ntu.edu.tw', 0, 0, 0, 0, 0),
-('S004', '清華大學', '電子工程學系', '新竹', '科技學群', '電子興趣', '數學能力', '學生', '全日制', 35, '03-45678901', 'www.nthu.edu.tw', 0, 0, 0, 0, 0),
-('S005', '中山大學', '國際事務學系', '高雄', '國際關係', '外交興趣', '組織管理', '學生', '全日制', 20, '07-56789012', 'www.nsysu.edu.tw', 0, 0, 0, 0, 0),
-('S006', '成功大學', '機械工程學系', '台南', '工程學群', '機械設計興趣', '創新能力', '學生', '全日制', 50, '06-67890123', 'www.ncku.edu.tw', 0, 0, 0, 0, 0),
-('S007', '東華大學', '人類發展學系', '花蓮', '社會學群', '心理學興趣', '溝通技巧', '學生', '全日制', 15, '03-78901234', 'www.dhu.edu.tw', 0, 0, 0, 0, 0),
-('S008', '國防大學', '資管系', '桃園', '資訊學群', '日制', '資工', '一般', '特殊選才', 5, '0277777777777', 'https://www.ndu.edu.tw/', 0, 0, 0, 0, 0);
+INSERT INTO `sch_description` (`Sch_num`, `School_Name`, `p_type`, `Department`, `Region`, `address`, `Disc_Cluster`, `Schol_Apti`, `Exam_Item`, `Talent`, `ID`, `Plan`, `Quota`, `announce`, `Contact`, `link`, `note`) VALUES
+('S001', '國防醫學院', '國立', '醫學系', '台北', '', '醫學類', '臨床興趣', '', '醫療技能', '學生', '全日制', 30, NULL, '02-12345678', 'www.ndm.edu.tw', NULL),
+('S002', '國防大學', '國立', '國際事務學系', '台北', '', '國際關係', '外交興趣', '', '領導能力', '學生', '全日制', 25, NULL, '02-23456789', 'www.ndu.edu.tw', NULL),
+('S003', '台灣大學', '國立', '資訊工程學系', '台北', '', '工程學群', '程式設計興趣', '', '邏輯推理', '學生', '全日制', 40, NULL, '02-34567890', 'www.ntu.edu.tw', NULL),
+('S004', '清華大學', '國立', '電子工程學系', '新竹', '', '科技學群', '電子興趣', '', '數學能力', '學生', '全日制', 35, NULL, '03-45678901', 'www.nthu.edu.tw', NULL),
+('S005', '中山大學', '國立', '國際事務學系', '高雄', '', '國際關係', '外交興趣', '', '組織管理', '學生', '全日制', 20, NULL, '07-56789012', 'www.nsysu.edu.tw', NULL),
+('S006', '成功大學', '國立', '機械工程學系', '台南', '', '工程學群', '機械設計興趣', '', '創新能力', '學生', '全日制', 50, NULL, '06-67890123', 'www.ncku.edu.tw', NULL),
+('S007', '東華大學', '國立', '人類發展學系', '花蓮', '', '社會學群', '心理學興趣', '', '溝通技巧', '學生', '全日制', 15, NULL, '03-78901234', 'www.dhu.edu.tw', NULL),
+('S008', '國防大學', '國立', '資管系', '桃園', '', '資訊學群', '日制', '', '資工', '一般', '特殊選才', 5, NULL, '0277777777777', 'https://www.ndu.edu.tw/', NULL);
 
 -- --------------------------------------------------------
 
@@ -359,14 +301,6 @@ ALTER TABLE `admi_thro_years`
   ADD PRIMARY KEY (`sch_num`);
 
 --
--- 資料表索引 `comments`
---
-ALTER TABLE `comments`
-  ADD PRIMARY KEY (`Comment_ID`),
-  ADD KEY `Post_ID` (`Post_ID`),
-  ADD KEY `User_ID` (`User_ID`);
-
---
 -- 資料表索引 `discussion_area`
 --
 ALTER TABLE `discussion_area`
@@ -381,12 +315,6 @@ ALTER TABLE `disc_cluster_introduction`
   ADD PRIMARY KEY (`Disc_Cluster_name`);
 
 --
--- 資料表索引 `latest_news`
---
-ALTER TABLE `latest_news`
-  ADD PRIMARY KEY (`title`);
-
---
 -- 資料表索引 `message_area`
 --
 ALTER TABLE `message_area`
@@ -399,13 +327,6 @@ ALTER TABLE `message_area`
 ALTER TABLE `my_favorites`
   ADD PRIMARY KEY (`User_ID`,`Sch_num`),
   ADD KEY `Sch_num` (`Sch_num`);
-
---
--- 資料表索引 `posts`
---
-ALTER TABLE `posts`
-  ADD PRIMARY KEY (`Post_ID`),
-  ADD KEY `User_ID` (`User_ID`);
 
 --
 -- 資料表索引 `school_introduction`
@@ -437,12 +358,6 @@ ALTER TABLE `account`
   MODIFY `User_ID` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- 使用資料表自動遞增(AUTO_INCREMENT) `comments`
---
-ALTER TABLE `comments`
-  MODIFY `Comment_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
 -- 使用資料表自動遞增(AUTO_INCREMENT) `discussion_area`
 --
 ALTER TABLE `discussion_area`
@@ -455,12 +370,6 @@ ALTER TABLE `message_area`
   MODIFY `Message_area_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- 使用資料表自動遞增(AUTO_INCREMENT) `posts`
---
-ALTER TABLE `posts`
-  MODIFY `Post_ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
 -- 已傾印資料表的限制式
 --
 
@@ -469,13 +378,6 @@ ALTER TABLE `posts`
 --
 ALTER TABLE `admi_thro_years`
   ADD CONSTRAINT `fk_sch_num` FOREIGN KEY (`sch_num`) REFERENCES `sch_description` (`Sch_num`);
-
---
--- 資料表的限制式 `comments`
---
-ALTER TABLE `comments`
-  ADD CONSTRAINT `comments_ibfk_1` FOREIGN KEY (`Post_ID`) REFERENCES `posts` (`Post_ID`),
-  ADD CONSTRAINT `comments_ibfk_2` FOREIGN KEY (`User_ID`) REFERENCES `account` (`User_ID`);
 
 --
 -- 資料表的限制式 `discussion_area`
@@ -496,12 +398,6 @@ ALTER TABLE `message_area`
 ALTER TABLE `my_favorites`
   ADD CONSTRAINT `my_favorites_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `account` (`User_ID`),
   ADD CONSTRAINT `my_favorites_ibfk_2` FOREIGN KEY (`Sch_num`) REFERENCES `sch_description` (`Sch_num`);
-
---
--- 資料表的限制式 `posts`
---
-ALTER TABLE `posts`
-  ADD CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `account` (`User_ID`);
 
 --
 -- 資料表的限制式 `sch_description`
