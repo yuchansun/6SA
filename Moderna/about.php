@@ -247,9 +247,10 @@ $conn->close();
   <td><?= htmlspecialchars($row['Department']); ?></td>
   <td><?= htmlspecialchars($row['Quota']); ?></td>
   <td>
-          <button class="btn  btn-sm" style=" background-color: var(--accent-color); color:white;" type="button" data-bs-toggle="collapse" data-bs-target="#details-<?php echo $row['Sch_num']; ?>" aria-expanded="false" aria-controls="details-<?php echo $row['Sch_num']; ?>">
-            詳細介紹
-          </button>
+  <a href="school_detail.php?sch_num=<?= urlencode($row['Sch_num']) ?>" class="btn btn-sm" style="background-color: var(--accent-color); color:white;">
+  詳細介紹
+</a>
+
         </td>
         <td>
       <!-- 收藏按鈕 -->
