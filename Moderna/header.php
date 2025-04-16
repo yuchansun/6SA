@@ -1,5 +1,9 @@
+
 <!-- header.php -->
 <?php
+if (session_status() == PHP_SESSION_NONE) {
+  session_start();
+}
 $currentPage = basename($_SERVER['PHP_SELF']);
 $isHome = ($currentPage === 'index.php');
 ?>
@@ -30,10 +34,17 @@ $isHome = ($currentPage === 'index.php');
             <li><a href="#">Dropdown 4</a></li> -->
           </ul>
         </li>
-        <li><a href="contact.php">登入</a></li>
-      </ul>
-      <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-    </nav>
+        <!-- Check if user is logged in -->
+    <?php if (isset($_SESSION['nickname'])): ?>
+      <li>Hi, <?= htmlspecialchars($_SESSION['nickname']) ?></li> <!-- Display user's nickname -->
+      <li><a href="logout.php">登出</a></li> <!-- Add a logout option -->
+    <?php else: ?>
+      <li><a href="contact.php">登入</a></li> <!-- Show login link for users not logged in -->
+    <?php endif; ?>
+
+  </ul>
+  <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+</nav>
 
   </div>
 </header>
