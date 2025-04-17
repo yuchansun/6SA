@@ -290,13 +290,13 @@ $conn->close();
   </a>
 </div>
 
+
 <script>
 function toggleStar(button) {
   const star = button.querySelector('i');
   const schNum = button.getAttribute('data-sch-num');
   let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
-  // PHP 動態產生是否登入狀態
   const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
   const user_id = <?php echo json_encode($_SESSION['user_id'] ?? null); ?>;
 
@@ -311,8 +311,8 @@ function toggleStar(button) {
       localStorage.setItem('favorites', JSON.stringify(favorites));
       showNotification("已加入收藏！點我查看", "favorite.php");
 
-      // 如果登入，再傳給後端儲存
       if (isLoggedIn) {
+        // 傳送加入收藏
         fetch('add_favorite.php', {
           method: 'POST',
           headers: {
@@ -323,6 +323,18 @@ function toggleStar(button) {
         })
         .then(response => response.text())
         .then(data => console.log(data));
+
+        // ✅ 同時新增到 user_todos
+        fetch('add_user_todos.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: 'sch_num=' + encodeURIComponent(schNum),
+          credentials: 'include'
+        })
+        .then(response => response.text())
+        .then(data => console.log('加入 user_todos 結果：', data));
       }
     }
 
@@ -351,39 +363,40 @@ window.onload = function () {
   const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
 
   if (isLoggedIn) {
-    // 登入時，從資料庫取得收藏
+    // 取得收藏資料
     fetch('get_favorites.php', {
       credentials: 'include'
     })
-      .then(response => response.json())
-      .then(favoritesFromDB => {
-        const buttons = document.querySelectorAll('.favorite-btn');
-        buttons.forEach(button => {
-          const schNum = button.getAttribute('data-sch-num');
-          const star = button.querySelector('i');
-          if (favoritesFromDB.includes(schNum)) {
-            star.classList.remove('bi-star');
-            star.classList.add('bi-star-fill');
-            star.style.color = '#FFCC00';
-          }
-        });
-        localStorage.setItem('favorites', JSON.stringify(favoritesFromDB));
-      // 發送請求將收藏的 sch_num 插入到 user_todos 資料表
-      favoritesFromDB.forEach(schNum => {
-          fetch('add_user_todos.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'sch_num=' + encodeURIComponent(schNum) + '&user_id=' + encodeURIComponent(<?php echo json_encode($_SESSION['user_id']); ?>),
-            credentials: 'include'  // 確保 session 資料被傳遞
-          })
-          .then(response => response.text())
-          .then(data => console.log(data));  // 檢查回應資料
-        });
+    .then(response => response.json())
+    .then(favoritesFromDB => {
+      const buttons = document.querySelectorAll('.favorite-btn');
+      buttons.forEach(button => {
+        const schNum = button.getAttribute('data-sch-num');
+        const star = button.querySelector('i');
+        if (favoritesFromDB.includes(schNum)) {
+          star.classList.remove('bi-star');
+          star.classList.add('bi-star-fill');
+          star.style.color = '#FFCC00';
+        }
       });
 
+      // 將所有收藏加入 user_todos（保險機制）
+      favoritesFromDB.forEach(schNum => {
+        fetch('add_user_todos.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'sch_num=' + encodeURIComponent(schNum),
+          credentials: 'include'
+        })
+        .then(response => response.text())
+        .then(data => console.log('加入 user_todos 結果：', data));
+      });
+
+      localStorage.setItem('favorites', JSON.stringify(favoritesFromDB));
+    });
 
   } else {
-    // 未登入，使用 localStorage
+    // 未登入，從 localStorage 顯示收藏
     const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
     const buttons = document.querySelectorAll('.favorite-btn');
     buttons.forEach(button => {
@@ -397,8 +410,6 @@ window.onload = function () {
     });
   }
 };
-
-
 
 function showNotification(message, link, clickable = true) {
   const notification = document.getElementById('notification');
@@ -424,6 +435,7 @@ function showNotification(message, link, clickable = true) {
   }, 3000);
 }
 </script>
+
 
 
 </tr>

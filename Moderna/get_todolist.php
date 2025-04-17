@@ -1,13 +1,19 @@
 <?php
 header('Content-Type: application/json');
-include('db.php');
+require_once("db.php");
 
+// 解析 JSON
 $data = json_decode(file_get_contents('php://input'), true);
 $schNum = $data['schNum'] ?? '';
 $userId = $data['userId'] ?? '';
 
 if (!$schNum || !$userId) {
-    echo json_encode([]);
+    echo json_encode([
+        "error" => true,
+        "message" => "缺少必要的參數",
+        "schNum" => $schNum,
+        "userId" => $userId
+    ]);
     exit;
 }
 
@@ -36,6 +42,7 @@ while ($row = $result->fetch_assoc()) {
     $todos[] = $row;
 }
 
-echo json_encode($todos);
+echo json_encode($todos); // ✅ 只輸出這個
 $stmt->close();
 $conn->close();
+?>
