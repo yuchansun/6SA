@@ -22,6 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($password === $user['Password']) {
           $_SESSION['user'] = $user['E-mail'];
           $_SESSION['nickname'] = $user['Nickname'];
+          $_SESSION['user_id'] = $user['User_ID']; 
+      
+    
       
           // ✅ Set cookies if 'remember' is checked
           if (isset($_POST['remember'])) {

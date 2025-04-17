@@ -2,6 +2,7 @@
 include('header.php');
 require_once("db.php");
 
+
 // 查詢 my_favorites 資料表
 $query = "SELECT * FROM my_favorites INNER JOIN sch_description ON my_favorites.Sch_num = sch_description.Sch_num";
 $result = $conn->query($query);
@@ -83,7 +84,7 @@ $conn->close();
       return;
     }
 
-    fetch('get_favorites.php', {
+    fetch('get_fav_detail.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ schNums: favorites })
@@ -107,12 +108,21 @@ $conn->close();
        style="position: absolute; top: 0px; right: -5px; cursor: pointer; font-size: 22px;color: gold;"
        title="取消收藏"></i>
 
-    <h3 style="margin-top: 0;">${school.School_Name} ${school.Department}</h3>
-    <ul>
-      <li><strong>學校名稱</strong>: ${school.School_Name}</li>
-      <li><strong>科系</strong>: ${school.Department}</li>
-      <li><strong>地區</strong>: ${school.Region}</li>
-    </ul>
+   <h3><a href="school_detail.php?sch_num=${school.Sch_num}" class="portfolio-title">
+          ${school.School_Name} ${school.Department}
+        </a></h3>
+        <style>
+          .portfolio-title {
+            
+            color: var(--heading-color);
+          }
+          .portfolio-title:hover {
+           
+          }
+        </style>
+        <ul>
+          <li><strong>簡章網址</strong>: <a href="${school.link}" target="_blank">${school.link}</a></li>
+        </ul>
 
     <div class="todo-section">
       <h5>To-Do List</h5>
@@ -127,72 +137,101 @@ $conn->close();
     });
   };
 
-  // 取消收藏
-  function toggleFavorite(schNum, iconElement) {
+// 取消收藏（適用於我的最愛頁面）
+function toggleFavorite(schNum, iconElement) {
   let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
+  const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
+  const user_id = <?php echo json_encode($_SESSION['user_id'] ?? null); ?>;
+
   if (favorites.includes(schNum)) {
+    // 1. 移除 localStorage 中的收藏
     favorites = favorites.filter(fav => fav !== schNum);
     localStorage.setItem('favorites', JSON.stringify(favorites));
 
+    // 2. 改變星星樣式
     iconElement.classList.remove('bi-star-fill');
     iconElement.classList.add('bi-star');
     iconElement.style.color = 'gray';
 
+    // 3. 若有登入，再發送到後端刪除資料庫
+    if (isLoggedIn) {
+      fetch('remove_favorite.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'sch_num=' + encodeURIComponent(schNum),
+        credentials: 'include'
+      });
+    }
+
+    // 4. 更新畫面
     setTimeout(() => location.reload(), 300);
   }
 }
+function renderTodos(schNum, userId) {
+  const list = document.getElementById(`todo-${schNum}`);
+  if (!list) return;
 
-  // 渲染 To-Do List
-  function renderTodos(schNum) {
-    const list = document.getElementById(`todo-${schNum}`);
-    if (!list) {
-      console.error(`找不到 todo list 元素: todo-${schNum}`);
+  fetch('get_todolist.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ schNum, userId })
+  })
+  .then(res => res.json())
+  .then(todos => {
+    list.innerHTML = '';
+
+    if (!Array.isArray(todos) || todos.length === 0) {
+      list.innerHTML = "<p>目前沒有待辦事項。</p>";
       return;
     }
 
-    fetch('get_todolist.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ schNum: schNum })
-    })
-    .then(res => res.json())
-    .then(todos => {
-      list.innerHTML = '';  // 清空原本內容
-
-      if (!todos || todos.length === 0) {
-        list.innerHTML = "<p>目前沒有待辦事項。</p>";
-        return;
-      }
-
-      // 完成的排最上面
-      const sorted = [...todos].sort((a, b) => b.completed - a.completed);
-
-      sorted.forEach((todo, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <label style="display: flex; align-items: center; gap: 8px;">
-            <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleComplete('${schNum}', ${index})">
-            <span style="text-decoration: ${todo.completed ? 'line-through' : 'none'}">${todo.text}</span>
-          </label>
-        `;
-        list.appendChild(li);
+    todos.forEach(todo => {
+      const li = document.createElement('li');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = todo.is_done == 1;
+      checkbox.addEventListener('change', () => {
+        updateTodoStatus(userId, todo.todo_id, checkbox.checked);
       });
-    });
-  }
 
-  // 標記為完成或未完成
-  function toggleComplete(schNum, index) {
-    fetch('toggle_todolist.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ schNum: schNum, index: index })
-    })
-    .then(res => res.json())
-    .then(response => {
-      renderTodos(schNum);  // 更新 To-Do List
+      li.appendChild(checkbox);
+      li.innerHTML += `
+        <strong>${todo.title}</strong><br>
+        🕓 ${todo.start_time || ''} ～ ${todo.end_time || ''}
+      `;
+      list.appendChild(li);
     });
-  }
+  })
+  .catch(err => {
+    console.error('載入待辦失敗:', err);
+    list.innerHTML = "<p>載入失敗，請稍後再試。</p>";
+  });
+}
+
+function updateTodoStatus(userId, todoId, isDone) {
+  fetch('update_todo_status.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId,
+      todoId,
+      isDone: isDone ? 1 : 0
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("更新完成", data);
+  })
+  .catch(err => {
+    console.error("更新失敗", err);
+  });
+}
+
+
+    
+
+
 </script>
 
 

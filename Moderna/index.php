@@ -1,4 +1,13 @@
 <?php include('header.php'); ?>
+<?php if (isset($_SESSION['user'])): ?>
+<script>
+  if (!localStorage.getItem('userLoggedIn')) {
+    localStorage.setItem('userLoggedIn', 'true');
+    localStorage.setItem('userId', '<?= $_SESSION['user'] ?>');
+  }
+</script>
+<?php endif; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 

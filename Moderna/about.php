@@ -1,3 +1,7 @@
+<?php
+session_start();
+?>
+
 <?php include('header.php'); ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -253,7 +257,7 @@ $conn->close();
 
         </td>
         <td>
-      <!-- 收藏按鈕 -->
+    <!-- 收藏按鈕 -->
 <button class="favorite-btn" style="background-color:none"
   data-sch-num="<?php echo $row['Sch_num']; ?>"
   onclick="toggleStar(this)">
@@ -292,7 +296,12 @@ function toggleStar(button) {
   const schNum = button.getAttribute('data-sch-num');
   let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
+  // PHP 動態產生是否登入狀態
+  const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
+  const user_id = <?php echo json_encode($_SESSION['user_id'] ?? null); ?>;
+
   if (star.classList.contains('bi-star')) {
+    // 加入收藏
     star.classList.remove('bi-star');
     star.classList.add('bi-star-fill');
     star.style.color = '#FFCC00';
@@ -301,8 +310,24 @@ function toggleStar(button) {
       favorites.push(schNum);
       localStorage.setItem('favorites', JSON.stringify(favorites));
       showNotification("已加入收藏！點我查看", "favorite.php");
+
+      // 如果登入，再傳給後端儲存
+      if (isLoggedIn) {
+        fetch('add_favorite.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: 'sch_num=' + encodeURIComponent(schNum) + '&user_id=' + encodeURIComponent(user_id),
+          credentials: 'include'
+        })
+        .then(response => response.text())
+        .then(data => console.log(data));
+      }
     }
+
   } else {
+    // 取消收藏
     star.classList.remove('bi-star-fill');
     star.classList.add('bi-star');
     star.style.color = 'black';
@@ -310,24 +335,70 @@ function toggleStar(button) {
     favorites = favorites.filter(fav => fav !== schNum);
     localStorage.setItem('favorites', JSON.stringify(favorites));
     showNotification("已解除收藏", "#", false);
+
+    if (isLoggedIn) {
+      fetch('remove_favorite.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'sch_num=' + encodeURIComponent(schNum),
+        credentials: 'include'
+      });
+    }
   }
 }
 
-window.onload = function() {
-  const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-  const buttons = document.querySelectorAll('.favorite-btn');
+window.onload = function () {
+  const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
 
-  buttons.forEach(button => {
-    const schNum = button.getAttribute('data-sch-num');
-    const star = button.querySelector('i');
+  if (isLoggedIn) {
+    // 登入時，從資料庫取得收藏
+    fetch('get_favorites.php', {
+      credentials: 'include'
+    })
+      .then(response => response.json())
+      .then(favoritesFromDB => {
+        const buttons = document.querySelectorAll('.favorite-btn');
+        buttons.forEach(button => {
+          const schNum = button.getAttribute('data-sch-num');
+          const star = button.querySelector('i');
+          if (favoritesFromDB.includes(schNum)) {
+            star.classList.remove('bi-star');
+            star.classList.add('bi-star-fill');
+            star.style.color = '#FFCC00';
+          }
+        });
+        localStorage.setItem('favorites', JSON.stringify(favoritesFromDB));
+      // 發送請求將收藏的 sch_num 插入到 user_todos 資料表
+      favoritesFromDB.forEach(schNum => {
+          fetch('add_user_todos.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'sch_num=' + encodeURIComponent(schNum) + '&user_id=' + encodeURIComponent(<?php echo json_encode($_SESSION['user_id']); ?>),
+            credentials: 'include'  // 確保 session 資料被傳遞
+          })
+          .then(response => response.text())
+          .then(data => console.log(data));  // 檢查回應資料
+        });
+      });
 
-    if (favorites.includes(schNum)) {
-      star.classList.remove('bi-star');
-      star.classList.add('bi-star-fill');
-      star.style.color = '#FFCC00';
-    }
-  });
+
+  } else {
+    // 未登入，使用 localStorage
+    const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+    const buttons = document.querySelectorAll('.favorite-btn');
+    buttons.forEach(button => {
+      const schNum = button.getAttribute('data-sch-num');
+      const star = button.querySelector('i');
+      if (favorites.includes(schNum)) {
+        star.classList.remove('bi-star');
+        star.classList.add('bi-star-fill');
+        star.style.color = '#FFCC00';
+      }
+    });
+  }
 };
+
+
 
 function showNotification(message, link, clickable = true) {
   const notification = document.getElementById('notification');
@@ -354,31 +425,7 @@ function showNotification(message, link, clickable = true) {
 }
 </script>
 
-</tr>
-<tr class="collapse" id="details-<?= $row['Sch_num']; ?>">
-  <td colspan="5">
-    <div class="card card-body">
-      <div class="row">
-        <div class="col-md-4 text-start">
-          <p><strong>學校：</strong><?= htmlspecialchars($row['School_Name']); ?></p>
-          <p><strong>科系：</strong><?= htmlspecialchars($row['Department']); ?></p>
-          <p><strong>名額：</strong><?= htmlspecialchars($row['Quota']); ?></p>
-          <p><strong>電話：</strong><?= htmlspecialchars($row['Contact']); ?></p>
-        </div>
-        <div class="col-md-4 text-start">
-          <p><strong>興趣：</strong><?= htmlspecialchars($row['Schol_Apti']); ?></p>
-          <p><strong>能力：</strong><?= htmlspecialchars($row['Talent']); ?></p>
-          <p><strong>身份：</strong><?= htmlspecialchars($row['ID']); ?></p>
-          <p><strong>計畫類別：</strong><?= htmlspecialchars($row['Plan']); ?></p>
-          <p><strong>連結：</strong><a href="<?= htmlspecialchars($row['link']); ?>" target="_blank"><?= htmlspecialchars($row['link']); ?></a></p>
-        </div>
-        <div class="col-md-4 text-start">
-          <p><strong>近五年錄取趨勢：</strong></p>
-          <canvas id="chart-<?= $row['Sch_num']; ?>" width="300" height="200"></canvas>
-        </div>
-      </div>
-    </div>
-  </td>
+
 </tr>
 <?php endforeach; ?>
 </tbody></table>
@@ -386,42 +433,6 @@ function showNotification(message, link, clickable = true) {
 <p>沒有找到相關結果。</p>
 <?php endif; ?>
 
-<!-- 圖表腳本 -->
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  <?php foreach ($results as $row): ?>
-    new Chart(document.getElementById("chart-<?php echo $row['Sch_num']; ?>"), {
-      type: "line",
-      data: {
-        labels: ["110", "111", "112", "113", "114"],
-        datasets: [{
-          label: "錄取人數",
-          data: [
-            <?php echo (int)($row["110"] ?? 0); ?>,
-            <?php echo (int)($row["111"] ?? 0); ?>,
-            <?php echo (int)($row["112"] ?? 0); ?>,
-            <?php echo (int)($row["113"] ?? 0); ?>,
-            <?php echo (int)($row["114"] ?? 0); ?>
-          ],
-          borderColor: "#007bff",
-          backgroundColor: "rgba(0,123,255,0.2)",
-          fill: true,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: { precision: 0 }
-          }
-        }
-      }
-    });
-  <?php endforeach; ?>
-});
-</script>
 
 <style> 
   .filter-form {

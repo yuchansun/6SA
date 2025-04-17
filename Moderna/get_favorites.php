@@ -1,33 +1,22 @@
 <?php
-require_once("db.php");
-
-// 取得前端傳來的 JSON 並解碼
-$data = json_decode(file_get_contents("php://input"), true);
-
-if (!isset($data['schNums']) || !is_array($data['schNums'])) {
-    echo json_encode([]);
-    exit;
+session_start();
+if (!isset($_SESSION['user_id'])) {
+  echo json_encode([]);
+  exit();
 }
 
-$schNums = $data['schNums'];
-
-// 將 schNums 裡的每一個都轉成安全字串
-$escaped = array_map(function($num) use ($conn) {
-    return "'" . $conn->real_escape_string($num) . "'";
-}, $schNums);
-
-$inClause = implode(",", $escaped);
-
-// 查詢符合的學校資料
-$query = "SELECT * FROM sch_description WHERE Sch_num IN ($inClause)";
-$result = $conn->query($query);
+$conn = new mysqli("localhost", "root", "", "sa-6");
+$user_id = $_SESSION['user_id'];
+$sql = "SELECT sch_num FROM my_favorites WHERE user_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
 
 $favorites = [];
 while ($row = $result->fetch_assoc()) {
-    $favorites[] = $row;
+  $favorites[] = $row['sch_num'];
 }
 
-$conn->close();
 echo json_encode($favorites);
-?>
- 
+
