@@ -169,8 +169,8 @@ $conn->close();
     if (!list) return;
 
     if (!schNum || !userId) {
-      console.error("schNum 或 userId 不正確！");
-      list.innerHTML = "<p>無效的學校編號或用戶 ID。</p>";
+      console.error("未登入，無法載入待辦清單！");
+      list.innerHTML = "<p>請先登入以查看待辦清單。</p>";
       return;
     }
 
