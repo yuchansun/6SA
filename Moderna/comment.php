@@ -1,26 +1,47 @@
 <?php
-header('Content-Type: application/json');
+session_start();
+require_once 'db_connection.php';
 
-$conn = new mysqli("localhost", "root", "", "sa-6");
-if ($conn->connect_error) {
-    echo json_encode(["success" => false, "message" => "資料庫連線失敗"]);
-    exit;
-}
+if (isset($_POST['submit_comment']) && isset($_SESSION['user'])) {
+    $userEmail = $_SESSION['user'];
+    $content = trim($_POST['comment_content']);
+    $postId = intval($_POST['post_id']);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $postId = intval($_POST['post_id'] ?? 0);
-    $userId = 1; // 假設使用者 ID 為 1
-    $content = $conn->real_escape_string($_POST['comment'] ?? '');
+    if (empty($content)) {
+        echo "留言內容不能為空。";
+        exit;
+    }
 
-    if ($postId > 0 && !empty($content)) {
-        $conn->query("INSERT INTO comments (Post_ID, User_ID, Content) VALUES ($postId, $userId, '$content')");
-        echo json_encode(["success" => true]);
+    // 確認使用者 ID
+    $stmt = $conn->prepare("SELECT User_ID FROM account WHERE `E-mail` = ?");
+    if (!$stmt) {
+        echo "資料庫錯誤：" . $conn->error;
+        exit;
+    }
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $userId = $user['User_ID'];
+
+        // 插入留言
+        $stmt = $conn->prepare("INSERT INTO comments (User_ID, Post_ID, Content, Comment_Time) VALUES (?, ?, ?, NOW())");
+        if (!$stmt) {
+            echo "資料庫錯誤：" . $conn->error;
+            exit;
+        }
+        $stmt->bind_param("iis", $userId, $postId, $content);
+        if ($stmt->execute()) {
+            echo "留言成功！";
+        } else {
+            echo "留言失敗，請稍後再試。";
+        }
+        $stmt->close();
     } else {
-        echo json_encode(["success" => false, "message" => "無效的留言內容"]);
+        echo "無法找到對應的使用者，請重新登入。";
     }
 } else {
-    echo json_encode(["success" => false, "message" => "無效的請求"]);
+    echo "請先登入後再發布留言。";
 }
-
-$conn->close();
 ?>
