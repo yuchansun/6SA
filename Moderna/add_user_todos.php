@@ -1,6 +1,4 @@
 <?php
-file_put_contents("debug.log", print_r($_POST, true));
-
 session_start();
 if (!isset($_SESSION['user_id'])) {
     echo "尚未登入";

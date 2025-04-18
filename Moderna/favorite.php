@@ -17,7 +17,6 @@ while ($row = $result->fetch_assoc()) {
         'Department' => $row['Department'],
         'Region' => $row['Region'],
         'Disc_Cluster' => $row['Disc_Cluster'],
-        'Schol_Apti' => $row['Schol_Apti'],
         'Talent' => $row['Talent'],
         'ID' => $row['ID'],
         'Plan' => $row['Plan'],
@@ -165,22 +164,22 @@ $conn->close();
   }
 
   function renderTodos(schNum, userId) {
-    const list = document.getElementById(`todo-${schNum}`);
-    if (!list) return;
+  const list = document.getElementById(`todo-${schNum}`);
+  if (!list) return;
 
-    if (!schNum || !userId) {
-      console.error("未登入，無法載入待辦清單！");
-      list.innerHTML = "<p>請先登入以查看待辦清單。</p>";
-      return;
-    }
+  if (!schNum || !userId) {
+    console.error("未登入，無法載入待辦清單！");
+    list.innerHTML = "<p>請先登入以查看待辦清單。</p>";
+    return;
+  }
 
-    console.log("載入待辦清單，schNum:", schNum, "userId:", userId);
+  console.log("載入待辦清單，schNum:", schNum, "userId:", userId);
 
-    fetch('get_todolist.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ schNum, userId })
-    })
+  fetch('get_todolist.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ schNum, userId })
+  })
     .then(res => res.json())
     .then(todos => {
       console.log("收到待辦清單資料:", todos);
@@ -193,18 +192,69 @@ $conn->close();
 
       todos.forEach(todo => {
         const li = document.createElement('li');
+        li.style.marginBottom = '10px';
+
+        // 外層包一層 div 做 flex 排版
+        const todoWrapper = document.createElement('div');
+        todoWrapper.style.display = 'flex';
+        todoWrapper.style.alignItems = 'center';
+        todoWrapper.style.justifyContent = 'space-between';
+
+        const leftContent = document.createElement('div');
+        leftContent.style.display = 'flex';
+        leftContent.style.alignItems = 'center';
+
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = todo.is_done == 1;
+        checkbox.style.marginRight = '8px';
         checkbox.addEventListener('change', () => {
           updateTodoStatus(userId, todo.todo_id, checkbox.checked);
         });
 
-        li.appendChild(checkbox);
-        li.innerHTML += `
-          <strong>${todo.title}</strong><br>
-          🕓 ${todo.start_time || ''} ～ ${todo.end_time || ''}
-        `;
+        const title = document.createElement('strong');
+        title.textContent = todo.title;
+
+        leftContent.appendChild(checkbox);
+        leftContent.appendChild(title);
+
+        const calendarIcon = document.createElement('i');
+        calendarIcon.className = 'bi bi-calendar';
+        calendarIcon.style.cursor = 'pointer';
+        calendarIcon.style.marginLeft = '10px';
+
+        const timeInfo = document.createElement('div');
+        timeInfo.className = 'time-tag';
+        timeInfo.style.display = 'none';
+        timeInfo.style.marginTop = '5px';
+       
+
+        if (todo.start_time || todo.end_time) {
+          if (todo.start_time && todo.end_time) {
+            timeInfo.textContent = ` ${todo.start_time} ～ ${todo.end_time}`;
+          } else if (todo.start_time) {
+            timeInfo.textContent = ` ${todo.start_time}`;
+          } else {
+            timeInfo.textContent = ` ${todo.end_time}`;
+          }
+
+          calendarIcon.addEventListener('click', () => {
+            const isHidden = timeInfo.style.display === 'none';
+            timeInfo.style.display = isHidden ? 'block' : 'none';
+            calendarIcon.className = isHidden ? 'bi bi-calendar-x' : 'bi bi-calendar';
+          });
+
+          todoWrapper.appendChild(leftContent);
+          todoWrapper.appendChild(calendarIcon);
+
+          li.appendChild(todoWrapper);
+          li.appendChild(timeInfo);
+        } else {
+          // 沒有時間就只加左邊內容
+          todoWrapper.appendChild(leftContent);
+          li.appendChild(todoWrapper);
+        }
+
         list.appendChild(li);
       });
     })
@@ -212,10 +262,19 @@ $conn->close();
       console.error('載入失敗:', err);
       list.innerHTML = "<p>載入失敗，請稍後再試。</p>";
     });
-  }
+}
+
 </script>
 
-
+<style>
+          .time-tag {
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #333;
+          }
+        </style>
 
 <style>
     table {
