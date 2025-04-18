@@ -191,90 +191,107 @@ $conn->close();
       }
 
       todos.forEach(todo => {
-        const li = document.createElement('li');
-        li.style.marginBottom = '10px';
+  const li = document.createElement('li');
+  li.style.marginBottom = '10px';
 
-        // 外層包一層 div 做 flex 排版
-        const todoWrapper = document.createElement('div');
-        todoWrapper.style.display = 'flex';
-        todoWrapper.style.alignItems = 'center';
-        todoWrapper.style.justifyContent = 'space-between';
+  // 外層包一層 div 做 flex 排版
+  const todoWrapper = document.createElement('div');
+  todoWrapper.style.display = 'flex';
+  todoWrapper.style.alignItems = 'center';
+  todoWrapper.style.justifyContent = 'space-between';
 
-        const leftContent = document.createElement('div');
-        leftContent.style.display = 'flex';
-        leftContent.style.alignItems = 'center';
+  const leftContent = document.createElement('div');
+  leftContent.style.display = 'flex';
+  leftContent.style.alignItems = 'center';
 
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = todo.is_done == 1;
-        checkbox.style.marginRight = '8px';
-        checkbox.addEventListener('change', () => {
-          updateTodoStatus(userId, todo.todo_id, checkbox.checked);
-        });
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = todo.is_done === 1;  // 確保使用嚴格等於 (===)
+  checkbox.style.marginRight = '8px';
 
-        const title = document.createElement('strong');
-        title.textContent = todo.title;
+  // 當勾選框狀態改變時更新資料庫
+  checkbox.addEventListener('change', () => {
+    updateTodoStatus(userId, todo.todo_id, checkbox.checked ? 1 : 0);
+  });
 
-        leftContent.appendChild(checkbox);
-        leftContent.appendChild(title);
+  const title = document.createElement('strong');
+  title.textContent = todo.title;
 
-        const calendarIcon = document.createElement('i');
-        calendarIcon.className = 'bi bi-calendar';
-        calendarIcon.style.cursor = 'pointer';
-        calendarIcon.style.marginLeft = '10px';
+  leftContent.appendChild(checkbox);
+  leftContent.appendChild(title);
 
-        const timeInfo = document.createElement('div');
-        timeInfo.className = 'time-tag';
-        timeInfo.style.display = 'none';
-        timeInfo.style.marginTop = '5px';
-       
+  // 時間顯示與切換日曆圖示
+  const calendarIcon = document.createElement('i');
+  calendarIcon.className = 'bi bi-calendar';
+  calendarIcon.style.cursor = 'pointer';
+  calendarIcon.style.marginLeft = '10px';
 
-        if (todo.start_time || todo.end_time) {
-          if (todo.start_time && todo.end_time) {
-            timeInfo.textContent = ` ${todo.start_time} ～ ${todo.end_time}`;
-          } else if (todo.start_time) {
-            timeInfo.textContent = ` ${todo.start_time}`;
-          } else {
-            timeInfo.textContent = ` ${todo.end_time}`;
-          }
+  const timeInfo = document.createElement('div');
+  timeInfo.className = 'time-tag';
+  timeInfo.style.display = 'none';
+  timeInfo.style.marginTop = '5px';
 
-          calendarIcon.addEventListener('click', () => {
-            const isHidden = timeInfo.style.display === 'none';
-            timeInfo.style.display = isHidden ? 'block' : 'none';
-            calendarIcon.className = isHidden ? 'bi bi-calendar-x' : 'bi bi-calendar';
-          });
+  // 處理開始時間與結束時間
+  if (todo.start_time || todo.end_time) {
+    if (todo.start_time && todo.end_time) {
+      timeInfo.textContent = `${todo.start_time} ～ ${todo.end_time}`;
+    } else if (todo.start_time) {
+      timeInfo.textContent = `${todo.start_time}`;
+    } else {
+      timeInfo.textContent = `${todo.end_time}`;
+    }
 
-          todoWrapper.appendChild(leftContent);
-          todoWrapper.appendChild(calendarIcon);
+    // 點擊日曆圖示顯示/隱藏時間
+    calendarIcon.addEventListener('click', () => {
+      const isHidden = timeInfo.style.display === 'none';
+      timeInfo.style.display = isHidden ? 'block' : 'none';
+      calendarIcon.className = isHidden ? 'bi bi-calendar-x' : 'bi bi-calendar';
+    });
 
-          li.appendChild(todoWrapper);
-          li.appendChild(timeInfo);
-        } else {
-          // 沒有時間就只加左邊內容
-          todoWrapper.appendChild(leftContent);
-          li.appendChild(todoWrapper);
-        }
+    // 將時間資訊與圖示加入 todoWrapper
+    todoWrapper.appendChild(leftContent);
+    todoWrapper.appendChild(calendarIcon);
 
-        list.appendChild(li);
-      });
+    li.appendChild(todoWrapper);
+    li.appendChild(timeInfo);
+  } else {
+    // 沒有時間就只加左邊內容
+    todoWrapper.appendChild(leftContent);
+    li.appendChild(todoWrapper);
+  }
+
+  list.appendChild(li);
+});
     })
     .catch(err => {
-      console.error('載入失敗:', err);
-      list.innerHTML = "<p>載入失敗，請稍後再試。</p>";
+      console.error("載入待辦清單失敗:", err);
+      list.innerHTML = "<p>載入待辦清單失敗，請稍後再試。</p>";
     });
+}
+function updateTodoStatus(userId, todoId, isDone) {
+  fetch('update_todo_status.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, todoId, isDone })
+  })
+  .then(response => response.text())  // 先讀取為文字
+  .then(text => {
+    console.log('伺服器回傳:', text);  // 顯示回傳內容
+    try {
+      const data = JSON.parse(text);  // 嘗試轉換為 JSON
+      console.log('轉換後資料:', data);
+      // 在這裡可以處理伺服器回傳的資料
+    } catch (err) {
+      console.error('解析失敗:', err);
+      console.log('伺服器回應非 JSON 格式，請檢查 PHP 檔案回傳內容');
+    }
+  })
+  .catch(error => {
+    console.error('更新失敗:', error);
+  });
 }
 
 </script>
-
-<style>
-          .time-tag {
-            background-color: #f0f0f0;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            color: #333;
-          }
-        </style>
 
 <style>
     table {
@@ -323,6 +340,13 @@ $conn->close();
   padding: 20px;
   transition: 0.3s;
  }
+ .time-tag {
+            background-color:  color-mix(in srgb, var(--default-color), transparent 94%);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #333;
+          }
 </style>
   
   <!-- Footer -->

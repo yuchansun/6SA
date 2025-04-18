@@ -1,30 +1,26 @@
 <?php
-// update_todo_status.php
-header('Content-Type: application/json');
-include('db.php');
+$mysqli = new mysqli('localhost', 'root', '', 'sa-6');
 
-// 取得 JSON 請求內容
-$data = json_decode(file_get_contents('php://input'), true);
-$userId = $data['userId'] ?? '';
-$todoId = $data['todoId'] ?? '';
-$isDone = $data['isDone'] ?? 0;
-
-if (!$userId || !$todoId) {
-    echo json_encode(['error' => '缺少必要資料']);
-    exit;
+if ($mysqli->connect_error) {
+    die('資料庫連線失敗: ' . $mysqli->connect_error);
 }
 
-// 更新 user_todos 表的 is_done 狀態
-$sql = "
-    UPDATE user_todos
-    SET is_done = ?, updated_at = NOW()
-    WHERE user_id = ? AND todo_id = ?
-";
+// 接收資料
+$data = json_decode(file_get_contents('php://input'), true);
+$userId = $data['userId'];
+$todoId = $data['todoId'];
+$isDone = $data['isDone'];
 
-$stmt = $conn->prepare($sql);
+// 更新
+$stmt = $mysqli->prepare("UPDATE user_todos SET is_done = ?, updated_at = NOW() WHERE user_id = ? AND todo_id = ?");
 $stmt->bind_param('iii', $isDone, $userId, $todoId);
-$stmt->execute();
 
-echo json_encode(['status' => 'success']);
+if ($stmt->execute()) {
+    echo json_encode(['success' => true, 'message' => '更新成功']);
+} else {
+    echo json_encode(['error' => '更新失敗: ' . $stmt->error]);
+}
+
 $stmt->close();
-$conn->close();
+$mysqli->close();
+?>
