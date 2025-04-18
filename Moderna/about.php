@@ -63,7 +63,7 @@ $departmentOptions = getDistinctOptions($conn, 'Department');
 $discClusterOptions = getDistinctOptions($conn, 'Disc_Cluster');
 $planOptions = getDistinctOptions($conn, 'Plan');
 $idOptions = getDistinctOptions($conn, 'ID');
-$aptiOptions = getDistinctOptions($conn, 'Schol_Apti');
+$aptiOptions = getDistinctOptions($conn, 'exam_date');
 $talentOptions = getDistinctOptions($conn, 'Talent');
 
 
@@ -73,7 +73,7 @@ $filters = [
     "region" => $_GET['region'] ?? "",
     "department" => $_GET['department'] ?? "",
     "plan" => $_GET['plan'] ?? "",
-    "schol_apti" => $_GET['schol_apti'] ?? "",
+    "exam_date" => $_GET['exam_date'] ?? "",
     "talent" => $_GET['talent'] ?? "",
     "ID" => $_GET['ID'] ?? "",
     "school_name" => $_GET['school_name'] ?? "",
@@ -99,7 +99,7 @@ $types = "";
 
 // 處理關鍵字搜尋
 if (!empty($filters["q"])) {
-    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Schol_Apti", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
+    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "exam_date", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
     $searchConditions = [];
 
     $searchTerms = preg_split('/\s+/', trim($filters["q"]));
@@ -209,10 +209,10 @@ $conn->close();
         <?php endforeach; ?>
     </select>
 
-    <select name="schol_apti">
+    <select name="exam_date">
         <option value="">選擇興趣</option>
         <?php foreach ($aptiOptions as $option): ?>
-            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["schol_apti"] == $option) ? "selected" : "" ?>>
+            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["exam_date"] == $option) ? "selected" : "" ?>>
                 <?= htmlspecialchars($option) ?>
             </option>
         <?php endforeach; ?>
