@@ -76,7 +76,8 @@ $conn->close();
               <h5 class="card-title">報考資訊</h5>
             </div>
             <div class="card-body">
-              <p><strong>考試項目：</strong><?= htmlspecialchars($data['Exam_Item']) ?></p>  
+              <p><strong>考試項目：</strong><?= htmlspecialchars($data['Exam_Item']) ?></p>
+              <p><strong>考試項目：</strong><?= htmlspecialchars($data['exam_date']) ?></p>  
               <p><strong>地址：</strong><?= htmlspecialchars($data['address']) ?></p>
               <p><strong>電話：</strong><?= htmlspecialchars($data['Contact']) ?></p>
               <p><strong>官方連結：</strong><a href="<?= htmlspecialchars($data['link']) ?>" target="_blank"><?= htmlspecialchars($data['link']) ?></a></p>
@@ -92,7 +93,7 @@ $conn->close();
             </div>
             <div class="card-body">
               <p><strong>學類：</strong><?= htmlspecialchars($data['Disc_Cluster']) ?></p>
-              <p><strong>興趣：</strong><?= htmlspecialchars($data['Schol_Apti']) ?></p>
+              <p><strong>興趣：</strong><?= htmlspecialchars($data['requirement']) ?></p>
               <p><strong>能力：</strong><?= htmlspecialchars($data['Talent']) ?></p>
               <p><strong>身份：</strong><?= htmlspecialchars($data['ID']) ?></p>
             </div>
@@ -109,7 +110,7 @@ $conn->close();
             </div>
             <div class="card-body">
               <p><strong>計畫類別：</strong><?= htmlspecialchars($data['Plan']) ?></p>
-              <p><strong>備註：</strong><?= htmlspecialchars($data['announce']) ?></p>
+              <p><strong>備註：</strong><?= htmlspecialchars($data['note']) ?></p>
             </div>
           </div>
         </div>
