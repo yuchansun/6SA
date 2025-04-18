@@ -68,16 +68,16 @@ $talentOptions = getDistinctOptions($conn, 'Talent');
 
 // 取得搜尋 & 篩選參數
 $filters = [
-    "q" => $_GET['q'] ?? "",
-    "region" => $_GET['region'] ?? "",
-    "department" => $_GET['department'] ?? "",
-    "plan" => $_GET['plan'] ?? "",
-    "schol_apti" => $_GET['schol_apti'] ?? "",
-    "talent" => $_GET['talent'] ?? "",
-    "ID" => $_GET['ID'] ?? "",
-    "school_name" => $_GET['school_name'] ?? "",
-    "disc_cluster" => $_GET['disc_cluster'] ?? ""
+  "q" => $_GET['q'] ?? "",
+  "region" => $_GET['region'] ?? "",
+  "department" => $_GET['department'] ?? "",
+  "plan" => $_GET['plan'] ?? "",
+  "talent" => $_GET['talent'] ?? "",
+  "ID" => $_GET['ID'] ?? "",
+  "school_name" => $_GET['school_name'] ?? "",
+  "disc_cluster" => $_GET['disc_cluster'] ?? ""
 ];
+
 
 
 $keywordMapping = [
