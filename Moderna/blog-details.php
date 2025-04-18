@@ -1,5 +1,16 @@
 <?php include('header.php'); ?>
+
+
 <?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user'])) {
+    header("Location: contact.php?error=進入討論區需要先登入喔");
+    exit();
+}
+
 // 連接資料庫
 require_once 'db.php';
 
@@ -7,25 +18,98 @@ require_once 'db.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'], $_POST['comment'])) {
     $title = $conn->real_escape_string($_POST['title']);
     $content = $conn->real_escape_string($_POST['comment']);
-    $userId = 1; // 假設用戶 ID 為 1，應根據實際情況動態獲取
 
-    $insertPost = $conn->prepare("INSERT INTO posts (Title, Content, User_ID, Post_Time) VALUES (?, ?, ?, NOW())");
-    $insertPost->bind_param("ssi", $title, $content, $userId);
-    $insertPost->execute();
-    header("Location: blog-details.php");
-    exit;
+    // 從 SESSION 中取得使用者的 E-mail
+    $userEmail = $_SESSION['user'];
+    
+    // 查詢 account 表以獲取 User_ID
+    $stmt = $conn->prepare("SELECT User_ID FROM account WHERE `E-mail` = ?");
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $userId = $user['User_ID'];
+
+        // 插入貼文
+        $insertPost = $conn->prepare("INSERT INTO posts (Title, Content, User_ID, Post_Time) VALUES (?, ?, ?, NOW())");
+        $insertPost->bind_param("ssi", $title, $content, $userId);
+        $insertPost->execute();
+        header("Location: blog-details.php");
+        exit;
+    } else {
+        echo "無法找到對應的使用者資訊。";
+    }
+
+    $stmt->close();
 }
 
 // 處理留言提交
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['comment'])) {
     $postId = intval($_POST['post_id']);
     $comment = $conn->real_escape_string($_POST['comment']);
-    $userId = 1; // 假設用戶 ID 為 1，應根據實際情況動態獲取
 
-    $insertComment = $conn->prepare("INSERT INTO comments (Post_ID, Content, User_ID, Comment_Time) VALUES (?, ?, ?, NOW())");
-    $insertComment->bind_param("isi", $postId, $comment, $userId);
-    $insertComment->execute();
-    header("Location: blog-details.php");
+    // 從 SESSION 中取得使用者的 E-mail
+    $userEmail = $_SESSION['user'] ?? null;
+    if ($userEmail) {
+        $stmt = $conn->prepare("SELECT User_ID FROM account WHERE `E-mail` = ?");
+        $stmt->bind_param("s", $userEmail);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            $userId = $user['User_ID'];
+
+            $insertComment = $conn->prepare("INSERT INTO comments (Post_ID, Content, User_ID, Comment_Time) VALUES (?, ?, ?, NOW())");
+            $insertComment->bind_param("isi", $postId, $comment, $userId);
+            $insertComment->execute();
+            header("Location: blog-details.php");
+            exit;
+        } else {
+            echo "<script>alert('無法找到對應的使用者資訊，請重新登入');</script>";
+        }
+    } else {
+        echo "<script>alert('用戶未登入，請先登入');</script>";
+    }
+}
+
+// 處理點讚請求
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['postId'])) {
+    header('Content-Type: application/json');
+
+    session_start();
+    if (!isset($_SESSION['user_id'])) {
+        echo json_encode(['success' => false, 'message' => '無法取得使用者 ID']);
+        exit;
+    }
+
+    $postId = intval($_POST['postId']);
+    $userId = $_SESSION['user_id']; // 從 session 中獲取 User_ID
+
+    // 插入點讚記錄
+    $addLike = $conn->prepare("INSERT INTO likes (User_ID, Post_ID, Like_Time) VALUES (?, ?, NOW())");
+    $addLike->bind_param("ii", $userId, $postId);
+    if ($addLike->execute()) {
+        $likeId = $conn->insert_id; // 獲取 Like_ID
+
+        // 更新文章的點讚數
+        $updateLikes = $conn->prepare("UPDATE posts SET Likes = Likes + 1 WHERE Post_ID = ?");
+        $updateLikes->bind_param("i", $postId);
+        $updateLikes->execute();
+
+        // 獲取最新的點讚數
+        $stmt = $conn->prepare("SELECT Likes FROM posts WHERE Post_ID = ?");
+        $stmt->bind_param("i", $postId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $likes = $result->fetch_assoc()['Likes'];
+
+        echo json_encode(['success' => true, 'postId' => $postId, 'userId' => $userId, 'likeId' => $likeId, 'likes' => $likes]);
+    } else {
+        echo json_encode(['success' => false, 'message' => '無法完成點讚操作，請稍後再試']);
+    }
     exit;
 }
 
@@ -41,7 +125,62 @@ if (isset($_GET['search'])) {
         $searchResults[] = $row;
     }
 }
+
+// 從 SESSION 中取得使用者的 Nickname
+$nickname = "訪客"; // 預設值
+if (isset($_SESSION['user'])) {
+    $userEmail = $_SESSION['user'];
+    $stmt = $conn->prepare("SELECT Nickname FROM account WHERE `E-mail` = ?");
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $nickname = $user['Nickname'];
+    }
+    $stmt->close();
+}
+
+// 獲取使用者的近期貼文
+$recentPosts = [];
+if (isset($_SESSION['user'])) {
+    $userEmail = $_SESSION['user'];
+    $stmt = $conn->prepare("SELECT p.Title, p.Post_Time FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $recentPosts[] = $row;
+    }
+    $stmt->close();
+}
 ?>
+
+<script>
+
+function handleLike(button) {
+  const postId = button.getAttribute('data-post-id'); // 取得 Post_ID
+  fetch('like_handler.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ postId })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('Post ID:', data.postId);
+      console.log('User ID:', data.userId);
+      console.log('Like ID:', data.likeId);
+      button.querySelector('span').textContent = data.likes; // 更新按鈕上的點讚數
+    } else {
+      alert(data.message);
+    }
+  })
+  .catch(error => console.error('Error:', error));
+}
+</script>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -59,7 +198,7 @@ if (isset($_GET['search'])) {
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -165,7 +304,19 @@ if (isset($_GET['search'])) {
               </div>
             </section>
           <?php endif; ?>
+          <?php
+  // 取得目前登入的用戶 ID
 
+  // 🔍 查詢目前用戶已經點過讚的文章
+  $likedPostIds = [];
+  $likedQuery = $conn->prepare("SELECT post_id FROM likes WHERE user_id = ?");
+  $likedQuery->bind_param("i", $user_id);
+  $likedQuery->execute();
+  $likedResult = $likedQuery->get_result();
+  while ($row = $likedResult->fetch_assoc()) {
+      $likedPostIds[] = $row['post_id'];
+  }
+?>
           <!-- 顯示貼文 -->
           <section id="blog-posts" class="blog-posts section">
             <div class="container">
@@ -175,25 +326,71 @@ if (isset($_GET['search'])) {
                   <div class="meta">
                     <span>由 <?= htmlspecialchars($post['Nickname']) ?> 發布於 <?= $post['Post_Time'] ?></span>
                   </div>
-                  <p><?= nl2br(htmlspecialchars($post['Content'])) ?></p>
-                  <button class="btn-like" onclick="likePost(<?= $post['Post_ID'] ?>, this)">
-                    <i class="bi bi-heart"></i> <span><?= $post['Likes'] ?></span>
-                  </button>
+                  <?php
+                  $content = htmlspecialchars($post['Content']);
+                  if (strlen($content) > 100): ?>
+                    <p class="short-content">
+                      <?= nl2br(substr($content, 0, 300)) ?>...
+                      <a href="#" class="read-more" onclick="showFullContent(this, '<?= addslashes($content) ?>'); return false;">(查看更多)</a>
+                    </p>
+                  <?php else: ?>
+                    <p><?= nl2br($content) ?></p>
+                  <?php endif; ?>
+                  <?php $alreadyLiked = in_array($post['Post_ID'], $likedPostIds); ?>
+<button 
+  class="btn-like <?= $alreadyLiked ? 'liked' : '' ?>" 
+  onclick="<?= $alreadyLiked ? 'alert(`你已經點過讚了`)' : 'likePost(' . $post['Post_ID'] . ', this)' ?>" 
+  <?= $alreadyLiked ? 'disabled' : '' ?>
+>
+  <i class="bi bi-heart"></i> <span><?= $post['Likes'] ?></span>
+</button>
+
 
                   <!-- 顯示留言 -->
                   <div class="comments">
                     <?php
-                    $commentsQuery = $conn->query("SELECT c.*, a.Nickname FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = " . $post['Post_ID'] . " ORDER BY Comment_Time ASC");
-                    while ($comment = $commentsQuery->fetch_assoc()): ?>
-                      <div class="comment-item">
-                        <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
-                        <div class="meta">留言時間: <?= $comment['Comment_Time'] ?></div>
-                        <button class="btn-like" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">
-                          <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
-                        </button>
+                    $commentsQuery = $conn->query("SELECT c.*, a.Nickname FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = " . $post['Post_ID'] . " ORDER BY c.Likes DESC, c.Comment_Time ASC");
+                    $comments = [];
+                    while ($comment = $commentsQuery->fetch_assoc()) {
+                        $comments[] = $comment;
+                    }
+                    $topComments = array_slice($comments, 0, 3);
+                    ?>
+
+                    <div id="top-comments">
+                      <?php foreach ($topComments as $comment): ?>
+                        <div class="comment-item">
+                          <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
+                          <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> | 點讚數: <?= $comment['Likes'] ?></div>
+                          <button class="btn-like" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">
+                            <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+                          </button>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+
+                    <?php if (count($comments) > 3): ?>
+                      <button id="show-more-comments" class="btn btn-link">顯示更多留言</button>
+                      <div id="all-comments" style="display: none;">
+                        <?php foreach (array_slice($comments, 3) as $comment): ?>
+                          <div class="comment-item">
+                            <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
+                            <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> | 點讚數: <?= $comment['Likes'] ?></div>
+                            <button class="btn-like" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">
+                              <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+                            </button>
+                          </div>
+                        <?php endforeach; ?>
                       </div>
-                    <?php endwhile; ?>
+                    <?php endif; ?>
                   </div>
+
+                  <script>
+                  document.getElementById('show-more-comments')?.addEventListener('click', function() {
+                    document.getElementById('all-comments').style.display = 'block';
+                    this.style.display = 'none';
+                  });
+                  </script>
 
                   <!-- 新增留言表單 -->
                   <form method="POST" action="">
@@ -212,25 +409,32 @@ if (isset($_GET['search'])) {
 
           <script>
           function likePost(postId, button) {
-            // AJAX 請求來更新文章的點讚數
             fetch(`like_post.php?post_id=${postId}`)
               .then(response => response.json())
               .then(data => {
                 if (data.success) {
                   button.querySelector('span').textContent = data.likes;
+                } else {
+                  alert(data.message);
                 }
               });
           }
 
           function likeComment(commentId, button) {
-            // AJAX 請求來更新留言的點讚數
             fetch(`like_comment.php?comment_id=${commentId}`)
               .then(response => response.json())
               .then(data => {
                 if (data.success) {
                   button.querySelector('span').textContent = data.likes;
+                } else {
+                  alert(data.message);
                 }
               });
+          }
+
+          function showFullContent(link, fullContent) {
+            const parent = link.closest('.short-content');
+            parent.innerHTML = fullContent;
           }
           </script>
 
@@ -245,7 +449,7 @@ if (isset($_GET['search'])) {
 
               <div class="d-flex flex-column align-items-center">
                 <img src="assets/img/blog/blog-author.jpg" class="rounded-circle flex-shrink-0" alt="">
-                <h4>登入者匿名或名稱</h4>
+                <h4><?= htmlspecialchars($nickname) ?></h4>
                 
 
                 <p>
@@ -322,52 +526,59 @@ if (isset($_GET['search'])) {
 
             
 
-            <!-- Recent Posts Widget -->
+            <!-- Recent Posts and Comments Widget -->
             <div class="recent-posts-widget widget-item">
-
               <h3 class="widget-title">近期紀錄</h3>
+              <h4>近期文章</h4>
+              <?php
+              if (isset($_SESSION['user'])) {
+                  $userEmail = $_SESSION['user'];
+                  $recentPostsQuery = $conn->prepare("SELECT p.Title, p.Post_Time FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
+                  $recentPostsQuery->bind_param("s", $userEmail);
+                  $recentPostsQuery->execute();
+                  $result = $recentPostsQuery->get_result();
+                  if ($result->num_rows > 0): ?>
+                    <?php while ($post = $result->fetch_assoc()): ?>
+                      <div class="post-item">
+                        <div>
+                          <h5><?= htmlspecialchars($post['Title']) ?></h5>
+                          <time datetime="<?= $post['Post_Time'] ?>"><?= $post['Post_Time'] ?></time>
+                        </div>
+                      </div>
+                    <?php endwhile; ?>
+                  <?php else: ?>
+                    <p>尚未發布任何文章。</p>
+                  <?php endif;
+              } else {
+                  echo '<p>請先登入以查看您的文章。</p>';
+              }
+              ?>
 
-              <div class="post-item">
-                <img src="assets/img/blog/blog-recent-1.jpg" alt="" class="flex-shrink-0">
-                <div>
-                  <h4><a href="blog-details.html">Nihil blanditiis at in nihil autem</a></h4>
-                  <time datetime="2020-01-01">Jan 1, 2020</time>
-                </div>
-              </div><!-- End recent post item-->
-
-              <div class="post-item">
-                <img src="assets/img/blog/blog-recent-2.jpg" alt="" class="flex-shrink-0">
-                <div>
-                  <h4><a href="blog-details.html">Quidem autem et impedit</a></h4>
-                  <time datetime="2020-01-01">Jan 1, 2020</time>
-                </div>
-              </div><!-- End recent post item-->
-
-              <div class="post-item">
-                <img src="assets/img/blog/blog-recent-3.jpg" alt="" class="flex-shrink-0">
-                <div>
-                  <h4><a href="blog-details.html">Id quia et et ut maxime similique occaecati ut</a></h4>
-                  <time datetime="2020-01-01">Jan 1, 2020</time>
-                </div>
-              </div><!-- End recent post item-->
-
-              <div class="post-item">
-                <img src="assets/img/blog/blog-recent-4.jpg" alt="" class="flex-shrink-0">
-                <div>
-                  <h4><a href="blog-details.html">Laborum corporis quo dara net para</a></h4>
-                  <time datetime="2020-01-01">Jan 1, 2020</time>
-                </div>
-              </div><!-- End recent post item-->
-
-              <div class="post-item">
-                <img src="assets/img/blog/blog-recent-5.jpg" alt="" class="flex-shrink-0">
-                <div>
-                  <h4><a href="blog-details.html">Et dolores corrupti quae illo quod dolor</a></h4>
-                  <time datetime="2020-01-01">Jan 1, 2020</time>
-                </div>
-              </div><!-- End recent post item-->
-
-            </div><!--/Recent Posts Widget -->
+              <h4>近期留言</h4>
+              <?php
+              if (isset($_SESSION['user'])) {
+                  $userEmail = $_SESSION['user'];
+                  $recentCommentsQuery = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
+                  $recentCommentsQuery->bind_param("s", $userEmail);
+                  $recentCommentsQuery->execute();
+                  $result = $recentCommentsQuery->get_result();
+                  if ($result->num_rows > 0): ?>
+                    <?php while ($comment = $result->fetch_assoc()): ?>
+                      <div class="post-item">
+                        <div>
+                          <p>留言於文章: <strong><?= htmlspecialchars($comment['Title']) ?></strong></p>
+                          <time datetime="<?= $comment['Comment_Time'] ?>">留言時間: <?= $comment['Comment_Time'] ?></time>
+                        </div>
+                      </div>
+                    <?php endwhile; ?>
+                  <?php else: ?>
+                    <p>尚未發布任何留言。</p>
+                  <?php endif;
+              } else {
+                  echo '<p>請先登入以查看您的留言。</p>';
+              }
+              ?>
+            </div><!--/Recent Posts and Comments Widget -->
 
             <!-- Tags Widget -->
             <div class="tags-widget widget-item">
