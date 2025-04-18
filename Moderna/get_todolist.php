@@ -29,7 +29,7 @@ $sql = "
     LEFT JOIN user_todos ut 
         ON t.todo_id = ut.todo_id AND ut.user_id = ?
     WHERE t.sch_num = ?
-    ORDER BY t.start_time
+    ORDER BY t.todo_id
 ";
 
 $stmt = $conn->prepare($sql);
