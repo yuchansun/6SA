@@ -1,36 +1,48 @@
 <?php
 header('Content-Type: application/json');
+require_once("db.php");
 
-// 引入資料庫連接設定
-include('db.php');
-
-// 取得前端發送的 JSON 資料
+// 解析 JSON
 $data = json_decode(file_get_contents('php://input'), true);
-$schNum = $data['schNum'];  // 取得校系編號
+$schNum = $data['schNum'] ?? '';
+$userId = $data['userId'] ?? '';
 
-// 查詢學校和其對應的 To-do list
+if (!$schNum || !$userId) {
+    echo json_encode([
+        "error" => true,
+        "message" => "缺少必要的參數",
+        "schNum" => $schNum,
+        "userId" => $userId
+    ]);
+    exit;
+}
+
+// 查詢 todos 並合併使用者是否完成
 $sql = "
-    SELECT t.text, t.completed
+    SELECT 
+        t.todo_id,
+        t.title,
+        t.start_time,
+        t.end_time,
+        COALESCE(ut.is_done, 0) AS is_done
     FROM todos t
-    INNER JOIN sch_description s ON t.Sch_num = s.Sch_num
-    WHERE t.Sch_num = ?
+    LEFT JOIN user_todos ut 
+        ON t.todo_id = ut.todo_id AND ut.user_id = ?
+    WHERE t.sch_num = ?
+    ORDER BY t.start_time
 ";
+
 $stmt = $conn->prepare($sql);
-
-// 假設 Sch_num 是字串型別，使用 's'；如果是整數型別，請使用 'i'
-$stmt->bind_param('s', $schNum);  // 使用 's' 代表字串，改為 'i' 如果是整數
-
+$stmt->bind_param('ss', $userId, $schNum);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$todolist = [];
+$todos = [];
 while ($row = $result->fetch_assoc()) {
-    $todolist[] = $row;  // 將結果加入 to-do list 陣列
+    $todos[] = $row;
 }
 
-// 回傳 JSON 格式的資料
-echo json_encode($todolist);
-
+echo json_encode($todos); // ✅ 只輸出這個
 $stmt->close();
 $conn->close();
 ?>

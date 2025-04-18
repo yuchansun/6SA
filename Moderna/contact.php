@@ -1,3 +1,54 @@
+<?php
+session_start();
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $account = $_POST['account'];
+    $password = $_POST['password'];
+
+    $conn = new mysqli('localhost', 'root', '', 'sa-6');
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    $stmt = $conn->prepare("SELECT * FROM account WHERE `E-mail` = ?");
+    $stmt->bind_param("s", $account);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+
+        if ($password === $user['Password']) {
+          $_SESSION['user'] = $user['E-mail'];
+          $_SESSION['nickname'] = $user['Nickname'];
+          $_SESSION['user_id'] = $user['User_ID']; 
+      
+    
+      
+          // ✅ Set cookies if 'remember' is checked
+          if (isset($_POST['remember'])) {
+              setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
+              setcookie('remember_password', $password, time() + (86400 * 30), "/");
+          } else {
+              // ❌ Clear cookies if not checked
+              setcookie('remember_email', '', time() - 3600, "/");
+              setcookie('remember_password', '', time() - 3600, "/");
+          }
+      
+          header("Location: index.php");
+          exit();
+        } else {
+            $error = "密碼錯誤.";
+        }
+    } else {
+        $error = "E-mail 錯誤.";
+    }
+
+    $stmt->close();
+    $conn->close();
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -47,15 +98,23 @@
         <div class="col-md-6 col-lg-4">
           <div class="card shadow p-4">
             <h4 class="text-center mb-4">登入</h4>
-            <form action="contact_process.php" method="post">
+            <form action="" method="post">
+            <?php if (!empty($error)): ?>
+  <div class="alert alert-danger text-center">
+    <?= htmlspecialchars($error) ?>
+  </div>
+<?php endif; ?>
               <div class="mb-3">
-                <input type="text" name="account" class="form-control" placeholder="E-Mail" required>
+              <input type="text" name="account" class="form-control" placeholder="E-Mail" required
+              value="<?= isset($_COOKIE['remember_email']) ? htmlspecialchars($_COOKIE['remember_email']) : '' ?>">
               </div>
               <div class="mb-3">
-                <input type="password" name="password" class="form-control" placeholder="密碼" required>
+              <input type="password" name="password" class="form-control" placeholder="密碼" required
+              value="<?= isset($_COOKIE['remember_password']) ? htmlspecialchars($_COOKIE['remember_password']) : '' ?>">
               </div>
               <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="rememberMe" name="remember">
+              <input type="checkbox" class="form-check-input" id="rememberMe" name="remember"
+              <?= isset($_COOKIE['remember_email']) ? 'checked' : '' ?>>
                 <label class="form-check-label" for="rememberMe">記住我</label>
               </div>
               <div class="d-grid mb-3">

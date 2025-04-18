@@ -1,6 +1,8 @@
+
 <?php
 include('header.php');
 require_once("db.php");
+
 
 // 查詢 my_favorites 資料表
 $query = "SELECT * FROM my_favorites INNER JOIN sch_description ON my_favorites.Sch_num = sch_description.Sch_num";
@@ -78,12 +80,14 @@ $conn->close();
     const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
     const container = document.getElementById('favorite-list');
 
+    const userId = <?php echo json_encode($_SESSION['user_id'] ?? null); ?>;
+
     if (favorites.length === 0) {
       container.innerHTML = "<p style='text-align:center;'>尚未收藏任何學校。</p>";
       return;
     }
 
-    fetch('get_favorites.php', {
+    fetch('get_fav_detail.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ schNums: favorites })
@@ -101,90 +105,119 @@ $conn->close();
         const todoId = `todo-${school.Sch_num}`;
 
         div.innerHTML = `
-          <h3>${school.School_Name} ${school.Department}</h3>
-          <ul>
-            <li><strong>學校名稱</strong>: ${school.School_Name}</li>
-            <li><strong>科系</strong>: ${school.Department}</li>
-            <li><strong>地區</strong>: ${school.Region}</li>
-            <li><button onclick="removeFavorite('${school.Sch_num}')">取消收藏</button></li>
-          </ul>
+  <div style="position: relative; padding-top: 30px;">
+    <i class="bi bi-star-fill"
+       onclick="toggleFavorite('${school.Sch_num}', this)"
+       style="position: absolute; top: 0px; right: -5px; cursor: pointer; font-size: 22px;color: gold;"
+       title="取消收藏"></i>
 
-          <div class="todo-section">
-            <h5>To-Do List</h5>
-            <ul id="${todoId}" class="todo-list"></ul>
-          </div>
-        `;
+   <h3><a href="school_detail.php?sch_num=${school.Sch_num}" class="portfolio-title">
+          ${school.School_Name} ${school.Department}
+        </a></h3>
+        <style>
+          .portfolio-title {
+            color: var(--heading-color);
+          }
+        </style>
+        <ul>
+          <li><strong>簡章網址</strong>: <a href="${school.link}" target="_blank">${school.link}</a></li>
+        </ul>
+
+    <div class="todo-section">
+      <h5>To-Do List</h5>
+      <ul id="${todoId}" class="todo-list"></ul>
+    </div>
+  </div>
+`;
 
         container.appendChild(div);
-        renderTodos(school.Sch_num);  // 取得並顯示該校系的 To-Do List
+        renderTodos(school.Sch_num, userId); // ✅ 修正這裡，加上 userId
       });
     });
   };
 
-  // 取消收藏
-  function removeFavorite(schNum) {
+  // 取消收藏（適用於我的最愛頁面）
+  function toggleFavorite(schNum, iconElement) {
     let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    favorites = favorites.filter(fav => fav !== schNum);
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-    location.reload();
+
+    const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
+    const user_id = <?php echo json_encode($_SESSION['user_id'] ?? null); ?>;
+
+    if (favorites.includes(schNum)) {
+      favorites = favorites.filter(fav => fav !== schNum);
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+
+      iconElement.classList.remove('bi-star-fill');
+      iconElement.classList.add('bi-star');
+      iconElement.style.color = 'gray';
+
+      if (isLoggedIn) {
+        fetch('remove_favorite.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'sch_num=' + encodeURIComponent(schNum),
+          credentials: 'include'
+        });
+      }
+
+      setTimeout(() => location.reload(), 300);
+    }
   }
 
-  // 渲染 To-Do List
-  function renderTodos(schNum) {
+  function renderTodos(schNum, userId) {
     const list = document.getElementById(`todo-${schNum}`);
-    if (!list) {
-      console.error(`找不到 todo list 元素: todo-${schNum}`);
+    if (!list) return;
+
+    if (!schNum || !userId) {
+      console.error("未登入，無法載入待辦清單！");
+      list.innerHTML = "<p>請先登入以查看待辦清單。</p>";
       return;
     }
+
+    console.log("載入待辦清單，schNum:", schNum, "userId:", userId);
 
     fetch('get_todolist.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ schNum: schNum })
+      body: JSON.stringify({ schNum, userId })
     })
     .then(res => res.json())
     .then(todos => {
-      list.innerHTML = '';  // 清空原本內容
+      console.log("收到待辦清單資料:", todos);
+      list.innerHTML = '';
 
-      if (!todos || todos.length === 0) {
+      if (!Array.isArray(todos) || todos.length === 0) {
         list.innerHTML = "<p>目前沒有待辦事項。</p>";
         return;
       }
 
-      // 完成的排最上面
-      const sorted = [...todos].sort((a, b) => b.completed - a.completed);
-
-      sorted.forEach((todo, index) => {
+      todos.forEach(todo => {
         const li = document.createElement('li');
-        li.innerHTML = `
-          <label style="display: flex; align-items: center; gap: 8px;">
-            <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleComplete('${schNum}', ${index})">
-            <span style="text-decoration: ${todo.completed ? 'line-through' : 'none'}">${todo.text}</span>
-          </label>
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = todo.is_done == 1;
+        checkbox.addEventListener('change', () => {
+          updateTodoStatus(userId, todo.todo_id, checkbox.checked);
+        });
+
+        li.appendChild(checkbox);
+        li.innerHTML += `
+          <strong>${todo.title}</strong><br>
+          🕓 ${todo.start_time || ''} ～ ${todo.end_time || ''}
         `;
         list.appendChild(li);
       });
-    });
-  }
-
-  // 標記為完成或未完成
-  function toggleComplete(schNum, index) {
-    fetch('toggle_todolist.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ schNum: schNum, index: index })
     })
-    .then(res => res.json())
-    .then(response => {
-      renderTodos(schNum);  // 更新 To-Do List
+    .catch(err => {
+      console.error('載入失敗:', err);
+      list.innerHTML = "<p>載入失敗，請稍後再試。</p>";
     });
   }
 </script>
 
 
 
-
-    <style>
+<style>
     table {
       width: 100%;
       border-collapse: collapse;
@@ -220,21 +253,18 @@ $conn->close();
       background-color: #cc0000;
     }
     
-    #favorite-list {
-  display: flex;
+    #favorite-list {  
+    display: flex;
+    gap: 20px;
+    }
 
-  gap: 20px;
- 
-}
-
-.portfolio-info {
+  .portfolio-info {
   width: 300px;
   min-height: 250px;
   padding: 20px;
   transition: 0.3s;
-}
-
-  </style>
+ }
+</style>
   
   <!-- Footer -->
 <?php include('footer.php'); ?>
