@@ -63,23 +63,11 @@ $departmentOptions = getDistinctOptions($conn, 'Department');
 $discClusterOptions = getDistinctOptions($conn, 'Disc_Cluster');
 $planOptions = getDistinctOptions($conn, 'Plan');
 $idOptions = getDistinctOptions($conn, 'ID');
-$aptiOptions = getDistinctOptions($conn, 'exam_date');
 $talentOptions = getDistinctOptions($conn, 'Talent');
 
 
 // 取得搜尋 & 篩選參數
 $filters = [
-<<<<<<< HEAD
-    "q" => $_GET['q'] ?? "",
-    "region" => $_GET['region'] ?? "",
-    "department" => $_GET['department'] ?? "",
-    "plan" => $_GET['plan'] ?? "",
-    "exam_date" => $_GET['exam_date'] ?? "",
-    "talent" => $_GET['talent'] ?? "",
-    "ID" => $_GET['ID'] ?? "",
-    "school_name" => $_GET['school_name'] ?? "",
-    "disc_cluster" => $_GET['disc_cluster'] ?? ""
-=======
   "q" => $_GET['q'] ?? "",
   "region" => $_GET['region'] ?? "",
   "department" => $_GET['department'] ?? "",
@@ -88,7 +76,6 @@ $filters = [
   "ID" => $_GET['ID'] ?? "",
   "school_name" => $_GET['school_name'] ?? "",
   "disc_cluster" => $_GET['disc_cluster'] ?? ""
->>>>>>> julie2
 ];
 
 
@@ -111,7 +98,7 @@ $types = "";
 
 // 處理關鍵字搜尋
 if (!empty($filters["q"])) {
-    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "exam_date", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
+    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster",  "Talent", "ID", "Plan", "Quota", "Contact", "link"];
     $searchConditions = [];
 
     $searchTerms = preg_split('/\s+/', trim($filters["q"]));
@@ -221,15 +208,7 @@ $conn->close();
         <?php endforeach; ?>
     </select>
 
-    <select name="exam_date">
-        <option value="">選擇興趣</option>
-        <?php foreach ($aptiOptions as $option): ?>
-            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["exam_date"] == $option) ? "selected" : "" ?>>
-                <?= htmlspecialchars($option) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-
+    
     <select name="talent">
         <option value="">選擇能力</option>
         <?php foreach ($talentOptions as $option): ?>
