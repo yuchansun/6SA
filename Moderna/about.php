@@ -63,7 +63,6 @@ $departmentOptions = getDistinctOptions($conn, 'Department');
 $discClusterOptions = getDistinctOptions($conn, 'Disc_Cluster');
 $planOptions = getDistinctOptions($conn, 'Plan');
 $idOptions = getDistinctOptions($conn, 'ID');
-$aptiOptions = getDistinctOptions($conn, 'Schol_Apti');
 $talentOptions = getDistinctOptions($conn, 'Talent');
 
 
@@ -99,7 +98,7 @@ $types = "";
 
 // 處理關鍵字搜尋
 if (!empty($filters["q"])) {
-    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Schol_Apti", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
+    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster",  "Talent", "ID", "Plan", "Quota", "Contact", "link"];
     $searchConditions = [];
 
     $searchTerms = preg_split('/\s+/', trim($filters["q"]));
@@ -209,15 +208,7 @@ $conn->close();
         <?php endforeach; ?>
     </select>
 
-    <select name="schol_apti">
-        <option value="">選擇興趣</option>
-        <?php foreach ($aptiOptions as $option): ?>
-            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["schol_apti"] == $option) ? "selected" : "" ?>>
-                <?= htmlspecialchars($option) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-
+    
     <select name="talent">
         <option value="">選擇能力</option>
         <?php foreach ($talentOptions as $option): ?>
