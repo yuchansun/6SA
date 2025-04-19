@@ -17,14 +17,15 @@ if (!$schNum || !$userId) {
     exit;
 }
 
-// 查詢 todos 並合併使用者是否完成
+// 查詢 todos 並合併使用者是否完成和是否已通知
 $sql = "
     SELECT 
         t.todo_id,
         t.title,
         t.start_time,
         t.end_time,
-        COALESCE(ut.is_done, 0) AS is_done
+        COALESCE(ut.is_done, 0) AS is_done,
+        COALESCE(ut.is_notified, 0) AS is_notified
     FROM todos t
     LEFT JOIN user_todos ut 
         ON t.todo_id = ut.todo_id AND ut.user_id = ?
@@ -42,7 +43,7 @@ while ($row = $result->fetch_assoc()) {
     $todos[] = $row;
 }
 
-echo json_encode($todos); // ✅ 只輸出這個
+echo json_encode($todos); // 返回 todo 項目，包括 is_notified
 $stmt->close();
 $conn->close();
 ?>
