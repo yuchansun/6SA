@@ -168,30 +168,57 @@ if (isset($_SESSION['user'])) {
 ?>
 
 <script>
+function handleLike(button, type, id) {
+    const payload = type === 'post' ? { postId: id } : { commentId: id };
 
-function handleLike(button) {
-  const postId = button.getAttribute('data-post-id'); // 取得 Post_ID
-  fetch('like_handler.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ postId })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      console.log('Post ID:', data.postId);
-      console.log('User ID:', data.userId);
-      console.log('Like ID:', data.likeId);
-      button.querySelector('span').textContent = data.likes; // 更新按鈕上的點讚數
-    } else {
-      alert(data.message);
-    }
-  })
-  .catch(error => console.error('Error:', error));
+    fetch(type === 'post' ? 'likePost.php' : 'likeComment.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`伺服器回應錯誤，狀態碼: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            button.classList.toggle('liked', data.liked);
+            const icon = button.querySelector('i');
+            icon.classList.toggle('bi-heart', !data.liked);
+            icon.classList.toggle('bi-heart-fill', data.liked);
+            button.querySelector('span').textContent = data.newLikesCount;
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(`發生錯誤: ${error.message}`);
+    });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-like').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const postId = this.getAttribute('data-post-id');
+            const commentId = this.getAttribute('data-comment-id');
+
+            if (postId) {
+                handleLike(this, 'post', postId);
+            } else if (commentId) {
+                handleLike(this, 'comment', commentId);
+            } else {
+                alert('缺少 postId 或 commentId');
+            }
+        });
+    });
+});
 </script>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -348,14 +375,15 @@ function handleLike(button) {
                     <p><?= nl2br($content) ?></p>
                   <?php endif; ?>
                   <?php $alreadyLiked = in_array($post['Post_ID'], $likedPostIds); ?>
-<button 
+                  
+                  
+                  <button 
   class="btn-like <?= $alreadyLiked ? 'liked' : '' ?>" 
-  onclick="<?= $alreadyLiked ? 'alert(`你已經點過讚了`)' : 'likePost(' . $post['Post_ID'] . ', this)' ?>" 
+  data-post-id="<?= $post['Post_ID'] ?>" 
   <?= $alreadyLiked ? 'disabled' : '' ?>
 >
   <i class="bi bi-heart"></i> <span><?= $post['Likes'] ?></span>
 </button>
-
 
                   <!-- 顯示留言 -->
                   <div class="comments">
@@ -373,7 +401,7 @@ function handleLike(button) {
                         <div class="comment-item">
                           <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
                           <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> | 點讚數: <?= $comment['Likes'] ?></div>
-                          <button class="btn-like" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">
+                          <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                             <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
                           </button>
                         </div>
@@ -387,7 +415,7 @@ function handleLike(button) {
                           <div class="comment-item">
                             <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
                             <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> | 點讚數: <?= $comment['Likes'] ?></div>
-                            <button class="btn-like" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">
+                            <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                               <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
                             </button>
                           </div>
@@ -448,30 +476,6 @@ function handleLike(button) {
           </section>
 
           <script>
-          function likePost(postId, button) {
-            fetch(`like_post.php?post_id=${postId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (data.success) {
-                  button.querySelector('span').textContent = data.likes;
-                } else {
-                  alert(data.message);
-                }
-              });
-          }
-
-          function likeComment(commentId, button) {
-            fetch(`like_comment.php?comment_id=${commentId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (data.success) {
-                  button.querySelector('span').textContent = data.likes;
-                } else {
-                  alert(data.message);
-                }
-              });
-          }
-
           function showFullContent(link, fullContent) {
             const parent = link.closest('.short-content');
             parent.innerHTML = fullContent;

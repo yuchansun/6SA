@@ -45,3 +45,9 @@ if (isset($_POST['submit_comment']) && isset($_SESSION['user'])) {
     echo "請先登入後再發布留言。";
 }
 ?>
+
+
+<button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
+    <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+</button>
+
