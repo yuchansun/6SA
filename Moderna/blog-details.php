@@ -113,8 +113,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['postId'])) {
     exit;
 }
 
-// 獲取所有貼文
-$postsQuery = $conn->query("SELECT p.*, a.Nickname FROM posts p JOIN account a ON p.User_ID = a.User_ID ORDER BY Post_Time DESC");
+// 分頁邏輯
+$postsPerPage = 5;
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+$offset = ($page - 1) * $postsPerPage;
+
+$totalPostsQuery = $conn->query("SELECT COUNT(*) as total FROM posts");
+$totalPosts = $totalPostsQuery->fetch_assoc()['total'];
+$totalPages = ceil($totalPosts / $postsPerPage);
+
+$postsQuery = $conn->prepare("SELECT p.*, a.Nickname FROM posts p JOIN account a ON p.User_ID = a.User_ID ORDER BY Post_Time DESC LIMIT ? OFFSET ?");
+$postsQuery->bind_param("ii", $postsPerPage, $offset);
+$postsQuery->execute();
+$postsResult = $postsQuery->get_result();
 
 // 搜尋功能
 $searchResults = [];
@@ -157,30 +168,57 @@ if (isset($_SESSION['user'])) {
 ?>
 
 <script>
+function handleLike(button, type, id) {
+    const payload = type === 'post' ? { postId: id } : { commentId: id };
 
-function handleLike(button) {
-  const postId = button.getAttribute('data-post-id'); // 取得 Post_ID
-  fetch('like_handler.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ postId })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      console.log('Post ID:', data.postId);
-      console.log('User ID:', data.userId);
-      console.log('Like ID:', data.likeId);
-      button.querySelector('span').textContent = data.likes; // 更新按鈕上的點讚數
-    } else {
-      alert(data.message);
-    }
-  })
-  .catch(error => console.error('Error:', error));
+    fetch(type === 'post' ? 'likePost.php' : 'likeComment.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`伺服器回應錯誤，狀態碼: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            button.classList.toggle('liked', data.liked);
+            const icon = button.querySelector('i');
+            icon.classList.toggle('bi-heart', !data.liked);
+            icon.classList.toggle('bi-heart-fill', data.liked);
+            button.querySelector('span').textContent = data.newLikesCount;
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(`發生錯誤: ${error.message}`);
+    });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-like').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const postId = this.getAttribute('data-post-id');
+            const commentId = this.getAttribute('data-comment-id');
+
+            if (postId) {
+                handleLike(this, 'post', postId);
+            } else if (commentId) {
+                handleLike(this, 'comment', commentId);
+            } else {
+                alert('缺少 postId 或 commentId');
+            }
+        });
+    });
+});
 </script>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -320,7 +358,7 @@ function handleLike(button) {
           <!-- 顯示貼文 -->
           <section id="blog-posts" class="blog-posts section">
             <div class="container">
-              <?php while ($post = $postsQuery->fetch_assoc()): ?>
+              <?php while ($post = $postsResult->fetch_assoc()): ?>
                 <div class="post-item">
                   <h3><?= htmlspecialchars($post['Title']) ?></h3>
                   <div class="meta">
@@ -337,14 +375,15 @@ function handleLike(button) {
                     <p><?= nl2br($content) ?></p>
                   <?php endif; ?>
                   <?php $alreadyLiked = in_array($post['Post_ID'], $likedPostIds); ?>
-<button 
+                  
+                  
+                  <button 
   class="btn-like <?= $alreadyLiked ? 'liked' : '' ?>" 
-  onclick="<?= $alreadyLiked ? 'alert(`你已經點過讚了`)' : 'likePost(' . $post['Post_ID'] . ', this)' ?>" 
+  data-post-id="<?= $post['Post_ID'] ?>" 
   <?= $alreadyLiked ? 'disabled' : '' ?>
 >
   <i class="bi bi-heart"></i> <span><?= $post['Likes'] ?></span>
 </button>
-
 
                   <!-- 顯示留言 -->
                   <div class="comments">
@@ -362,7 +401,7 @@ function handleLike(button) {
                         <div class="comment-item">
                           <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
                           <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> | 點讚數: <?= $comment['Likes'] ?></div>
-                          <button class="btn-like" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">
+                          <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                             <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
                           </button>
                         </div>
@@ -376,7 +415,7 @@ function handleLike(button) {
                           <div class="comment-item">
                             <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
                             <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> | 點讚數: <?= $comment['Likes'] ?></div>
-                            <button class="btn-like" onclick="likeComment(<?= $comment['Comment_ID'] ?>, this)">
+                            <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                               <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
                             </button>
                           </div>
@@ -404,34 +443,39 @@ function handleLike(button) {
                   </form>
                 </div>
               <?php endwhile; ?>
+
+              <!-- 分頁導航 -->
+              <?php if ($totalPages > 1): ?>
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                  <?php if ($page > 1): ?>
+                    <li class="page-item">
+                      <a class="page-link" href="?page=<?= $page - 1 ?>" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                      </a>
+                    </li>
+                  <?php endif; ?>
+
+                  <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                      <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                    </li>
+                  <?php endfor; ?>
+
+                  <?php if ($page < $totalPages): ?>
+                    <li class="page-item">
+                      <a class="page-link" href="?page=<?= $page + 1 ?>" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                  <?php endif; ?>
+                </ul>
+              </nav>
+              <?php endif; ?>
             </div>
           </section>
 
           <script>
-          function likePost(postId, button) {
-            fetch(`like_post.php?post_id=${postId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (data.success) {
-                  button.querySelector('span').textContent = data.likes;
-                } else {
-                  alert(data.message);
-                }
-              });
-          }
-
-          function likeComment(commentId, button) {
-            fetch(`like_comment.php?comment_id=${commentId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (data.success) {
-                  button.querySelector('span').textContent = data.likes;
-                } else {
-                  alert(data.message);
-                }
-              });
-          }
-
           function showFullContent(link, fullContent) {
             const parent = link.closest('.short-content');
             parent.innerHTML = fullContent;
