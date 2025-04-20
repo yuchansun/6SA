@@ -113,8 +113,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['postId'])) {
     exit;
 }
 
-// 獲取所有貼文
-$postsQuery = $conn->query("SELECT p.*, a.Nickname FROM posts p JOIN account a ON p.User_ID = a.User_ID ORDER BY Post_Time DESC");
+// 分頁邏輯
+$postsPerPage = 5;
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+$offset = ($page - 1) * $postsPerPage;
+
+$totalPostsQuery = $conn->query("SELECT COUNT(*) as total FROM posts");
+$totalPosts = $totalPostsQuery->fetch_assoc()['total'];
+$totalPages = ceil($totalPosts / $postsPerPage);
+
+$postsQuery = $conn->prepare("SELECT p.*, a.Nickname FROM posts p JOIN account a ON p.User_ID = a.User_ID ORDER BY Post_Time DESC LIMIT ? OFFSET ?");
+$postsQuery->bind_param("ii", $postsPerPage, $offset);
+$postsQuery->execute();
+$postsResult = $postsQuery->get_result();
 
 // 搜尋功能
 $searchResults = [];
@@ -320,7 +331,7 @@ function handleLike(button) {
           <!-- 顯示貼文 -->
           <section id="blog-posts" class="blog-posts section">
             <div class="container">
-              <?php while ($post = $postsQuery->fetch_assoc()): ?>
+              <?php while ($post = $postsResult->fetch_assoc()): ?>
                 <div class="post-item">
                   <h3><?= htmlspecialchars($post['Title']) ?></h3>
                   <div class="meta">
@@ -404,6 +415,35 @@ function handleLike(button) {
                   </form>
                 </div>
               <?php endwhile; ?>
+
+              <!-- 分頁導航 -->
+              <?php if ($totalPages > 1): ?>
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                  <?php if ($page > 1): ?>
+                    <li class="page-item">
+                      <a class="page-link" href="?page=<?= $page - 1 ?>" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                      </a>
+                    </li>
+                  <?php endif; ?>
+
+                  <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                      <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                    </li>
+                  <?php endfor; ?>
+
+                  <?php if ($page < $totalPages): ?>
+                    <li class="page-item">
+                      <a class="page-link" href="?page=<?= $page + 1 ?>" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                  <?php endif; ?>
+                </ul>
+              </nav>
+              <?php endif; ?>
             </div>
           </section>
 
