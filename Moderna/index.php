@@ -1,11 +1,11 @@
 <?php include('header.php'); ?>
 <?php if (isset($_SESSION['user'])): ?>
-<script>
-  if (!localStorage.getItem('userLoggedIn')) {
-    localStorage.setItem('userLoggedIn', 'true');
-    localStorage.setItem('userId', '<?= $_SESSION['user'] ?>');
-  }
-</script>
+  <script>
+    if (!localStorage.getItem('userLoggedIn')) {
+      localStorage.setItem('userLoggedIn', 'true');
+      localStorage.setItem('userId', '<?= $_SESSION['user'] ?>');
+    }
+  </script>
 <?php endif; ?>
 
 <!DOCTYPE html>
@@ -17,7 +17,7 @@
   <title>Index - Moderna Bootstrap Template</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
-  
+
   <!-- Favicons -->
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
@@ -37,7 +37,7 @@
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
   <!--  -->
-  
+
   <!-- =======================================================
   * Template Name: Moderna
   * Template URL: https://bootstrapmade.com/free-bootstrap-template-corporate-moderna/
@@ -49,26 +49,26 @@
 
 <body class="index-page">
 
-<?php
-// 資料庫連線設定
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "sa-6"; // 替換為你的資料庫名稱
-// 建立連線
-$conn = new mysqli($servername, $username, $password, $dbname);
+  <?php
+  // 資料庫連線設定
+  $servername = "localhost";
+  $username = "root";
+  $password = "";
+  $dbname = "sa-6"; // 替換為你的資料庫名稱
+  // 建立連線
+  $conn = new mysqli($servername, $username, $password, $dbname);
 
-// 檢查連線
-if ($conn->connect_error) {
+  // 檢查連線
+  if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
-}
+  }
 
-// 從 latest_news 資料表中抓取資料
-// 最新消息查詢
-$newsSql = "SELECT title, content, link FROM latest_news LIMIT 3";
-$newsResult = $conn->query($newsSql);
-// 討論區熱門文章查詢（包含留言讚數）
-$hotSql = "SELECT 
+  // 從 latest_news 資料表中抓取資料
+  // 最新消息查詢
+  $newsSql = "SELECT title, content, link FROM latest_news LIMIT 3";
+  $newsResult = $conn->query($newsSql);
+  // 討論區熱門文章查詢（包含留言讚數）
+  $hotSql = "SELECT 
               p.Post_ID, 
               p.Title, 
               p.Content,
@@ -90,10 +90,10 @@ $hotSql = "SELECT
           ORDER BY 
               TotalLikes DESC
           LIMIT 3";
-$hotResult = $conn->query($hotSql);
+  $hotResult = $conn->query($hotSql);
 
 
-?>
+  ?>
 
 
   <main class="main">
@@ -103,53 +103,53 @@ $hotResult = $conn->query($hotSql);
 
       <div id="hero-carousel" class="carousel carousel-fade" data-bs-ride="carousel" data-bs-interval="5000" data-bs-pause="false">
 
-      <div class="carousel-inner">
-        <?php
-        if ($newsResult->num_rows > 0) {
+        <div class="carousel-inner">
+          <?php
+          if ($newsResult->num_rows > 0) {
             $isActive = true; // 用於設定第一個項目為 active
             while ($row = $newsResult->fetch_assoc()) {
-                ?>
-                <div class="carousel-item <?php echo $isActive ? 'active' : ''; ?>">
-                  <div class="carousel-container">
-                    <h2><?php echo htmlspecialchars($row['title']); ?></h2>
-                    <p><?php echo htmlspecialchars($row['content']); ?></p>
-                    <a href="<?php echo htmlspecialchars($row['link']); ?>" class="btn-get-started">連結網址</a>
-                  </div>
+          ?>
+              <div class="carousel-item <?php echo $isActive ? 'active' : ''; ?>">
+                <div class="carousel-container">
+                  <h2><?php echo htmlspecialchars($row['title']); ?></h2>
+                  <p><?php echo htmlspecialchars($row['content']); ?></p>
+                  <a href="<?php echo htmlspecialchars($row['link']); ?>" class="btn-get-started">連結網址</a>
                 </div>
-                <?php
-                $isActive = false; // 之後的項目不再是 active
+              </div>
+            <?php
+              $isActive = false; // 之後的項目不再是 active
             }
-        } else {
+          } else {
             ?>
             <p>No news available.</p>
-            <?php
-        }
-        ?>
-      </div>
-      <a class="carousel-control-prev" href="#hero-carousel" role="button" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon bi bi-chevron-left" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-      </a>
-      <a class="carousel-control-next" href="#hero-carousel" role="button" data-bs-slide="next">
-        <span class="carousel-control-next-icon bi bi-chevron-right" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-      </a>
-      
-      <div class="carousel-indicators ">
-      <button type="button" data-bs-target="#hero-carousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-      <button type="button" data-bs-target="#hero-carousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-      <button type="button" data-bs-target="#hero-carousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-      </div>
+          <?php
+          }
+          ?>
+        </div>
+        <a class="carousel-control-prev" href="#hero-carousel" role="button" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon bi bi-chevron-left" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#hero-carousel" role="button" data-bs-slide="next">
+          <span class="carousel-control-next-icon bi bi-chevron-right" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </a>
+
+        <div class="carousel-indicators ">
+          <button type="button" data-bs-target="#hero-carousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+          <button type="button" data-bs-target="#hero-carousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+          <button type="button" data-bs-target="#hero-carousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        </div>
 
 
-    </div>
-    </div>
+      </div>
+      </div>
     </section><!-- /最新消息 -->
 
     <div>
-        <section>
-        </section>
-      </div>
+      <section>
+      </section>
+    </div>
 
     <!-- 特殊選才是什麼? -->
     <section id="about" class="about section light-background">
@@ -164,7 +164,7 @@ $hotResult = $conn->query($hotSql);
           <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="200">
             <h3>特殊選才是什麼?</h3>
             <p>
-            「特殊選才」是一種專為具有獨特才能、經歷或背景的學生設計的多元入學方式。與學測、指考等傳統的入學考試不同的是，特殊選才允許學生透過備審資料和面試申請入學，無須提供學測成績，讓各大學能根據自身的需求靈活選拔出較為「偏才」或「專才」的學生。</p>
+              「特殊選才」是一種專為具有獨特才能、經歷或背景的學生設計的多元入學方式。與學測、指考等傳統的入學考試不同的是，特殊選才允許學生透過備審資料和面試申請入學，無須提供學測成績，讓各大學能根據自身的需求靈活選拔出較為「偏才」或「專才」的學生。</p>
             <ul>
               <li><i class="bi bi-check2-all"></i> <span>唯一不用大考的升學管道</span></li>
               <li><i class="bi bi-check2-all"></i> <span>特選名額逐年攀升</span></li>
@@ -172,7 +172,7 @@ $hotResult = $conn->query($hotSql);
               <li><i class="bi bi-check2-all"></i> <span>書審面視為關鍵標準</span></li>
             </ul>
             <p>
-            以包容多元為核心精神的「特殊選才」，等於為那些在特定領域表現優秀的學生及來自弱勢背景的學子，提供了更多升學機會，也提升大學各校系在招生上的多樣性與創新能力。自 104 學年度首次試行以來，參與的學校逐年增加，招生名額至 113 學年度已擴增至 1,618 個，反映出各大學院校對擁有各類才能學生的重視。
+              以包容多元為核心精神的「特殊選才」，等於為那些在特定領域表現優秀的學生及來自弱勢背景的學子，提供了更多升學機會，也提升大學各校系在招生上的多樣性與創新能力。自 104 學年度首次試行以來，參與的學校逐年增加，招生名額至 113 學年度已擴增至 1,618 個，反映出各大學院校對擁有各類才能學生的重視。
             </p>
           </div>
         </div>
@@ -200,7 +200,7 @@ $hotResult = $conn->query($hotSql);
           <div class="col-md-7" data-aos="fade-up" data-aos-delay="100">
             <h3>適合走特殊選才的六大類型</h3>
             <p class="fst-italic">
-            特殊選才的入學方式特別適合擁有以下特質的學生，這些特點有助於在申請過程中展現出與所選校系的契合度。
+              特殊選才的入學方式特別適合擁有以下特質的學生，這些特點有助於在申請過程中展現出與所選校系的契合度。
             </p>
             <ul>
               <li><i class="bi bi-check"></i><span> 特頂學科才能</span></li>
@@ -212,11 +212,11 @@ $hotResult = $conn->query($hotSql);
             </ul>
           </div>
         </div><!-- Features Item -->
-      
+
         <!-- 特殊選才申請流程 -->
         <div class="row gy-4 align-items-center features-item">
-        <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out">
-        <img src="assets/img/features-3.svg" class="img-fluid" alt="">
+          <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out">
+            <img src="assets/img/features-3.svg" class="img-fluid" alt="">
           </div>
           <div class="col-md-7 order-2 order-md-1" data-aos="fade-up">
             <h3>特殊選才申請流程</h3>
@@ -230,13 +230,13 @@ $hotResult = $conn->query($hotSql);
         </div><!-- Features Item -->
         <!-- 備審資料 -->
         <div class="row gy-4 align-items-center features-item">
-        <div class="col-md-5 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
-        <img src="assets/img/features-4.svg" class="img-fluid" alt="">
+          <div class="col-md-5 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
+            <img src="assets/img/features-4.svg" class="img-fluid" alt="">
           </div>
           <div class="col-md-7" data-aos="fade-up" data-aos-delay="100">
             <h3>備審資料</h3>
             <p class="fst-italic">
-            關於特殊選才備審資料每間學校要求不盡相同，不過通常都包含以下幾種必備文件：
+              關於特殊選才備審資料每間學校要求不盡相同，不過通常都包含以下幾種必備文件：
             </p>
             <ul>
               <li><i class="bi bi-check"></i> <span>高中學歷證明正本</span></li>
@@ -246,62 +246,62 @@ $hotResult = $conn->query($hotSql);
 
             </ul>
             <p>
-            其他有利審查的資料用來證明自身獨特才能或潛力的相關證明文件，讓教授能從中看到你的潛力與專長，大致包括以下 5 個項目。
-            個人簡歷、自傳、申請動機、讀書計畫、有利的佐證資料。	
+              其他有利審查的資料用來證明自身獨特才能或潛力的相關證明文件，讓教授能從中看到你的潛力與專長，大致包括以下 5 個項目。
+              個人簡歷、自傳、申請動機、讀書計畫、有利的佐證資料。
             </p>
           </div>
         </div><!-- Features Item -->
         <!--討論區熱門文章  -->
         <div class="row gy-4 align-items-center features-item">
-  <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
-    <img src="assets/img/features-2.svg" class="img-fluid" alt="">
-  </div>
-  <div class="col-md-7 order-2 order-md-1" data-aos="fade-up" data-aos-delay="200">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-  <h3 class="mb-0">討論區熱門文章</h3>
-  <a href="blog-details.php" class="btn btn-gray">
-    查看更多 <i class="bi bi-arrow-right ms-1"></i>
-  </a>
-</div>
+          <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
+            <img src="assets/img/features-2.svg" class="img-fluid" alt="">
+          </div>
+          <div class="col-md-7 order-2 order-md-1" data-aos="fade-up" data-aos-delay="200">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="mb-0">討論區熱門文章</h3>
+              <a href="blog-details.php" class="btn btn-gray">
+                查看更多 <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+            </div>
 
-   
-    <p class="fst-italic"></p>
-    <ul>
-    <div class="list-group">
-  <?php if ($hotResult->num_rows > 0): ?>
-    <?php while ($row = $hotResult->fetch_assoc()): ?>
-      <a href="blog-details.php?highlight_id=<?= $row['Post_ID'] ?>" class="ios-post-card d-block text-decoration-none">
-        <h5><?= htmlspecialchars($row['Title']) ?></h5>
-        <p class="content-preview"><?= htmlspecialchars($row['Content']) ?></p>
 
-        <?php if ($row['TopCommentContent']): ?>
-          <small class="d-block mb-2 text-muted">
-            <strong>熱門留言：</strong><?= htmlspecialchars(mb_substr($row['TopCommentContent'], 0, 40)) ?>...
-          </small>
-        <?php endif; ?>
+            <p class="fst-italic"></p>
+            <ul>
+              <div class="list-group">
+                <?php if ($hotResult->num_rows > 0): ?>
+                  <?php while ($row = $hotResult->fetch_assoc()): ?>
+                    <a href="blog-details.php?highlight_id=<?= $row['Post_ID'] ?>" class="ios-post-card d-block text-decoration-none">
+                      <h5><?= htmlspecialchars($row['Title']) ?></h5>
+                      <p class="content-preview"><?= htmlspecialchars($row['Content']) ?></p>
 
-        <div class="meta">
-          <span><i class="bi bi-person-circle"></i> <?= htmlspecialchars($row['Author']) ?></span>
-          <span>
-            <i class="bi bi-heart-fill text-danger"></i> <?= $row['TotalLikes'] ?>
-            &nbsp;
-            <i class="bi bi-chat-dots-fill text-primary"></i> <?= $row['CommentCount'] ?>
-          </span>
+                      <?php if ($row['TopCommentContent']): ?>
+                        <small class="d-block mb-2 text-muted">
+                          <strong>熱門留言：</strong><?= htmlspecialchars(mb_substr($row['TopCommentContent'], 0, 40)) ?>...
+                        </small>
+                      <?php endif; ?>
+
+                      <div class="meta">
+                        <span><i class="bi bi-person-circle"></i> <?= htmlspecialchars($row['Author']) ?></span>
+                        <span>
+                          <i class="bi bi-heart-fill text-danger"></i> <?= $row['TotalLikes'] ?>
+                          &nbsp;
+                          <i class="bi bi-chat-dots-fill text-primary"></i> <?= $row['CommentCount'] ?>
+                        </span>
+                      </div>
+                    </a>
+                  <?php endwhile; ?>
+                <?php else: ?>
+                  <p>目前沒有熱門文章。</p>
+                <?php endif; ?>
+              </div>
+
+
+            </ul>
+          </div>
         </div>
-      </a>
-    <?php endwhile; ?>
-  <?php else: ?>
-    <p>目前沒有熱門文章。</p>
-  <?php endif; ?>
-</div>
-
-
-    </ul>
-  </div>
-</div>
 
         <!-- Features Item -->
-       
+
 
 
       </div>
@@ -311,7 +311,7 @@ $hotResult = $conn->query($hotSql);
   </main>
 
   <!-- Footer -->
-<?php include('footer.php'); ?>
+  <?php include('footer.php'); ?>
 
   <!-- Scroll Top -->
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -332,98 +332,101 @@ $hotResult = $conn->query($hotSql);
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
-  <style>.list-group-item {
-  border-left: 4px solid #3498db;
+  <style>
+    .list-group-item {
+      border-left: 4px solid #3498db;
 
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-.list-group-item:hover {
-  background-color: #fffdf3;
-}
-<!-- index.php 最底部 -->
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
 
-.hero::before {
-  background: transparent !important;
-}
+    .list-group-item:hover {
+      background-color: #fffdf3;
+    }
 
-.hero::after {
-  background: #1e4356 !important;
-  background-size: cover !important;
-}
-.content-preview {
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* 限制顯示兩行 */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-height: 3em;
-  line-height: 1.5em;
-}
-.btn-gray {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-weight: 600;
-  border-radius: 50px;
-  transition: background-color 0.3s ease;
-}
+    .hero::before {
+      background: transparent !important;
+    }
 
-.btn-gray:hover {
-  background-color: #5a6268;
-  color: white;
-}
-.ios-post-card {
-  background-color: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.2s ease;
-  border-left: 5px solid  #6c757d;
-}
+    .hero::after {
+      background: #1e4356 !important;
+      background-size: cover !important;
+    }
 
-.ios-post-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  background-color: #f9f9f9;
-}
+    .content-preview {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-height: 3em;
+      line-height: 1.5em;
+    }
 
-.ios-post-card h5 {
-  font-weight: 600;
-  margin-bottom: 10px;
-  font-size: 1.2rem;
-}
+    .btn-gray {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-weight: 600;
+      border-radius: 50px;
+      transition: background-color 0.3s ease;
+    }
 
-.ios-post-card p,
-.ios-post-card small {
-  font-size: 0.95rem;
-  color: #333;
-}
+    .btn-gray:hover {
+      background-color: #5a6268;
+      color: white;
+    }
 
-.ios-post-card small i {
-  margin-right: 4px;
-}
+    .ios-post-card {
+      background-color: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      transition: box-shadow 0.2s ease;
+      border-left: 5px solid #6c757d;
+    }
 
-.ios-post-card .content-preview {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-height: 3em;
-  line-height: 1.5em;
-}
+    .ios-post-card:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      background-color: #f9f9f9;
+    }
 
-.ios-post-card .meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #888;
-  font-size: 0.9rem;
-}
+    .ios-post-card h5 {
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+    }
 
-</style>
+    .ios-post-card p,
+    .ios-post-card small {
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    .ios-post-card small i {
+      margin-right: 4px;
+    }
+
+    .ios-post-card .content-preview {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-height: 3em;
+      line-height: 1.5em;
+    }
+
+    .ios-post-card .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #888;
+      font-size: 0.9rem;
+    }
+  </style>
 </body>
 
 </html>
