@@ -17,7 +17,7 @@
   <title>Index - Moderna Bootstrap Template</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
-
+  
   <!-- Favicons -->
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
@@ -257,44 +257,52 @@ $hotResult = $conn->query($hotSql);
     <img src="assets/img/features-2.svg" class="img-fluid" alt="">
   </div>
   <div class="col-md-7 order-2 order-md-1" data-aos="fade-up" data-aos-delay="200">
-    <h3>討論區熱門文章</h3>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0">討論區熱門文章</h3>
+  <a href="blog-details.php" class="btn btn-gray">
+    查看更多 <i class="bi bi-arrow-right ms-1"></i>
+  </a>
+</div>
+
+   
     <p class="fst-italic"></p>
     <ul>
     <div class="list-group">
-<?php
-if ($hotResult->num_rows > 0):
-    while ($row = $hotResult->fetch_assoc()):
-?>
-  <a href="blog-details.php?highlight_id=<?= $row['Post_ID'] ?>" class="list-group-item list-group-item-action flex-column align-items-start">
-    <div class="d-flex w-100 justify-content-between">
-      <h5 class="mb-1"><?= htmlspecialchars($row['Title']) ?></h5>
-      <small class="text-muted">總讚數：<?= $row['TotalLikes'] ?>｜留言數：<?= $row['CommentCount'] ?></small>
-    </div>
-    <p class="mb-1 text-truncate" style="max-width: 100%;">
-      <?= htmlspecialchars(mb_substr($row['Content'], 0, 45)) ?>...
-    </p>
-    <?php if ($row['TopCommentContent']): ?>
-  <small class="text-muted">
-    <strong>熱門留言：</strong>
-    <?= htmlspecialchars(mb_substr($row['TopCommentContent'], 0, 45)) ?>...
-  </small>
-<?php endif; ?>
+  <?php if ($hotResult->num_rows > 0): ?>
+    <?php while ($row = $hotResult->fetch_assoc()): ?>
+      <a href="blog-details.php?highlight_id=<?= $row['Post_ID'] ?>" class="ios-post-card d-block text-decoration-none">
+        <h5><?= htmlspecialchars($row['Title']) ?></h5>
+        <p class="content-preview"><?= htmlspecialchars($row['Content']) ?></p>
 
-    <div class="text-muted mt-1"><small>作者：<?= htmlspecialchars($row['Author']) ?></small></div>
-  </a>
-<?php
-    endwhile;
-else:
-?>
-  <p>目前沒有熱門文章。</p>
-<?php endif; ?>
+        <?php if ($row['TopCommentContent']): ?>
+          <small class="d-block mb-2 text-muted">
+            <strong>熱門留言：</strong><?= htmlspecialchars(mb_substr($row['TopCommentContent'], 0, 40)) ?>...
+          </small>
+        <?php endif; ?>
+
+        <div class="meta">
+          <span><i class="bi bi-person-circle"></i> <?= htmlspecialchars($row['Author']) ?></span>
+          <span>
+            <i class="bi bi-heart-fill text-danger"></i> <?= $row['TotalLikes'] ?>
+            &nbsp;
+            <i class="bi bi-chat-dots-fill text-primary"></i> <?= $row['CommentCount'] ?>
+          </span>
+        </div>
+      </a>
+    <?php endwhile; ?>
+  <?php else: ?>
+    <p>目前沒有熱門文章。</p>
+  <?php endif; ?>
 </div>
+
 
     </ul>
   </div>
 </div>
 
         <!-- Features Item -->
+       
+
 
       </div>
 
@@ -340,9 +348,81 @@ else:
 }
 
 .hero::after {
-  background: linear-gradient(to bottom, #1e4356,rgb(7, 7, 7)) !important;
+  background: #1e4356 !important;
   background-size: cover !important;
 }
+.content-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 限制顯示兩行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 3em;
+  line-height: 1.5em;
+}
+.btn-gray {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 50px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-gray:hover {
+  background-color: #5a6268;
+  color: white;
+}
+.ios-post-card {
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease;
+  border-left: 5px solid  #6c757d;
+}
+
+.ios-post-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  background-color: #f9f9f9;
+}
+
+.ios-post-card h5 {
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.ios-post-card p,
+.ios-post-card small {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.ios-post-card small i {
+  margin-right: 4px;
+}
+
+.ios-post-card .content-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 3em;
+  line-height: 1.5em;
+}
+
+.ios-post-card .meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #888;
+  font-size: 0.9rem;
+}
+
 </style>
 </body>
 
