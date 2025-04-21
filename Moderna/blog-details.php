@@ -219,6 +219,35 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- 自動捲動並加上黃色邊框與背景 -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const params = new URLSearchParams(window.location.search);
+  const highlightId = params.get('highlight_id');
+  if (highlightId) {
+    const target = document.querySelector('[data-post-id="' + highlightId + '"]');
+    if (target) {
+      // ➤ 計算位置並手動捲動，加上 offset 以避開 header
+      const yOffset = -370; // ← 這裡調整 header 高度，建議先設 100~120
+      const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+
+      // ➤ 加上高亮樣式
+      target.classList.add('highlighted-post');
+    }
+  }
+});
+</script>
+
+<style>
+.highlighted-post {
+  border: 2px solidrgb(140, 174, 213) !important;
+  background-color: #fff8e1 !important;
+  transition: all 0.5s ease;
+}
+</style>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -359,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <section id="blog-posts" class="blog-posts section">
             <div class="container">
               <?php while ($post = $postsResult->fetch_assoc()): ?>
-                <div class="post-item">
+                <div class="post-item data-post-id="<?= $post['Post_ID'] ?>" id="post-<?= $post['Post_ID'] ?>"">
                   <h3><?= htmlspecialchars($post['Title']) ?></h3>
                   <div class="meta">
                     <span>由 <?= htmlspecialchars($post['Nickname']) ?> 發布於 <?= $post['Post_Time'] ?></span>
@@ -608,7 +637,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   $result = $recentCommentsQuery->get_result();
                   if ($result->num_rows > 0): ?>
                     <?php while ($comment = $result->fetch_assoc()): ?>
-                      <div class="post-item">
+                      <div class="post-item ">
                         <div>
                           <p>留言於文章: <strong><?= htmlspecialchars($comment['Title']) ?></strong></p>
                           <time datetime="<?= $comment['Comment_Time'] ?>">留言時間: <?= $comment['Comment_Time'] ?></time>

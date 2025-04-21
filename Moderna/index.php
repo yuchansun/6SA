@@ -64,9 +64,37 @@ if ($conn->connect_error) {
 }
 
 // 從 latest_news 資料表中抓取資料
-$sql = "SELECT title, content, link FROM latest_news LIMIT 3";
-$result = $conn->query($sql);
+// 最新消息查詢
+$newsSql = "SELECT title, content, link FROM latest_news LIMIT 3";
+$newsResult = $conn->query($newsSql);
+// 討論區熱門文章查詢（包含留言讚數）
+$hotSql = "SELECT 
+              p.Post_ID, 
+              p.Title, 
+              p.Content,
+              p.Likes AS PostLikes, 
+              COALESCE(SUM(c.Likes), 0) AS CommentLikes,
+              (p.Likes + COALESCE(SUM(c.Likes), 0)) AS TotalLikes,
+              COUNT(c.Comment_ID) AS CommentCount,
+              a.Nickname AS Author,
+              MAX(c.Likes) AS TopCommentLikes,
+              (SELECT Content FROM comments WHERE Post_ID = p.Post_ID ORDER BY Likes DESC LIMIT 1) AS TopCommentContent
+          FROM 
+              posts p
+          LEFT JOIN 
+              comments c ON p.Post_ID = c.Post_ID
+          JOIN 
+              account a ON p.User_ID = a.User_ID
+          GROUP BY 
+              p.Post_ID
+          ORDER BY 
+              TotalLikes DESC
+          LIMIT 3";
+$hotResult = $conn->query($hotSql);
+
+
 ?>
+
 
   <main class="main">
 
@@ -77,9 +105,9 @@ $result = $conn->query($sql);
 
       <div class="carousel-inner">
         <?php
-        if ($result->num_rows > 0) {
+        if ($newsResult->num_rows > 0) {
             $isActive = true; // 用於設定第一個項目為 active
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $newsResult->fetch_assoc()) {
                 ?>
                 <div class="carousel-item <?php echo $isActive ? 'active' : ''; ?>">
                   <div class="carousel-container">
@@ -223,24 +251,49 @@ $result = $conn->query($sql);
             </p>
           </div>
         </div><!-- Features Item -->
-        <!--  -->
+        <!--討論區熱門文章  -->
         <div class="row gy-4 align-items-center features-item">
-          <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
-            <img src="assets/img/features-2.svg" class="img-fluid" alt="">
-          </div>
-          <div class="col-md-7 order-2 order-md-1" data-aos="fade-up" data-aos-delay="200">
-            <h3>討論區熱門文章</h3>
-            <p class="fst-italic">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-              magna aliqua.
-            </p>
-            <p>
-              Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-              velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-              culpa qui officia deserunt mollit anim id est laborum
-            </p>
-          </div>
-        </div>
+  <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
+    <img src="assets/img/features-2.svg" class="img-fluid" alt="">
+  </div>
+  <div class="col-md-7 order-2 order-md-1" data-aos="fade-up" data-aos-delay="200">
+    <h3>討論區熱門文章</h3>
+    <p class="fst-italic"></p>
+    <ul>
+    <div class="list-group">
+<?php
+if ($hotResult->num_rows > 0):
+    while ($row = $hotResult->fetch_assoc()):
+?>
+  <a href="blog-details.php?highlight_id=<?= $row['Post_ID'] ?>" class="list-group-item list-group-item-action flex-column align-items-start">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1"><?= htmlspecialchars($row['Title']) ?></h5>
+      <small class="text-muted">總讚數：<?= $row['TotalLikes'] ?>｜留言數：<?= $row['CommentCount'] ?></small>
+    </div>
+    <p class="mb-1 text-truncate" style="max-width: 100%;">
+      <?= htmlspecialchars(mb_substr($row['Content'], 0, 45)) ?>...
+    </p>
+    <?php if ($row['TopCommentContent']): ?>
+  <small class="text-muted">
+    <strong>熱門留言：</strong>
+    <?= htmlspecialchars(mb_substr($row['TopCommentContent'], 0, 45)) ?>...
+  </small>
+<?php endif; ?>
+
+    <div class="text-muted mt-1"><small>作者：<?= htmlspecialchars($row['Author']) ?></small></div>
+  </a>
+<?php
+    endwhile;
+else:
+?>
+  <p>目前沒有熱門文章。</p>
+<?php endif; ?>
+</div>
+
+    </ul>
+  </div>
+</div>
+
         <!-- Features Item -->
 
       </div>
@@ -271,7 +324,26 @@ $result = $conn->query($sql);
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+  <style>.list-group-item {
+  border-left: 4px solid #3498db;
 
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+.list-group-item:hover {
+  background-color: #fffdf3;
+}
+<!-- index.php 最底部 -->
+
+.hero::before {
+  background: transparent !important;
+}
+
+.hero::after {
+  background: linear-gradient(to bottom, #1e4356,rgb(7, 7, 7)) !important;
+  background-size: cover !important;
+}
+</style>
 </body>
 
 </html>
