@@ -216,10 +216,64 @@
         <!-- 特殊選才申請流程 -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out">
-            <img src="assets/img/features-3.svg" class="img-fluid" alt="">
+            <!--  -->
+            <div class="card shadow-sm rounded-4 ios-timeline">
+
+              <div class="card-body">
+                <div class="timeline">
+                  <div class="timeline-item d-flex gap-4 mb-5 fade-in-up">
+                    <div class="text-nowrap text-secondary pt-1" style="min-width: 60px;">9~10月</div>
+                    <div class="d-flex flex-column align-items-center position-relative timeline-indicator">
+                      <div class="timeline-dot"><i class="bi bi-megaphone-fill icon-inner"></i></div>
+                      <div class="timeline-line"></div>
+                    </div>
+                    <div class="timeline-content flex-fill">
+                      <strong class="fw-semibold">簡章公告</strong>
+                      <div class="text-muted small">請關注各校官網公告</div>
+                    </div>
+                  </div>
+
+                  <div class="timeline-item d-flex gap-4 mb-5 fade-in-up">
+                    <div class="text-nowrap text-secondary pt-1" style="min-width: 60px;">10~11月</div>
+                    <div class="d-flex flex-column align-items-center position-relative timeline-indicator">
+                      <div class="timeline-dot"><i class="bi bi-pencil-fill icon-inner"></i></div>
+                      <div class="timeline-line"></div>
+                    </div>
+                    <div class="timeline-content flex-fill">
+                      <strong class="fw-semibold">特殊選才報名、繳交審查資料</strong>
+                      <div class="text-muted small">完成備審文件準備與上傳</div>
+                    </div>
+                  </div>
+
+                  <div class="timeline-item d-flex gap-4 mb-5 fade-in-up">
+                    <div class="text-nowrap text-secondary pt-1" style="min-width: 60px;">11~12月</div>
+                    <div class="d-flex flex-column align-items-center position-relative timeline-indicator">
+                      <div class="timeline-dot"><i class="bi bi-people-fill icon-inner"></i></div>
+                      <div class="timeline-line"></div>
+                    </div>
+                    <div class="timeline-content flex-fill">
+                      <strong class="fw-semibold">二階面試</strong>
+                      <div class="text-muted small">依各校系指定時間參加</div>
+                    </div>
+                  </div>
+
+                  <div class="timeline-item d-flex gap-4 fade-in-up">
+                    <div class="text-nowrap text-secondary pt-1" style="min-width: 60px;">12~1月</div>
+                    <div class="d-flex flex-column align-items-center position-relative timeline-indicator">
+                      <div class="timeline-dot"><i class="bi bi-check-circle-fill icon-inner"></i></div>
+                    </div>
+                    <div class="timeline-content flex-fill">
+                      <strong class="fw-semibold">特殊選才放榜</strong>
+                      <div class="text-muted small">查詢個人錄取結果</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--  -->
           </div>
           <div class="col-md-7 order-2 order-md-1" data-aos="fade-up">
-            <h3>特殊選才申請流程</h3>
+            <h3>特殊選才申請流程介紹</h3>
             <p>由於各特殊選才科系招考的確切時間不同，需留意報名、審查及放榜的具體時間，才能及早準備書面審查資料與面試練習。特殊選才的日程主要集中於每年的 10月~12月，以下是相關的大致時程，提供有意申請的學生作為參考。</p>
             <ul>
               <li><i class="bi bi-check"></i> <span>報名時間 : 每年10月 ~ 12月初</span></li>
@@ -426,6 +480,97 @@
       color: #888;
       font-size: 0.9rem;
     }
+
+    /*  */
+    .ios-timeline {
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  background-color: #fff;
+  color: #1c1c1e;
+  border: 1px solid #d1d1d6;
+}
+.card-body {
+  padding: 2rem;
+}
+.text-secondary {
+  color: #8e8e93 !important;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+.text-muted {
+  color: #a1a1a6 !important;
+  font-size: 0.875rem;
+}
+.timeline-dot {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 50%;
+  background-color: #1c1c1e;
+  box-shadow: 0 0 0 4px #f2f2f7;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-inner {
+  color: white;
+  font-size: 14px;
+}
+.timeline-line {
+  flex-grow: 1;
+  width: 2px;
+  background-color: #e5e5ea;
+  margin-top: 4px;
+  height: 100%;
+  position: absolute;
+  top: 28px;
+}
+.timeline-item:last-child .timeline-line {
+  display: none;
+}
+.timeline-content {
+  transition: background-color 0.3s ease, padding-left 0.3s ease;
+  border-radius: 8px;
+  padding-right: 0.5rem;
+}
+.timeline-item:hover .timeline-content {
+  background-color: #f5f5f5;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.timeline-item:hover .timeline-dot {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 6px #d1d1d6;
+}
+.fade-in-up {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 576px) {
+  .timeline-item {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+  }
+  .timeline-item .text-nowrap {
+    min-width: auto !important;
+  }
+  .timeline-dot {
+    margin-left: 0.25rem;
+  }
+  .timeline-line {
+    left: 13px;
+  }
+}
+    /*  */
   </style>
 </body>
 
