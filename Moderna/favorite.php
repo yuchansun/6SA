@@ -297,7 +297,7 @@ bellIcon.style.marginLeft = '10px';
 bellIcon.style.transition = 'color 0.3s ease';  // 添加過渡動畫
 if (todo.is_notified == 1) {
   bellIcon.style.color = 'gold';  // 如果已通知，顯示金色鈴鐺
-  bellIcon.className = 'bi bi-bell-fill';  // 已通知，填滿鈴鐺
+  bellIcon.className = 'bi bi-bell';  // 已通知，填滿鈴鐺
   bellIcon.title = '關閉通知';  // 顯示「關閉通知」的提示文字
 } else {
   bellIcon.style.color = 'gray';  // 如果未通知，顯示灰色鈴鐺
@@ -311,7 +311,7 @@ bellIcon.addEventListener('click', () => {
 
   // 更新鈴鐺顏色與樣式
   bellIcon.style.color = newStatus ? 'gold' : 'gray';  // 更新顏色
-  bellIcon.className = newStatus ? 'bi bi-bell-fill' : 'bi bi-bell-slash';  // 切換為填滿或劃線鈴鐺
+  bellIcon.className = newStatus ? 'bi bi-bell' : 'bi bi-bell-slash';  // 切換為填滿或劃線鈴鐺
 
   // 更新提示文字
   bellIcon.title = newStatus ? '關閉通知' : '開啟通知';  // 根據狀態改變 tooltip 提示文字
