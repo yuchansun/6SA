@@ -216,10 +216,8 @@
 
         <!-- 特殊選才申請流程 -->
         <div class="row gy-4 align-items-center features-item">
-          <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out">
-            <!--  -->
-            <!-- 要把流程圖放到靠右 -->
-          
+          <!-- 流程圖 -->
+          <div class="col-md-5 order-1 order-md-2 d-flex align-items-center timeline-align-more-right" data-aos="zoom-out">
             <div class="card shadow-sm rounded-4 ios-timeline">
 
               <div class="card-body">
@@ -273,8 +271,8 @@
                 </div>
               </div>
             </div>
-            <!--  -->
           </div>
+          <!-- 內文 -->
           <div class="col-md-6 order-2 order-md-1" data-aos="fade-up">
             <h3>特殊選才申請流程介紹</h3>
             <p>由於各特殊選才科系招考的確切時間不同，需留意報名、審查及放榜的具體時間，才能及早準備書面審查資料與面試練習。特殊選才的日程主要集中於每年的 10月~12月，以下是相關的大致時程，提供有意申請的學生作為參考。</p>
@@ -314,52 +312,52 @@
           <!-- <div class="col-md-3 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
             <img src="assets\img\friend.png" class="img-fluid" alt=""> -->
 
+        </div>
+        <div class="col-md-12 order-2 order-md-1" data-aos="fade-up" data-aos-delay="200">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">討論區熱門文章</h3>
+            <a href="blog-details.php" class="btn btn-gray">
+              查看更多 <i class="bi bi-arrow-right ms-1"></i>
+            </a>
           </div>
-          <div class="col-md-12 order-2 order-md-1" data-aos="fade-up" data-aos-delay="200">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h3 class="mb-0">討論區熱門文章</h3>
-              <a href="blog-details.php" class="btn btn-gray">
-                查看更多 <i class="bi bi-arrow-right ms-1"></i>
-              </a>
+
+
+          <p class="fst-italic"></p>
+          <ul>
+            <div class="list-group">
+              <?php if ($hotResult->num_rows > 0): ?>
+                <?php while ($row = $hotResult->fetch_assoc()): ?>
+                  <a href="blog-details.php?highlight_id=<?= $row['Post_ID'] ?>" class="ios-post-card d-block text-decoration-none">
+                    <h5><?= htmlspecialchars($row['Title']) ?></h5>
+                    <p class="content-preview"><?= htmlspecialchars($row['Content']) ?></p>
+
+                    <?php if ($row['TopCommentContent']): ?>
+                      <small class="d-block mb-2 text-muted">
+                        <strong>熱門留言：</strong><?= htmlspecialchars(mb_substr($row['TopCommentContent'], 0, 60)) ?>...
+                      </small>
+                    <?php endif; ?>
+
+                    <div class="meta">
+                      <span><i class="bi bi-person-circle"></i> <?= htmlspecialchars($row['Author']) ?></span>
+                      <span>
+                        <i class="bi bi-heart-fill text-danger"></i> <?= $row['TotalLikes'] ?>
+                        &nbsp;
+                        <i class="bi bi-chat-dots-fill text-primary"></i> <?= $row['CommentCount'] ?>
+                      </span>
+                    </div>
+                  </a>
+                <?php endwhile; ?>
+              <?php else: ?>
+                <p>目前沒有熱門文章。</p>
+              <?php endif; ?>
             </div>
 
 
-            <p class="fst-italic"></p>
-            <ul>
-              <div class="list-group">
-                <?php if ($hotResult->num_rows > 0): ?>
-                  <?php while ($row = $hotResult->fetch_assoc()): ?>
-                    <a href="blog-details.php?highlight_id=<?= $row['Post_ID'] ?>" class="ios-post-card d-block text-decoration-none">
-                      <h5><?= htmlspecialchars($row['Title']) ?></h5>
-                      <p class="content-preview"><?= htmlspecialchars($row['Content']) ?></p>
-
-                      <?php if ($row['TopCommentContent']): ?>
-                        <small class="d-block mb-2 text-muted">
-                          <strong>熱門留言：</strong><?= htmlspecialchars(mb_substr($row['TopCommentContent'], 0, 60)) ?>...
-                        </small>
-                      <?php endif; ?>
-
-                      <div class="meta">
-                        <span><i class="bi bi-person-circle"></i> <?= htmlspecialchars($row['Author']) ?></span>
-                        <span>
-                          <i class="bi bi-heart-fill text-danger"></i> <?= $row['TotalLikes'] ?>
-                          &nbsp;
-                          <i class="bi bi-chat-dots-fill text-primary"></i> <?= $row['CommentCount'] ?>
-                        </span>
-                      </div>
-                    </a>
-                  <?php endwhile; ?>
-                <?php else: ?>
-                  <p>目前沒有熱門文章。</p>
-                <?php endif; ?>
-              </div>
-
-
-            </ul>
-          </div>
+          </ul>
         </div>
+      </div>
 
-        <!-- Features Item -->
+      <!-- Features Item -->
 
 
 
@@ -488,93 +486,119 @@
 
     /*  */
     .ios-timeline {
-  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", "Segoe UI", Roboto, "Noto Sans", sans-serif;
-  background-color: #fff;
-  color: #1c1c1e;
-  border: 1px solid #d1d1d6;
-}
-.card-body {
-  padding: 2rem;
-}
-.text-secondary {
-  color: #8e8e93 !important;
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-.text-muted {
-  color: #a1a1a6 !important;
-  font-size: 0.875rem;
-}
-.timeline-dot {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  border-radius: 50%;
-  background-color: #1c1c1e;
-  box-shadow: 0 0 0 4px #f2f2f7;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.icon-inner {
-  color: white;
-  font-size: 14px;
-}
-.timeline-line {
-  flex-grow: 1;
-  width: 2px;
-  background-color: #e5e5ea;
-  margin-top: 4px;
-  height: 100%;
-  position: absolute;
-  top: 28px;
-}
-.timeline-item:last-child .timeline-line {
-  display: none;
-}
-.timeline-content {
-  transition: background-color 0.3s ease, padding-left 0.3s ease;
-  border-radius: 8px;
-  padding-right: 0.5rem;
-}
-.timeline-item:hover .timeline-content {
-  background-color: #f5f5f5;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-}
-.timeline-item:hover .timeline-dot {
-  transform: scale(1.1);
-  box-shadow: 0 0 0 6px #d1d1d6;
-}
-.fade-in-up {
-  animation: fadeInUp 0.6s ease forwards;
-  opacity: 0;
-  transform: translateY(20px);
-}
-@keyframes fadeInUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-@media (max-width: 576px) {
-  .timeline-item {
-    flex-direction: column;
-    align-items: flex-start !important;
-    gap: 0.75rem;
-  }
-  .timeline-item .text-nowrap {
-    min-width: auto !important;
-  }
-  .timeline-dot {
-    margin-left: 0.25rem;
-  }
-  .timeline-line {
-    left: 13px;
-  }
-}
+      font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", "Segoe UI", Roboto, "Noto Sans", sans-serif;
+      background-color: #fff;
+      color: #1c1c1e;
+      border: 1px solid #d1d1d6;
+    }
+
+    .card-body {
+      padding: 2rem;
+    }
+
+    .text-secondary {
+      color: #8e8e93 !important;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .text-muted {
+      color: #a1a1a6 !important;
+      font-size: 0.875rem;
+    }
+
+    .timeline-dot {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      min-height: 28px;
+      border-radius: 50%;
+      background-color: #1c1c1e;
+      box-shadow: 0 0 0 4px #f2f2f7;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-inner {
+      color: white;
+      font-size: 14px;
+    }
+
+    .timeline-line {
+      flex-grow: 1;
+      width: 2px;
+      background-color: #e5e5ea;
+      margin-top: 4px;
+      height: 100%;
+      position: absolute;
+      top: 28px;
+    }
+
+    .timeline-item:last-child .timeline-line {
+      display: none;
+    }
+
+    .timeline-content {
+      transition: background-color 0.3s ease, padding-left 0.3s ease;
+      border-radius: 8px;
+      padding-right: 0.5rem;
+    }
+
+    .timeline-item:hover .timeline-content {
+      background-color: #f5f5f5;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    .timeline-item:hover .timeline-dot {
+      transform: scale(1.1);
+      box-shadow: 0 0 0 6px #d1d1d6;
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 576px) {
+      .timeline-item {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+      }
+
+      .timeline-item .text-nowrap {
+        min-width: auto !important;
+      }
+
+      .timeline-dot {
+        margin-left: 0.25rem;
+      }
+
+      .timeline-line {
+        left: 13px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .timeline-align-more-right {
+        margin-left: auto;
+        margin-right: -40px;
+        /* 或你想要的數值 */
+      }
+    }
+
+
     /*  */
   </style>
 </body>
