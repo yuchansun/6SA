@@ -4,6 +4,11 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 $currentPage = basename($_SERVER['PHP_SELF']);
 $isHome = ($currentPage === 'index.php');
+$photoPath = isset($_SESSION['photo']) && !empty($_SESSION['photo']) 
+    ? $_SESSION['photo']  // This will use the updated photo from session
+    : 'assets/img/personal_photo/default.jpeg';
+
+
 ?>
 
 <header id="header" class="header d-flex align-items-center fixed-top ">
@@ -27,12 +32,15 @@ $isHome = ($currentPage === 'index.php');
         </li>
 
         <?php if (isset($_SESSION['nickname'])): ?>
-          <li>Hi, <?= htmlspecialchars($_SESSION['nickname']) ?></li>
-          <li><a href="update_personal.php">個人資料</a></li> <!-- Link to profile page -->
-          <li><a href="logout.php">登出</a></li>
-        <?php else: ?>
-          <li><a href="contact.php">登入</a></li>
-        <?php endif; ?>
+          <li class="d-flex align-items-center">
+  <img src="<?= $photoPath ?>" alt="Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
+  <span>Hi, <?= htmlspecialchars($_SESSION['nickname']) ?></span>
+</li>
+<li><a href="update_personal.php">個人資料</a></li>
+<li><a href="logout.php">登出</a></li>
+  <?php else: ?>
+    <li><a href="contact.php">登入</a></li>
+  <?php endif; ?>
       </ul>
       <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
     </nav>
