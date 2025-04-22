@@ -192,6 +192,21 @@ if (isset($_SESSION['user'])) {
     $stmt->close();
 }
 
+// 從資料庫中獲取使用者的 Photo
+$photo = "assets/img/blog/blog-author.jpg"; // 預設圖片
+if (isset($_SESSION['user'])) {
+    $userEmail = $_SESSION['user'];
+    $stmt = $conn->prepare("SELECT Photo FROM account WHERE `E-mail` = ?");
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $photo = !empty($user['Photo']) ? $user['Photo'] : $photo;
+    }
+    $stmt->close();
+}
+
 // 獲取使用者的近期貼文
 $recentPosts = [];
 if (isset($_SESSION['user'])) {
@@ -581,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="blog-author-widget widget-item">
 
               <div class="d-flex flex-column align-items-center">
-                <img src="assets/img/blog/blog-author.jpg" class="rounded-circle flex-shrink-0" alt="">
+                <img src="<?= htmlspecialchars($photo) ?>" class="rounded-circle flex-shrink-0" alt="">
                 <h4><?= htmlspecialchars($nickname) ?></h4>
                 
 
