@@ -14,6 +14,46 @@ if (!isset($_SESSION['user'])) {
 // 連接資料庫
 require_once 'db.php';
 
+// 獲取使用者已點讚的文章與留言
+$likedPostIds = [];
+$likedCommentIds = [];
+if (isset($_SESSION['user'])) {
+    $userEmail = $_SESSION['user'];
+    $stmt = $conn->prepare("SELECT User_ID FROM account WHERE `E-mail` = ?");
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $userId = $user['User_ID'];
+
+        // 獲取已點讚的文章
+        $likedPostsQuery = $conn->prepare("SELECT Post_ID FROM likes WHERE User_ID = ? AND Post_ID IS NOT NULL");
+        $likedPostsQuery->bind_param("i", $userId);
+        $likedPostsQuery->execute();
+        $likedPostsResult = $likedPostsQuery->get_result();
+        while ($row = $likedPostsResult->fetch_assoc()) {
+            $likedPostIds[] = $row['Post_ID'];
+        }
+
+        // 獲取已點讚的留言
+        $likedCommentsQuery = $conn->prepare("SELECT Comment_ID FROM likes WHERE User_ID = ? AND Comment_ID IS NOT NULL");
+        $likedCommentsQuery->bind_param("i", $userId);
+        $likedCommentsQuery->execute();
+        $likedCommentsResult = $likedCommentsQuery->get_result();
+        while ($row = $likedCommentsResult->fetch_assoc()) {
+            $likedCommentIds[] = $row['Comment_ID'];
+        }
+    }
+    $stmt->close();
+}
+
+// 將點讚資料傳遞給前端
+echo "<script>
+    const likedPostIds = " . json_encode($likedPostIds) . ";
+    const likedCommentIds = " . json_encode($likedCommentIds) . ";
+</script>";
+
 // 處理新增貼文提交
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'], $_POST['comment'])) {
     $title = $conn->real_escape_string($_POST['title']);
@@ -215,6 +255,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('缺少 postId 或 commentId');
             }
         });
+    });
+
+    // 更新文章按鈕狀態
+    likedPostIds.forEach(postId => {
+        const postButton = document.querySelector(`.btn-like[data-post-id="${postId}"]`);
+        if (postButton) {
+            postButton.classList.add('liked');
+            postButton.querySelector('i').classList.remove('bi-heart');
+            postButton.querySelector('i').classList.add('bi-heart-fill');
+        }
+    });
+
+    // 更新留言按鈕狀態
+    likedCommentIds.forEach(commentId => {
+        const commentButton = document.querySelector(`.btn-like[data-comment-id="${commentId}"]`);
+        if (commentButton) {
+            commentButton.classList.add('liked');
+            commentButton.querySelector('i').classList.remove('bi-heart');
+            commentButton.querySelector('i').classList.add('bi-heart-fill');
+        }
     });
 });
 </script>
