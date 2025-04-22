@@ -48,36 +48,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Handle photo upload with validation
         if ($photo['error'] == 0) {
-            // Check if file type is allowed
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-            if (!in_array($photo['type'], $allowed_types)) {
-                $error = "只允許上傳 JPG, PNG 或 GIF 格式的圖片。";
-            } else {
-                // Check if file size is less than 5MB
-                if ($photo['size'] > 5 * 1024 * 1024) {
-                    $error = "圖片檔案大小不能超過 5MB。";
-                } else {
-                    // Set the target directory and file name
-                    $target_dir = "assets/img/personal_photo";
-                    $target_file = $target_dir . basename($photo["name"]);
-                    
-                    // Move the uploaded file to the target directory
-                    if (move_uploaded_file($photo["tmp_name"], $target_file)) {
-                        // Save the photo path to the database
-                        $stmt = $conn->prepare("UPDATE account SET Photo = ? WHERE `E-mail` = ?");
-                        $stmt->bind_param("ss", $target_file, $email);
-                        if ($stmt->execute()) {
-                            $success_message = "照片更新成功!";
-                        } else {
-                            $error = "照片更新失敗，請再試一次。";
-                        }
-                        $stmt->close();
-                    } else {
-                        $error = "照片上傳失敗，請再試一次。";
-                    }
-                }
-            }
-        }
+          // Check if file type is allowed
+          $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+          if (!in_array($photo['type'], $allowed_types)) {
+              $error = "只允許上傳 JPG, PNG 或 GIF 格式的圖片。";
+          } else {
+              // Check if file size is less than 5MB
+              if ($photo['size'] > 5 * 1024 * 1024) {
+                  $error = "圖片檔案大小不能超過 5MB。";
+              } else {
+                  // Set the target directory and file name
+                  $target_dir = "assets/img/personal_photo";
+                  $target_file = $target_dir . basename($photo["name"]);
+                  
+                  // Move the uploaded file to the target directory
+                  if (move_uploaded_file($photo["tmp_name"], $target_file)) {
+                      // Save the photo path to the database
+                      $stmt = $conn->prepare("UPDATE account SET Photo = ? WHERE `E-mail` = ?");
+                      $stmt->bind_param("ss", $target_file, $email);
+                      if ($stmt->execute()) {
+                          $_SESSION['photo'] = $target_file;  // Update session with the new photo path
+                          $success_message = "照片更新成功!";
+                      } else {
+                          $error = "照片更新失敗，請再試一次。";
+                      }
+                      $stmt->close();
+                  } else {
+                      $error = "照片上傳失敗，請再試一次。";
+                  }
+              }
+          }
+      }
     }
 
     $conn->close();
