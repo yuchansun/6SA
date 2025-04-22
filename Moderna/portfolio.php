@@ -119,7 +119,10 @@
   transform: scale(1.1); /* Optionally, scale the image slightly on hover */
 }
 
-  
+  .portfolio-container {
+    margin: 10px;
+    
+  }
 </style>
 </head>
 
