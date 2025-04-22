@@ -193,7 +193,7 @@
 
       <div class="container">
         <!-- 適合走特殊選才的六大類型 -->
-        <div class="row gy-4 align-items-center features-item">
+        <!-- <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
             <img src="assets/img/features-1.svg" class="img-fluid" alt="">
           </div>
@@ -211,12 +211,15 @@
               <li><i class="bi bi-check"></i> <span>特殊教育背景</span></li>
             </ul>
           </div>
-        </div><!-- Features Item -->
+        </div> -->
+        <!-- Features Item -->
 
         <!-- 特殊選才申請流程 -->
         <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out">
             <!--  -->
+            <!-- 要把流程圖放到靠右 -->
+          
             <div class="card shadow-sm rounded-4 ios-timeline">
 
               <div class="card-body">
@@ -272,7 +275,7 @@
             </div>
             <!--  -->
           </div>
-          <div class="col-md-7 order-2 order-md-1" data-aos="fade-up">
+          <div class="col-md-6 order-2 order-md-1" data-aos="fade-up">
             <h3>特殊選才申請流程介紹</h3>
             <p>由於各特殊選才科系招考的確切時間不同，需留意報名、審查及放榜的具體時間，才能及早準備書面審查資料與面試練習。特殊選才的日程主要集中於每年的 10月~12月，以下是相關的大致時程，提供有意申請的學生作為參考。</p>
             <ul>
@@ -283,7 +286,7 @@
           </div>
         </div><!-- Features Item -->
         <!-- 備審資料 -->
-        <div class="row gy-4 align-items-center features-item">
+        <!-- <div class="row gy-4 align-items-center features-item">
           <div class="col-md-5 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
             <img src="assets/img/features-4.svg" class="img-fluid" alt="">
           </div>
@@ -304,13 +307,15 @@
               個人簡歷、自傳、申請動機、讀書計畫、有利的佐證資料。
             </p>
           </div>
-        </div><!-- Features Item -->
+        </div> -->
+        <!-- Features Item -->
         <!--討論區熱門文章  -->
         <div class="row gy-4 align-items-center features-item">
-          <div class="col-md-5 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
-            <img src="assets/img/features-2.svg" class="img-fluid" alt="">
+          <!-- <div class="col-md-3 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
+            <img src="assets\img\friend.png" class="img-fluid" alt=""> -->
+
           </div>
-          <div class="col-md-7 order-2 order-md-1" data-aos="fade-up" data-aos-delay="200">
+          <div class="col-md-12 order-2 order-md-1" data-aos="fade-up" data-aos-delay="200">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h3 class="mb-0">討論區熱門文章</h3>
               <a href="blog-details.php" class="btn btn-gray">
@@ -330,7 +335,7 @@
 
                       <?php if ($row['TopCommentContent']): ?>
                         <small class="d-block mb-2 text-muted">
-                          <strong>熱門留言：</strong><?= htmlspecialchars(mb_substr($row['TopCommentContent'], 0, 40)) ?>...
+                          <strong>熱門留言：</strong><?= htmlspecialchars(mb_substr($row['TopCommentContent'], 0, 60)) ?>...
                         </small>
                       <?php endif; ?>
 
