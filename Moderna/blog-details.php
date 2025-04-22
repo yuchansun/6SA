@@ -162,7 +162,7 @@ $totalPostsQuery = $conn->query("SELECT COUNT(*) as total FROM posts");
 $totalPosts = $totalPostsQuery->fetch_assoc()['total'];
 $totalPages = ceil($totalPosts / $postsPerPage);
 
-$postsQuery = $conn->prepare("SELECT p.*, a.Nickname FROM posts p JOIN account a ON p.User_ID = a.User_ID ORDER BY Post_Time DESC LIMIT ? OFFSET ?");
+$postsQuery = $conn->prepare("SELECT p.*, a.Nickname, a.Roles FROM posts p JOIN account a ON p.User_ID = a.User_ID ORDER BY Post_Time DESC LIMIT ? OFFSET ?");
 $postsQuery->bind_param("ii", $postsPerPage, $offset);
 $postsQuery->execute();
 $postsResult = $postsQuery->get_result();
@@ -320,6 +320,16 @@ document.addEventListener('DOMContentLoaded', function () {
   background-color: #fff8e1 !important;
   transition: all 0.5s ease;
 }
+
+.role {
+  font-style: italic;
+  color:rgb(42, 120, 126); /* 橘色 */
+  font-size: 0.85em;
+  
+  border-radius: 4px;
+  padding: 2px 4px;
+  background-color:rgb(122, 201, 221); /* 淡橘背景 */
+}
 </style>
 
 
@@ -406,6 +416,24 @@ document.addEventListener('DOMContentLoaded', function () {
     .post-item h3 {
       font-size: 3em; /* 放大 100% */
     }
+    .floating-btn {
+      margin-top: 15px;
+      display: inline-block;
+      background: #007bff; /* 純藍色背景 */
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    .floating-btn:hover {
+      background: #0056b3; /* 深藍色背景 */
+      transform: scale(1.05);
+    }
+    .floating-btn i {
+      margin-left: 5px;
+    }
   </style>
 </head>
 
@@ -463,10 +491,10 @@ document.addEventListener('DOMContentLoaded', function () {
           <section id="blog-posts" class="blog-posts section">
             <div class="container">
               <?php while ($post = $postsResult->fetch_assoc()): ?>
-                <div class="post-item data-post-id="<?= $post['Post_ID'] ?>" id="post-<?= $post['Post_ID'] ?>"">
+                <div class="post-item data-post-id="<?= $post['Post_ID'] ?>" id="post-<?= $post['Post_ID'] ?>">
                   <h3><?= htmlspecialchars($post['Title']) ?></h3>
                   <div class="meta">
-                    <span>由 <?= htmlspecialchars($post['Nickname']) ?> 發布於 <?= $post['Post_Time'] ?></span>
+                    <span>由 <?= htmlspecialchars($post['Nickname']) ?> <span class="role"><?= htmlspecialchars($post['Roles']) ?></span> 發布於 <?= $post['Post_Time'] ?></span>
                   </div>
                   <?php
                   $content = htmlspecialchars($post['Content']);
@@ -492,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   <!-- 顯示留言 -->
                   <div class="comments">
                     <?php
-                    $commentsQuery = $conn->query("SELECT c.*, a.Nickname FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = " . $post['Post_ID'] . " ORDER BY c.Likes DESC, c.Comment_Time ASC");
+                    $commentsQuery = $conn->query("SELECT c.*, a.Nickname, a.Roles FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = " . $post['Post_ID'] . " ORDER BY c.Likes DESC, c.Comment_Time ASC");
                     $comments = [];
                     while ($comment = $commentsQuery->fetch_assoc()) {
                         $comments[] = $comment;
@@ -503,8 +531,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div id="top-comments">
                       <?php foreach ($topComments as $comment): ?>
                         <div class="comment-item">
-                          <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
-                          <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> | 點讚數: <?= $comment['Likes'] ?></div>
+                          <p><strong><?= htmlspecialchars($comment['Nickname']) ?> <span class="role"><?= htmlspecialchars($comment['Roles']) ?></span>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
+                          <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
                           <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                             <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
                           </button>
@@ -517,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function () {
                       <div id="all-comments" style="display: none;">
                         <?php foreach (array_slice($comments, 3) as $comment): ?>
                           <div class="comment-item">
-                            <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
+                            <p><strong><?= htmlspecialchars($comment['Nickname']) ?> <span class="role"><?= htmlspecialchars($comment['Roles']) ?></span>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
                             <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> | 點讚數: <?= $comment['Likes'] ?></div>
                             <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                               <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
@@ -655,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function () {
               .floating-btn {
                 margin-top: 15px;
                 display: inline-block;
-                background: linear-gradient(45deg, #007bff, #00d4ff);
+                background: #007bff; /* 純藍色背景 */
                 color: #fff;
                 border: none;
                 border-radius: 20px;
@@ -664,7 +692,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 transition: all 0.3s ease;
               }
               .floating-btn:hover {
-                background: linear-gradient(45deg, #0056b3, #0099cc);
+                background: #0056b3; /* 深藍色背景 */
                 transform: scale(1.05);
               }
               .floating-btn i {
@@ -759,18 +787,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   <?php include('footer.php'); ?>
 
-    <div class="container copyright text-center mt-4">
-      <p>© <span>Copyright</span> <strong class="px-1 sitename">Moderna</strong> <span>All Rights Reserved</span></p>
-      <div class="credits">
-        <!-- All the links in the footer should remain intact. -->
-        <!-- You can delete the links only if you've purchased the pro version. -->
-        <!-- Licensing information: https://bootstrapmade.com/license/ -->
-        <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
-        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-      </div>
-    </div>
-
-  </footer>
 
   <!-- Scroll Top -->
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
