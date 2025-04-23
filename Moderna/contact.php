@@ -36,7 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
               setcookie('remember_password', '', time() - 3600, "/");
           }
       
-          header("Location: index.php");
+          $redirect = $_GET['redirect'] ?? 'index.php'; // 沒有就回首頁
+          header("Location: $redirect");
           exit();
         } else {
             $error = "密碼錯誤.";
