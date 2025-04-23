@@ -137,19 +137,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body class="contact-page">
 <style>
   body.contact-page #header {
-    position: fixed;
+    
     top: 0;
     width: 100%;
     z-index: 999;
     background: rgba(0, 55, 67, 0.95);
   }
   .container {
-    max-width: 960px;
+    padding: 35px; /* Add padding to the container */
+    
   }
   .left-form {
     display: flex;
     justify-content: flex-start;
-    margin-left: 40%; /* Move it more to the left */
+    margin-left: 38%; /* Move it more to the left */
   }
   .card {
     max-width: 500px;
@@ -168,6 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       <div class="row justify-content-start">
         <div class="col-md-6 col-lg-4 left-form">
           <div class="card shadow p-4">
+            
             <h4 class="text-center mb-4">更新個人資料</h4>
             <form action="" method="post" enctype="multipart/form-data">
               <?php if (!empty($error)): ?>
