@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 ?>
 
+<?php include('header.php'); ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -53,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <meta name="keywords" content="">
 
   <!-- Favicons -->
-  <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Fonts -->
@@ -73,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 
 <body class="contact-page">
-<?php include('header.php'); ?>
 <style>
   body.contact-page #header {
   position: fixed;

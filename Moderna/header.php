@@ -5,7 +5,19 @@ if (session_status() == PHP_SESSION_NONE) {
 $currentPage = basename($_SERVER['PHP_SELF']);
 $isHome = ($currentPage === 'index.php');
 ?>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>特殊選才</title>
+  <link rel="icon" href="assets\img\friend.png" type="image/png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+</body>
+</html>
 <header id="header" class="header d-flex align-items-center fixed-top ">
   <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 

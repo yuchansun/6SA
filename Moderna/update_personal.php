@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $conn->close();
 }
 ?>
-
+<?php include('header.php'); ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -115,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 
 <body class="contact-page">
-<?php include('header.php'); ?>
 <style>
   body.contact-page #header {
     position: fixed;
