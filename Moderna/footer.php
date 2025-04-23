@@ -37,7 +37,7 @@
           <ul>
             <li><i class="bi bi-chevron-right"></i> <a href="index.php">首頁</a></li>
             <li><i class="bi bi-chevron-right"></i> <a href="about.php">校系簡章</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="service.php">學群介紹</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="services.php">學群介紹</a></li>
             <li><i class="bi bi-chevron-right"></i> <a href="portfolio.php">學校介紹</a></li>
           </ul>
         </div>
