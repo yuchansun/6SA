@@ -34,29 +34,31 @@ session_start();
   <section id="about" class="about section">
     <div class="container">
     <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "sa-6";
+include 'db.php';
 
-// 資料庫連線
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("資料庫連線失敗: " . $conn->connect_error);
-}
 // 抓取下拉選單的項目
-function getDistinctOptions($conn, $column, $table = "sch_description") {
-  $sql = "SELECT DISTINCT `$column` FROM `$table` WHERE `$column` IS NOT NULL AND `$column` <> ''";
-  $result = $conn->query($sql);
-  $options = [];
-  if ($result) {
-      while ($row = $result->fetch_assoc()) {
-          $options[] = $row[$column];
-      }
-  }
-  return $options;
+function getDistinctOptions($conn, $column, $table = "sch_description", $filterColumn = null, $filterValue = null) {
+    $sql = "SELECT DISTINCT `$column` FROM `$table` WHERE `$column` IS NOT NULL AND `$column` <> ''";
+    
+    // 如果提供了篩選條件，則加上額外的 WHERE 條件
+    if ($filterColumn && $filterValue) {
+        $sql .= " AND `$filterColumn` = ?";
+    }
+
+    $stmt = $conn->prepare($sql);
+    if ($filterColumn && $filterValue) {
+        $stmt->bind_param("s", $filterValue);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $options = [];
+    while ($row = $result->fetch_assoc()) {
+        $options[] = $row[$column];
+    }
+    return $options;
 }
 
+// 取得下拉選單資料
 $regionOptions = getDistinctOptions($conn, 'Region');
 $schoolOptions = getDistinctOptions($conn, 'School_Name');
 $departmentOptions = getDistinctOptions($conn, 'Department');
@@ -65,40 +67,43 @@ $planOptions = getDistinctOptions($conn, 'Plan');
 $idOptions = getDistinctOptions($conn, 'ID');
 $talentOptions = getDistinctOptions($conn, 'Talent');
 
-
 // 取得搜尋 & 篩選參數
 $filters = [
-  "q" => $_GET['q'] ?? "",
-  "region" => $_GET['region'] ?? "",
-  "department" => $_GET['department'] ?? "",
-  "plan" => $_GET['plan'] ?? "",
-  "talent" => $_GET['talent'] ?? "",
-  "ID" => $_GET['ID'] ?? "",
-  "school_name" => $_GET['school_name'] ?? "",
-  "disc_cluster" => $_GET['disc_cluster'] ?? ""
+    "q" => $_GET['q'] ?? "",
+    "region" => $_GET['region'] ?? "",
+    "department" => $_GET['department'] ?? "",
+    "plan" => $_GET['plan'] ?? "",
+    "talent" => $_GET['talent'] ?? "",
+    "ID" => $_GET['ID'] ?? "",
+    "school_name" => $_GET['school_name'] ?? "",
+    "disc_cluster" => $_GET['disc_cluster'] ?? ""
 ];
 
+// 根據選擇的學校過濾科系和學群
+if (!empty($filters["school_name"])) {
+    $departmentOptions = getDistinctOptions($conn, 'Department', "sch_description", "School_Name", $filters["school_name"]);
+    $discClusterOptions = getDistinctOptions($conn, 'Disc_Cluster', "sch_description", "School_Name", $filters["school_name"]);
+}
 
-
-$keywordMapping = [
-    "清大" => "清華大學",
-    "台大" => "台灣大學",
-    "交大" => "交通大學",
-    "成大" => "成功大學",
-];
-
-
+// 準備 SQL 查詢語句
 $sql = "SELECT sd.*, aty.110, aty.111, aty.112, aty.113, aty.114 
         FROM sch_description sd 
         LEFT JOIN admi_thro_years aty ON sd.Sch_num = aty.sch_num 
-        WHERE 1=1";
+        WHERE 1=1";  // 預設條件，始終為 true，用來加上過濾條件
 
 $params = [];
 $types = "";
 
+// 篩選出台中的學校
+if (!empty($filters["region"]) && $filters["region"] == "台中") {
+    $sql .= " AND sd.Region = ?";
+    $params[] = "台中";  // 台中地區
+    $types .= "s";
+}
+
 // 處理關鍵字搜尋
 if (!empty($filters["q"])) {
-    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster",  "Talent", "ID", "Plan", "Quota", "Contact", "link"];
+    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
     $searchConditions = [];
 
     $searchTerms = preg_split('/\s+/', trim($filters["q"]));
@@ -106,9 +111,6 @@ if (!empty($filters["q"])) {
 
     foreach ($searchTerms as $term) {
         $expandedTerms[] = $term;
-        if (isset($keywordMapping[$term])) {
-            $expandedTerms[] = $keywordMapping[$term];
-        }
     }
 
     foreach ($expandedTerms as $term) {
@@ -127,7 +129,7 @@ if (!empty($filters["q"])) {
 // 處理其他篩選條件
 foreach ($filters as $key => $value) {
     if ($key !== "q" && !empty($value)) {
-        $sql .= " AND $key = ?";
+        $sql .= " AND sd.$key = ?";
         $params[] = $value;
         $types .= "s";
     }
@@ -154,7 +156,7 @@ $conn->close();
 
 <div class="filter-container">
 <form method="GET" action="" class="filter-form">
-    <select name="region">
+    <select name="region" id="region">
         <option value="">選擇地區</option>
         <?php foreach ($regionOptions as $option): ?>
             <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["region"] == $option) ? "selected" : "" ?>>
@@ -163,34 +165,19 @@ $conn->close();
         <?php endforeach; ?>
     </select>
 
-    <select name="school_name">
+    <select name="school_name" id="school_name">
         <option value="">選擇學校</option>
-        <?php foreach ($schoolOptions as $option): ?>
-            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["school_name"] == $option) ? "selected" : "" ?>>
-                <?= htmlspecialchars($option) ?>
-            </option>
-        <?php endforeach; ?>
     </select>
 
-    <select name="department">
-        <option value="">選擇科系</option>
-        <?php foreach ($departmentOptions as $option): ?>
-            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["department"] == $option) ? "selected" : "" ?>>
-                <?= htmlspecialchars($option) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-
-    <select name="disc_cluster">
+    <select name="disc_cluster" id="disc_cluster">
         <option value="">選擇學群</option>
-        <?php foreach ($discClusterOptions as $option): ?>
-            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["disc_cluster"] == $option) ? "selected" : "" ?>>
-                <?= htmlspecialchars($option) ?>
-            </option>
-        <?php endforeach; ?>
     </select>
 
-    <select name="plan">
+    <select name="department" id="department">
+        <option value="">選擇科系</option>
+    </select>
+
+    <select name="plan" id="plan">
         <option value="">選擇計畫類別</option>
         <?php foreach ($planOptions as $option): ?>
             <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["plan"] == $option) ? "selected" : "" ?>>
@@ -199,7 +186,7 @@ $conn->close();
         <?php endforeach; ?>
     </select>
 
-    <select name="ID">
+    <select name="ID" id="ID">
         <option value="">選擇身份</option>
         <?php foreach ($idOptions as $option): ?>
             <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["ID"] == $option) ? "selected" : "" ?>>
@@ -208,8 +195,7 @@ $conn->close();
         <?php endforeach; ?>
     </select>
 
-    
-    <select name="talent">
+    <select name="talent" id="talent">
         <option value="">選擇能力</option>
         <?php foreach ($talentOptions as $option): ?>
             <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["talent"] == $option) ? "selected" : "" ?>>
@@ -219,10 +205,87 @@ $conn->close();
     </select>
 
     <input type="text" name="q" value="<?= htmlspecialchars($filters['q']) ?>" placeholder="輸入關鍵字..." class="search-input">
-    
-    <!-- 搜尋按鈕 -->
     <button type="submit" class="search-button">搜尋 <i class="bi bi-search"></i></button>
 </form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+    // 頁面載入後自動更新所有下拉選單
+    updateAllSelectOptions();
+
+    // 綁定選單變動事件
+    $('#region').on('change', function () {
+        updateSelectOptions('school_name');
+        updateSelectOptions('department');
+        updateSelectOptions('disc_cluster');
+    });
+
+    $('#school_name').on('change', function () {
+        updateSelectOptions('department');
+        updateSelectOptions('disc_cluster');
+    });
+
+    $('#department').on('change', function () {
+        updateSelectOptions('disc_cluster');
+    });
+});
+
+// 取得目前選擇的篩選條件
+function getCurrentFilters() {
+    return {
+        region: $('#region').val(),
+        school_name: $('#school_name').val(),
+        department: $('#department').val(),
+        disc_cluster: $('#disc_cluster').val(),
+    };
+}
+
+// 更新所有的下拉選單
+function updateAllSelectOptions() {
+    updateSelectOptions('school_name');
+    updateSelectOptions('department');
+    updateSelectOptions('disc_cluster');
+}
+
+// 更新特定的下拉選單
+function updateSelectOptions(target) {
+    const filters = getCurrentFilters();
+    filters['target'] = target;
+
+    const labels = {
+        region: '地區',
+        school_name: '學校',
+        department: '科系',
+        disc_cluster: '學群',
+        plan: '計畫類別',
+        ID: '身份',
+        talent: '能力'
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedValFromUrl = urlParams.get(target) || '';
+
+    $.ajax({
+        url: 'get_options.php',
+        type: 'GET',
+        data: filters,
+        dataType: 'json',
+        success: function(response) {
+            const select = $('#' + target);
+            const label = labels[target] || '項目';
+
+            select.empty().append('<option value="">選擇' + label + '</option>');
+            $.each(response, function(_, val) {
+                const selected = val === selectedValFromUrl ? ' selected' : '';
+                select.append('<option value="' + val + '"' + selected + '>' + val + '</option>');
+            });
+        }
+    });
+}
+</script>
+
+
 </div>
       <div style="display: flex; justify-content: flex-end;">
         <form method="GET" >
