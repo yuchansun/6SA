@@ -8,6 +8,12 @@ $photoPath = isset($_SESSION['photo']) && !empty($_SESSION['photo'])
     ? $_SESSION['photo']  // This will use the updated photo from session
     : 'assets/img/personal_photo/default.jpeg';
 
+// 點擊討論區檢查
+if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
+    $_SESSION['redirect_to'] = 'blog-details.php'; 
+    header('Location: contact.php'); 
+    exit();
+}
 
 ?>
 
