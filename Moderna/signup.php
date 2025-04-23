@@ -112,7 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         你是 ：
                         <select name="roles" class="form-select" required>
     <option value="學生" <?= isset($_POST['roles']) && $_POST['roles'] == '學生' ? 'selected' : '' ?>>學生</option>
+    <option value="學長姐" <?= isset($_POST['roles']) && $_POST['roles'] == '學長姐' ? 'selected' : '' ?>>學長姐</option>
     <option value="教師" <?= isset($_POST['roles']) && $_POST['roles'] == '教師' ? 'selected' : '' ?>>教師</option>
+    
 </select>
                     </div>
                     <div class="d-grid">
