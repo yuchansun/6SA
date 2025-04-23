@@ -119,7 +119,14 @@ window.onload = function () {
             }
           </style>
           <ul>
-            <li><strong>簡章網址</strong>: <a href="${school.link}" target="_blank">${school.link}</a></li>
+           <li><strong>簡章網址</strong>: <a href="${school.link}" target="_blank" class="wrap-link">${school.link}</a></li>
+<style>
+.wrap-link {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+</style>
           </ul>
 
           <div class="todo-section">
@@ -168,10 +175,14 @@ function renderTodos(schNum, userId) {
   if (!list) return;
 
   if (!schNum || !userId) {
-    console.error("未登入，無法載入待辦清單！");
-    list.innerHTML = "<p>請先登入以查看待辦清單。</p>";
-    return;
-  }
+  console.error("未登入，無法載入待辦清單！");
+  list.innerHTML = `
+    <a href="contact.php?redirect=favorite.php">
+      請先登入以查看待辦清單。
+    </a>`;
+  return;
+}
+
 
   console.log("載入待辦清單，schNum:", schNum, "userId:", userId);
 
