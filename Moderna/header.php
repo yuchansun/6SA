@@ -44,11 +44,11 @@ $photoPath = isset($_SESSION['photo']) && !empty($_SESSION['photo'])
         </li>
 
         <?php if (isset($_SESSION['nickname'])): ?>
-          <li class="d-flex align-items-center">
+          <li class="d-flex align-items-center"><a href="update_personal.php">
   <img src="<?= $photoPath ?>" alt="Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
-  <span>Hi, <?= htmlspecialchars($_SESSION['nickname']) ?></span>
+  <span>Hi, <?= htmlspecialchars($_SESSION['nickname']) ?></span><li>個人資料</li></a>
 </li>
-<li><a href="update_personal.php">個人資料</a></li>
+
 <li><a href="logout.php">登出</a></li>
   <?php else: ?>
     <li><a href="contact.php">登入</a></li>

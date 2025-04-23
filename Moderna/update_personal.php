@@ -8,6 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nickname = $_POST['nickname'];
     $new_password = $_POST['new_password'];
     $confirm_password = $_POST['confirm_password'];
+    $role = $_POST['roles'];
     $email = $_SESSION['user'];
     $photo = $_FILES['photo'];
 
@@ -15,6 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $conn = new mysqli('localhost', 'root', '', 'sa-6');
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
+    }
+
+    // Fetch latest role from database to sync session
+    $result = $conn->query("SELECT Roles FROM account WHERE `E-mail` = '$email'");
+    if ($result && $row = $result->fetch_assoc()) {
+        $_SESSION['role'] = $row['Roles'];
     }
 
     // Check if password fields match
@@ -26,64 +33,76 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt = $conn->prepare("UPDATE account SET Nickname = ? WHERE `E-mail` = ?");
             $stmt->bind_param("ss", $nickname, $email);
             if ($stmt->execute()) {
-                $_SESSION['nickname'] = $nickname; // <- This updates the session used in header
-                $success_message = "暱稱更新成功!";
+                $_SESSION['nickname'] = $nickname;
+                $success_message .= "暱稱更新成功! ";
             } else {
-                $error = "暱稱更新失敗，請再試一次。";
+                $error .= "暱稱更新失敗，請再試一次。";
             }
             $stmt->close();
         }
 
         // Handle password update
         if (!empty($new_password)) {
+            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
             $stmt = $conn->prepare("UPDATE account SET Password = ? WHERE `E-mail` = ?");
-            $stmt->bind_param("ss", $new_password, $email);
+            $stmt->bind_param("ss", $hashed_password, $email);
             if ($stmt->execute()) {
-                $success_message = "密碼更新成功!";
+                $success_message .= "密碼更新成功! ";
             } else {
-                $error = "密碼更新失敗，請再試一次。";
+                $error .= "密碼更新失敗，請再試一次。";
+            }
+            $stmt->close();
+        }
+
+        // Handle role update
+        if (!empty($role)) {
+            $stmt = $conn->prepare("UPDATE account SET Roles = ? WHERE `E-mail` = ?");
+            $stmt->bind_param("ss", $role, $email);
+            if ($stmt->execute()) {
+                $_SESSION['role'] = $role;
+                $success_message .= "身分更新成功! ";
+            } else {
+                $error .= "身分更新失敗，請再試一次。";
             }
             $stmt->close();
         }
 
         // Handle photo upload with validation
         if ($photo['error'] == 0) {
-          // Check if file type is allowed
-          $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-          if (!in_array($photo['type'], $allowed_types)) {
-              $error = "只允許上傳 JPG, PNG 或 GIF 格式的圖片。";
-          } else {
-              // Check if file size is less than 5MB
-              if ($photo['size'] > 5 * 1024 * 1024) {
-                  $error = "圖片檔案大小不能超過 5MB。";
-              } else {
-                  // Set the target directory and file name
-                  $target_dir = "assets/img/personal_photo";
-                  $target_file = $target_dir . basename($photo["name"]);
-                  
-                  // Move the uploaded file to the target directory
-                  if (move_uploaded_file($photo["tmp_name"], $target_file)) {
-                      // Save the photo path to the database
-                      $stmt = $conn->prepare("UPDATE account SET Photo = ? WHERE `E-mail` = ?");
-                      $stmt->bind_param("ss", $target_file, $email);
-                      if ($stmt->execute()) {
-                          $_SESSION['photo'] = $target_file;  // Update session with the new photo path
-                          $success_message = "照片更新成功!";
-                      } else {
-                          $error = "照片更新失敗，請再試一次。";
-                      }
-                      $stmt->close();
-                  } else {
-                      $error = "照片上傳失敗，請再試一次。";
-                  }
-              }
-          }
-      }
+            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!in_array($photo['type'], $allowed_types)) {
+                $error .= "只允許上傳 JPG, PNG 或 GIF 格式的圖片。";
+            } else {
+                if ($photo['size'] > 5 * 1024 * 1024) {
+                    $error .= "圖片檔案大小不能超過 5MB。";
+                } else {
+                    $ext = pathinfo($photo['name'], PATHINFO_EXTENSION);
+                    $new_filename = uniqid() . '.' . $ext;
+                    $target_dir = "assets/img/personal_photo/";
+                    $target_file = $target_dir . $new_filename;
+
+                    if (move_uploaded_file($photo["tmp_name"], $target_file)) {
+                        $stmt = $conn->prepare("UPDATE account SET Photo = ? WHERE `E-mail` = ?");
+                        $stmt->bind_param("ss", $target_file, $email);
+                        if ($stmt->execute()) {
+                            $_SESSION['photo'] = $target_file;
+                            $success_message .= "照片更新成功! ";
+                        } else {
+                            $error .= "照片更新失敗，請再試一次。";
+                        }
+                        $stmt->close();
+                    } else {
+                        $error .= "照片上傳失敗，請再試一次。";
+                    }
+                }
+            }
+        }
     }
 
     $conn->close();
 }
 ?>
+
 <?php include('header.php'); ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -175,6 +194,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
               <div class="mb-3">
                 <input type="password" name="confirm_password" class="form-control" placeholder="確認新密碼">
               </div>
+
+              <div class="mb-3">
+                        你是 ：
+                        <select name="roles" class="form-select" required>
+    <option value="學生" <?= isset($_POST['roles']) && $_POST['roles'] == '學生' ? 'selected' : '' ?>>學生</option>
+    <option value="學長姐" <?= isset($_POST['roles']) && $_POST['roles'] == '學長姐' ? 'selected' : '' ?>>學長姐</option>
+    <option value="教師" <?= isset($_POST['roles']) && $_POST['roles'] == '教師' ? 'selected' : '' ?>>教師</option>
+    
+</select>
+              </br>
 
               <!-- Photo Upload -->
               <div class="mb-3">
