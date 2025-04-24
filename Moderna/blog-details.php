@@ -7,11 +7,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // 如果使用者未登入，儲存當前頁面到 session 並導向登入頁面
-if (!isset($_SESSION['user'])) {
-    $_SESSION['redirect_to'] = $_SERVER['REQUEST_URI']; // 儲存當前頁面 URL
-    header("Location: contact.php"); // 導向登入頁面
-    exit;
-}
+
 
 // 連接資料庫
 require_once 'db.php';

@@ -5,6 +5,7 @@ require_once 'db_connection.php';
 if (isset($_POST['submit_comment']) && isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
     $content = trim($_POST['comment_content']);
+    $content = preg_replace("/\r|\n$/", "", $content);
     $postId = intval($_POST['post_id']);
 
     if (empty($content)) {
