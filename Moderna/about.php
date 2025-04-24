@@ -177,23 +177,7 @@ $conn->close();
         <option value="">選擇科系</option>
     </select>
 
-    <select name="plan" id="plan">
-        <option value="">選擇計畫類別</option>
-        <?php foreach ($planOptions as $option): ?>
-            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["plan"] == $option) ? "selected" : "" ?>>
-                <?= htmlspecialchars($option) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-
-    <select name="ID" id="ID">
-        <option value="">選擇身份</option>
-        <?php foreach ($idOptions as $option): ?>
-            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["ID"] == $option) ? "selected" : "" ?>>
-                <?= htmlspecialchars($option) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
+    
 
     <select name="talent" id="talent">
         <option value="">選擇能力</option>
@@ -226,10 +210,11 @@ $(document).ready(function () {
         updateSelectOptions('disc_cluster');
     });
 
-    $('#department').on('change', function () {
-        updateSelectOptions('disc_cluster');
+    $('#disc_cluster').on('change', function () {
+        updateSelectOptions('department');
     });
 });
+
 
 // 取得目前選擇的篩選條件
 function getCurrentFilters() {
