@@ -155,12 +155,12 @@
     <?php
 include('db.php'); // if you have a DB connection file
 
-$sql = "SELECT SchoolName, Sch_Intro, image_url, website, school_type FROM school_introduction";
+$sql = "SELECT School_Name, Sch_Intro, image_url, website, school_type FROM school_introduction";
 $result = mysqli_query($conn, $sql);
 
 if (mysqli_num_rows($result) > 0) {
   while ($row = mysqli_fetch_assoc($result)) {
-    $school_name = htmlspecialchars($row['SchoolName']);
+    $school_name = htmlspecialchars($row['School_Name']);
     $description = htmlspecialchars($row['Sch_Intro']);
     $image_url = htmlspecialchars($row['image_url']);
     $website = htmlspecialchars($row['website']);
