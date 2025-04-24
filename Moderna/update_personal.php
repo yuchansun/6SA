@@ -144,17 +144,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     background: rgba(0, 55, 67, 0.95);
   }
   .container {
+    
     padding: 35px; /* Add padding to the container */
     
   }
   .left-form {
+    
+    margin-top:5%;/* Light background for the form */
     display: flex;
     justify-content: flex-start;
     margin-left: 38%; /* Move it more to the left */
   }
   .card {
     max-width: 500px;
-    border: none; /* Remove the border around the card */
+     /* Remove the border around the card */
   }
   #photo-preview {
     max-width: 100%;
