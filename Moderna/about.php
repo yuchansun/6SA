@@ -36,15 +36,23 @@ session_start();
     <?php
 include 'db.php';
 
-// 抓取下拉選單的項目
+// 取得所有才能名稱
+function getTalentOptions($conn) {
+    $sql = "SELECT name FROM talents";
+    $result = $conn->query($sql);
+    $options = [];
+    while ($row = $result->fetch_assoc()) {
+        $options[] = $row['name'];
+    }
+    return $options;
+}
+
+// 取得單一欄位的唯一值（下拉選單用）
 function getDistinctOptions($conn, $column, $table = "sch_description", $filterColumn = null, $filterValue = null) {
     $sql = "SELECT DISTINCT `$column` FROM `$table` WHERE `$column` IS NOT NULL AND `$column` <> ''";
-    
-    // 如果提供了篩選條件，則加上額外的 WHERE 條件
     if ($filterColumn && $filterValue) {
         $sql .= " AND `$filterColumn` = ?";
     }
-
     $stmt = $conn->prepare($sql);
     if ($filterColumn && $filterValue) {
         $stmt->bind_param("s", $filterValue);
@@ -58,90 +66,95 @@ function getDistinctOptions($conn, $column, $table = "sch_description", $filterC
     return $options;
 }
 
-// 取得下拉選單資料
+// 抓前端篩選值
+$filters = [
+    "q" => $_GET['q'] ?? "",
+    "region" => $_GET['region'] ?? "",
+    "department" => $_GET['department'] ?? "",
+    "plan" => $_GET['plan'] ?? "",
+    "talent" => $_GET['talent'] ?? [],
+    "ID" => $_GET['ID'] ?? "",
+    "school_name" => $_GET['school_name'] ?? "",
+    "disc_cluster" => $_GET['disc_cluster'] ?? ""
+];
+
+// 取得下拉資料
 $regionOptions = getDistinctOptions($conn, 'Region');
 $schoolOptions = getDistinctOptions($conn, 'School_Name');
 $departmentOptions = getDistinctOptions($conn, 'Department');
 $discClusterOptions = getDistinctOptions($conn, 'Disc_Cluster');
 $planOptions = getDistinctOptions($conn, 'Plan');
 $idOptions = getDistinctOptions($conn, 'ID');
-$talentOptions = getDistinctOptions($conn, 'Talent');
+$talentOptions = getTalentOptions($conn);
 
-// 取得搜尋 & 篩選參數
-$filters = [
-    "q" => $_GET['q'] ?? "",
-    "region" => $_GET['region'] ?? "",
-    "department" => $_GET['department'] ?? "",
-    "plan" => $_GET['plan'] ?? "",
-    "talent" => $_GET['talent'] ?? "",
-    "ID" => $_GET['ID'] ?? "",
-    "school_name" => $_GET['school_name'] ?? "",
-    "disc_cluster" => $_GET['disc_cluster'] ?? ""
-];
-
-// 根據選擇的學校過濾科系和學群
+// 當有選學校時再過濾科系和學群
 if (!empty($filters["school_name"])) {
     $departmentOptions = getDistinctOptions($conn, 'Department', "sch_description", "School_Name", $filters["school_name"]);
     $discClusterOptions = getDistinctOptions($conn, 'Disc_Cluster', "sch_description", "School_Name", $filters["school_name"]);
 }
 
-// 準備 SQL 查詢語句
-$sql = "SELECT sd.*, aty.110, aty.111, aty.112, aty.113, aty.114 
-        FROM sch_description sd 
-        LEFT JOIN admi_thro_years aty ON sd.Sch_num = aty.sch_num 
-        WHERE 1=1";  // 預設條件，始終為 true，用來加上過濾條件
-
+// SQL 組合開始
 $params = [];
 $types = "";
 
-// 篩選出台中的學校
-if (!empty($filters["region"]) && $filters["region"] == "台中") {
-    $sql .= " AND sd.Region = ?";
-    $params[] = "台中";  // 台中地區
-    $types .= "s";
+$sql = "SELECT sd.* FROM sch_description sd";
+
+if (!empty($filters["talent"])) {
+    // 有才能條件才 JOIN
+    $sql .= "
+        JOIN department_talents dt ON sd.Sch_num = dt.sch_num
+        JOIN talents t ON dt.talent_id = t.id
+    ";
 }
+
+$sql .= " WHERE 1=1";
 
 // 處理關鍵字搜尋
 if (!empty($filters["q"])) {
-    $searchColumns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Talent", "ID", "Plan", "Quota", "Contact", "link"];
-    $searchConditions = [];
-
+    $columns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "ID", "Plan", "Contact", "link"];
+    $searchParts = [];
     $searchTerms = preg_split('/\s+/', trim($filters["q"]));
-    $expandedTerms = [];
-
     foreach ($searchTerms as $term) {
-        $expandedTerms[] = $term;
-    }
-
-    foreach ($expandedTerms as $term) {
-        foreach ($searchColumns as $col) {
-            $searchConditions[] = "sd.$col LIKE ?";
+        foreach ($columns as $col) {
+            $searchParts[] = "sd.$col LIKE ?";
             $params[] = "%" . $term . "%";
             $types .= "s";
         }
     }
-
-    if (!empty($searchConditions)) {
-        $sql .= " AND (" . implode(" OR ", $searchConditions) . ")";
+    if (!empty($searchParts)) {
+        $sql .= " AND (" . implode(" OR ", $searchParts) . ")";
     }
 }
 
-// 處理其他篩選條件
-foreach ($filters as $key => $value) {
-    if ($key !== "q" && !empty($value)) {
+// 處理才能（多選）
+if (!empty($filters["talent"])) {
+    $placeholders = implode(",", array_fill(0, count($filters["talent"]), "?"));
+    $sql .= " AND t.name IN ($placeholders)";
+    foreach ($filters["talent"] as $talent) {
+        $params[] = $talent;
+        $types .= "s";
+    }
+
+    // 確保同一個科系同時擁有這些才能
+    $sql .= " GROUP BY sd.Sch_num HAVING COUNT(DISTINCT t.name) = ?";
+    $params[] = count($filters["talent"]);
+    $types .= "i";
+}
+
+// 處理其他欄位條件
+foreach (["region", "department", "plan", "ID", "school_name", "disc_cluster"] as $key) {
+    if (!empty($filters[$key])) {
         $sql .= " AND sd.$key = ?";
-        $params[] = $value;
+        $params[] = $filters[$key];
         $types .= "s";
     }
 }
 
-// 預備 SQL 語句
+// 執行查詢
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
     die("SQL 錯誤: " . $conn->error);
 }
-
-// 綁定參數並執行
 if (!empty($params)) {
     $stmt->bind_param($types, ...$params);
 }
@@ -150,6 +163,7 @@ $result = $stmt->get_result();
 $results = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 $conn->close();
 ?>
+
 
 
 
@@ -176,21 +190,108 @@ $conn->close();
     <select name="department" id="department">
         <option value="">選擇科系</option>
     </select>
+    <div class="filter-form">
+    <!-- dropdown 按鈕 -->
+    <button type="button" id="toggleTalentDropdown" class="select-button d-flex justify-content-between align-items-center">
+    <span>
+        <?= !empty($filters["talent"]) ? implode(", ", $filters["talent"]) : "選擇能力" ?>
+    </span>
+    <i class="bi bi-chevron-down" style="font-size: 10px;margin-left: 10px;"></i>
 
-    
+</button>
 
-    <select name="talent" id="talent">
-        <option value="">選擇能力</option>
+
+    <!-- dropdown 內容 -->
+    <div id="talentDropdown" class="talent-dropdown" style="display:none;">
         <?php foreach ($talentOptions as $option): ?>
-            <option value="<?= htmlspecialchars($option) ?>" <?= ($filters["talent"] == $option) ? "selected" : "" ?>>
+            <label>
+                <input type="checkbox" name="talent[]" class="talent-option" value="<?= htmlspecialchars($option) ?>"
+                    <?= in_array($option, $filters["talent"]) ? "checked" : "" ?>>
                 <?= htmlspecialchars($option) ?>
-            </option>
+            </label><br>
         <?php endforeach; ?>
-    </select>
+    </div>
+</div>
+
+
+<style>
+ .filter-form {
+    position: relative;
+    display: inline-block;
+}
+.talent-dropdown {
+    display: none;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #ffffff;
+    position: absolute;
+    top: 100%; /* 顯示在按鈕正下方 */
+    left: 0;
+    z-index: 1000;
+    min-width: 200px; /* 設定最小寬度 */
+    width: auto; /* 自動調整寬度 */
+    box-sizing: border-box;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.talent-dropdown input {
+    margin-right: 5px;
+}
+.talent-dropdown label {
+    display: inline-block; /* 讓選項在一行內顯示 */
+    margin-right: 15px; /* 設定選項間的間距 */
+    margin-bottom: 5px; /* 在每個選項底部添加間距 */
+    
+}
+
+.talent-dropdown input[type="checkbox"]:checked {
+    background-color: #28a745;
+    color: white;
+}
+
+
+</style>
 
     <input type="text" name="q" value="<?= htmlspecialchars($filters['q']) ?>" placeholder="輸入關鍵字..." class="search-input">
     <button type="submit" class="search-button">搜尋 <i class="bi bi-search"></i></button>
 </form>
+
+
+<!-- JavaScript -->
+<script>
+    const button = document.getElementById("toggleTalentDropdown");
+    const dropdown = document.getElementById("talentDropdown");
+
+    // 設定 dropdown 寬度與按鈕一致
+    button.addEventListener("click", function () {
+        // 確保寬度一致
+        dropdown.style.width = button.offsetWidth + "px";
+        
+        // 顯示或隱藏下拉選單
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    });
+
+    // 更新按鈕文字
+    document.querySelectorAll(".talent-option").forEach(function (input) {
+        input.addEventListener("change", function () {
+            const selected = Array.from(document.querySelectorAll(".talent-option:checked"))
+                                  .map(input => input.value);
+            button.textContent = selected.length > 0 ? selected.join(", ") : "選擇能力";
+        });
+    });
+
+    // 點擊 dropdown 以外區域自動關閉
+    document.addEventListener("click", function (event) {
+        if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+            dropdown.style.display = "none";
+        }
+    });
+</script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -492,8 +593,6 @@ function showNotification(message, link, clickable = true) {
     gap: 10px;
     justify-content: center;
   }
-
-
 
   .search-button, .clear-button {
     background-color: color-mix(in srgb, var(--default-color), transparent 94%);
