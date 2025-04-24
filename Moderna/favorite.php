@@ -1,8 +1,6 @@
-
 <?php
 include('header.php');
 require_once("db.php");
-
 
 // 查詢 my_favorites 資料表
 $query = "SELECT * FROM my_favorites INNER JOIN sch_description ON my_favorites.Sch_num = sch_description.Sch_num";
@@ -166,7 +164,7 @@ function toggleFavorite(schNum, iconElement) {
       });
     }
 
-    setTimeout(() => location.reload(), 300);
+    location.reload();
   }
 }
 
