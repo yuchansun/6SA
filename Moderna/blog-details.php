@@ -6,9 +6,11 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
+// 如果使用者未登入，儲存當前頁面到 session 並導向登入頁面
 if (!isset($_SESSION['user'])) {
-    header("Location: contact.php?error=進入討論區需要先登入喔");
-    exit();
+    $_SESSION['redirect_to'] = $_SERVER['REQUEST_URI']; // 儲存當前頁面 URL
+    header("Location: contact.php"); // 導向登入頁面
+    exit;
 }
 
 // 連接資料庫
@@ -628,9 +630,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <h4><?= htmlspecialchars($nickname) ?></h4>
                 
 
-                <p>
-                  登入者介紹 看需不需要
-                </p>
+                
 
               </div>
             </div><!--/Blog Author Widget -->
@@ -704,7 +704,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             <!-- Recent Posts and Comments Widget -->
             <div class="recent-posts-widget widget-item">
-              <h3 class="widget-title">近期紀錄</h3>
+              
               <h4>近期文章</h4>
               <?php
               if (isset($_SESSION['user'])) {

@@ -22,7 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($password === $user['Password']) {
             $_SESSION['user'] = $user['E-mail'];
             $_SESSION['nickname'] = $user['Nickname'];
-            header("Location: index.php");
+
+            // 修改跳轉邏輯
+            $redirectTo = $_SESSION['redirect_to'] ?? 'index.php'; // 沒有就回首頁
+            unset($_SESSION['redirect_to']); // 清除 redirect 資訊
+            header("Location: $redirectTo");
             exit();
         } else {
             $error = "Incorrect password.";
