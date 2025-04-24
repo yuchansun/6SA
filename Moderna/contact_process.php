@@ -23,16 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user'] = $user['E-mail'];
             $_SESSION['nickname'] = $user['Nickname'];
 
-            // 討論區跳轉
-            if (isset($_SESSION['redirect_to'])) {
-                $redirectTo = $_SESSION['redirect_to'];
-                unset($_SESSION['redirect_to']); 
-                header("Location: $redirectTo"); 
-                exit();
-            } else {
-                header("Location: index.php"); 
-                exit();
-            }
+            // 修改跳轉邏輯
+            $redirectTo = $_SESSION['redirect_to'] ?? 'index.php'; // 沒有就回首頁
+            unset($_SESSION['redirect_to']); // 清除 redirect 資訊
+            header("Location: $redirectTo");
+            exit();
         } else {
             $error = "Incorrect password.";
         }
