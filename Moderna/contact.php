@@ -20,25 +20,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $result->fetch_assoc();
 
         if ($password === $user['Password']) {
-          $_SESSION['user'] = $user['E-mail'];
-          $_SESSION['nickname'] = $user['Nickname'];
-          $_SESSION['user_id'] = $user['User_ID']; 
-      
-    
-      
-          // ✅ Set cookies if 'remember' is checked
-          if (isset($_POST['remember'])) {
-              setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
-              setcookie('remember_password', $password, time() + (86400 * 30), "/");
-          } else {
-              // ❌ Clear cookies if not checked
-              setcookie('remember_email', '', time() - 3600, "/");
-              setcookie('remember_password', '', time() - 3600, "/");
-          }
-      
-          $redirect = $_GET['redirect'] ?? 'index.php'; // 沒有就回首頁
-          header("Location: $redirect");
-          exit();
+            $_SESSION['user'] = $user['E-mail'];
+            $_SESSION['nickname'] = $user['Nickname'];
+            $_SESSION['user_id'] = $user['User_ID'];
+
+            // ✅ Set cookies if 'remember' is checked
+            if (isset($_POST['remember'])) {
+                setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
+                setcookie('remember_password', $password, time() + (86400 * 30), "/");
+            } else {
+                // ❌ Clear cookies if not checked
+                setcookie('remember_email', '', time() - 3600, "/");
+                setcookie('remember_password', '', time() - 3600, "/");
+            }
+
+            // 修改跳轉邏輯
+            $redirect = $_SESSION['redirect_to'] ?? 'index.php'; // 沒有就回首頁
+            unset($_SESSION['redirect_to']); // 清除 redirect 資訊
+            header("Location: $redirect");
+            exit();
         } else {
             $error = "密碼錯誤.";
         }
