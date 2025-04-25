@@ -1,6 +1,9 @@
 <?php
 session_start();
 $error = '';
+if (isset($_GET['redirect'])) {
+  $_SESSION['redirect_to'] = $_GET['redirect'];
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $account = $_POST['account'];
