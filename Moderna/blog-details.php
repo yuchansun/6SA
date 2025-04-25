@@ -314,32 +314,38 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- 自動捲動並加上黃色邊框與背景 -->
+<!-- 捲動-->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const params = new URLSearchParams(window.location.search);
   const highlightId = params.get('highlight_id');
-  if (highlightId) {
-    const target = document.querySelector('[data-post-id="' + highlightId + '"]');
-    if (target) {
-      // ➤ 計算位置並手動捲動，加上 offset 以避開 header
-      const yOffset = -370; // ← 這裡調整 header 高度，建議先設 100~120
-      const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
 
-      // ➤ 加上高亮樣式
-      target.classList.add('highlighted-post');
-    }
+  if (highlightId) {
+    const interval = setInterval(() => {
+      const target = document.querySelector('[data-post-id="' + highlightId + '"]');
+      if (target) {
+        const yOffset = -370; // 如果有固定導覽列，可調整這個值
+        const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        target.classList.add('highlighted-post');
+        clearInterval(interval);
+      }
+    }, 200);
+
+    // 最多等 3 秒
+    setTimeout(() => clearInterval(interval), 3000);
   }
 });
 </script>
 
+
 <style>
 .highlighted-post {
-  border: 2px solidrgb(140, 174, 213) !important;
+  border: 2px solid rgb(140, 174, 213) !important;
   background-color: #fff8e1 !important;
   transition: all 0.5s ease;
 }
+
 
 .role {
   font-style: italic;

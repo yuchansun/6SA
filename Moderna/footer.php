@@ -20,14 +20,14 @@
     <div class="container footer-top">
       <div class="row gy-4">
         <div class="col-lg-3 col-md-6 footer-about">
-          <a href="index.html" class="d-flex align-items-center">
+          <a href="index.php" class="d-flex align-items-center">
             <span class="sitename">特殊選才</span>
           </a>
           <div class="footer-contact pt-3">
             <p></p>
             <p>242新北市新莊區中正路510號</p>
             <!-- <p class="mt-3"><strong>Phone:</strong> <span>+1 5589 55488 55</span></p> -->
-            <p><strong>Email:</strong> <span>info@m365.fju.edu.tw</span></p>
+            <p><strong>Gmail:</strong> <span>6sa666666@gmail.com</span></p>
           </div>
         </div>
         <div class="col-lg-1">

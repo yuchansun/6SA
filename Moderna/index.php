@@ -307,6 +307,8 @@
           </div>
         </div> -->
         <!-- Features Item -->
+
+
         <!--討論區熱門文章  -->
         <div class="row gy-4 align-items-center features-item">
           <!-- <div class="col-md-3 order-1 order-md-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="200">
@@ -327,7 +329,17 @@
             <div class="list-group">
               <?php if ($hotResult->num_rows > 0): ?>
                 <?php while ($row = $hotResult->fetch_assoc()): ?>
-                  <a href="blog-details.php?highlight_id=<?= $row['Post_ID'] ?>" class="ios-post-card d-block text-decoration-none">
+                  <?php
+                  $postId = $row['Post_ID'];
+                  $postsPerPage = 5; // ⚠️這要和 blog-details.php 的每頁筆數一致！
+
+                  // 找出該貼文在所有貼文中排名第幾（依時間遞減排序）
+                  $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+                  $position = $positionResult->fetch_assoc()['position'];
+                  $page = floor($position / $postsPerPage) + 1;
+                  ?>
+                  <a href="blog-details.php?page=<?= $page ?>&highlight_id=<?= $postId ?>" class="ios-post-card d-block text-decoration-none">
+
                     <h5><?= htmlspecialchars($row['Title']) ?></h5>
                     <p class="content-preview"><?= htmlspecialchars($row['Content']) ?></p>
 
@@ -355,6 +367,7 @@
 
           </ul>
         </div>
+
       </div>
 
       <!-- Features Item -->
