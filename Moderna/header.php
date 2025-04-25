@@ -2,11 +2,31 @@
 if (session_status() == PHP_SESSION_NONE) {
   session_start();
 }
+
+require_once 'db.php'; // make sure this points to your DB connection file
+
 $currentPage = basename($_SERVER['PHP_SELF']);
 $isHome = ($currentPage === 'index.php');
-$photoPath = isset($_SESSION['photo']) && !empty($_SESSION['photo']) 
-    ? $_SESSION['photo']  // This will use the updated photo from session
-    : 'assets/img/personal_photo/default.jpeg';
+
+$photoPath = 'assets/img/personal_photo/default.jpeg'; // Default photo path
+
+// Get photo from database if user is logged in
+if (isset($_SESSION['user_id'])) {
+    $userId = $_SESSION['user_id'];
+    $query = "SELECT Photo FROM account WHERE User_ID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $userId);
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            // Check if the user has uploaded a photo or if it's empty
+            if (!empty($row['Photo']) && $row['Photo'] !== 'assets/img/personal_photo/default.jpeg') {
+                $photoPath = $row['Photo']; // Use user's uploaded photo if it's not the default
+            }
+        }
+    }
+    $stmt->close();
+}
 
 // 點擊討論區檢查
 if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
@@ -14,7 +34,6 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
     header('Location: contact.php'); 
     exit();
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,13 +41,13 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>特殊選才</title>
-  <link rel="icon" href="assets\img\friend.png" type="image/png">
+  <link rel="icon" href="assets/img/friend.png" type="image/png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  
 </body>
 </html>
+
 <header id="header" class="header d-flex align-items-center fixed-top ">
   <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
@@ -51,14 +70,13 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
 
         <?php if (isset($_SESSION['nickname'])): ?>
           <li class="d-flex align-items-center"><a href="update_personal.php">
-  <img src="<?= $photoPath ?>" alt="Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
-  <span>Hi, <?= htmlspecialchars($_SESSION['nickname']) ?></span><li></li></a>
-</li>
-
-<li><a href="logout.php">登出</a></li>
-  <?php else: ?>
-    <li><a href="contact.php">登入</a></li>
-  <?php endif; ?>
+            <img src="<?= htmlspecialchars($photoPath) ?>" alt="Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
+            <span>Hi, <?= htmlspecialchars($_SESSION['nickname']) ?></span></a>
+          </li>
+          <li><a href="logout.php">登出</a></li>
+        <?php else: ?>
+          <li><a href="contact.php">登入</a></li>
+        <?php endif; ?>
       </ul>
       <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
     </nav>
