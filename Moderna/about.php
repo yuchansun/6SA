@@ -307,15 +307,14 @@ $(document).ready(function () {
     });
 
     $('#school_name').on('change', function () {
-        updateSelectOptions('department');
-        updateSelectOptions('disc_cluster');
+        updateSelectOptions('disc_cluster');  // 只需更新學群
+        updateSelectOptions('department');   // 也更新科系
     });
 
     $('#disc_cluster').on('change', function () {
-        updateSelectOptions('department');
+        updateSelectOptions('department');   // 學群變動後更新科系
     });
 });
-
 
 // 取得目前選擇的篩選條件
 function getCurrentFilters() {
@@ -362,6 +361,40 @@ function updateSelectOptions(target) {
             const label = labels[target] || '項目';
 
             select.empty().append('<option value="">選擇' + label + '</option>');
+
+            // 若沒有資料，則進行 fallback 重抓
+            if (response.length === 0 && (target === 'disc_cluster' || target === 'department')) {
+                const fallbackFilters = { target: target };
+
+                if (target === 'disc_cluster') {
+                    // 若學群無資料，重抓學群時保留學校條件
+                    fallbackFilters.school_name = $('#school_name').val();
+                }
+
+                if (target === 'department') {
+                    // 若科系無資料，重抓科系時保留學校與學群條件
+                    fallbackFilters.school_name = $('#school_name').val();
+                    fallbackFilters.disc_cluster = $('#disc_cluster').val(); // 保留學群條件
+                }
+
+                // 發送重抓請求
+                $.ajax({
+                    url: 'get_options.php',
+                    type: 'GET',
+                    data: fallbackFilters,
+                    dataType: 'json',
+                    success: function(fallbackResponse) {
+                        // 這邊處理重抓後的資料
+                        $.each(fallbackResponse, function(_, val) {
+                            select.append('<option value="' + val + '">' + val + '</option>');
+                        });
+                    }
+                });
+
+                return; // 取消後續正常的資料處理，避免加重複選項
+            }
+
+            // 若有資料，正常 append 到選單
             $.each(response, function(_, val) {
                 const selected = val === selectedValFromUrl ? ' selected' : '';
                 select.append('<option value="' + val + '"' + selected + '>' + val + '</option>');
@@ -398,7 +431,7 @@ function updateSelectOptions(target) {
         </td>
         <td>
     <!-- 收藏按鈕 -->
-<button class="favorite-btn" style="background-color:none"
+<button class="favorite-btn"   style="background-color: transparent; "
   data-sch-num="<?php echo $row['Sch_num']; ?>"
   onclick="toggleStar(this)">
   <i class="bi bi-star"></i>

@@ -47,7 +47,7 @@ $conn->close();
     <div class="page-title dark-background">
       <div class="container position-relative">
         <h1>我的最愛</h1>
-        <p>點擊標題可連結到該校系的詳細介紹頁面。使用者登入後可查看每個收藏的待辦事項，並勾選完成狀態及是否開啟通知功能。點擊右上角的金色星星可取消收藏。</p>
+        <p>點擊標題可連結到該校系的詳細介紹頁面。登入後可查看每個收藏的待辦事項，並勾選完成狀態及是否開啟通知功能。點擊右上角的金色星星可取消收藏。</p>
         
       </div>
     </div><!-- End Page Title -->

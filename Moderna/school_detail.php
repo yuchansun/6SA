@@ -63,7 +63,7 @@ $conn->close();
   
   /* Apply dark background and white text color to card headers */
   .card-header {
-    background-color:rgb(10, 42, 75); /* Dark background */
+    background-color:var(--heading-color); /* Dark background */
     color: white; /* White text */
   }
   <style>
