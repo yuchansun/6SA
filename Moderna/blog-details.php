@@ -93,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'], $_POST['comm
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['comment'])) {
     $postId = intval($_POST['post_id']);
     $comment = $conn->real_escape_string(trim($_POST['comment']));
+    $expandComments = isset($_POST['expand_comments']) ? intval($_POST['expand_comments']) : 0;
 
     // 從 SESSION 中取得使用者的 E-mail
     $userEmail = $_SESSION['user'] ?? null;
@@ -109,7 +110,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['co
             $insertComment = $conn->prepare("INSERT INTO comments (Post_ID, Content, User_ID, Comment_Time) VALUES (?, ?, ?, NOW())");
             $insertComment->bind_param("isi", $postId, $comment, $userId);
             $insertComment->execute();
-            header("Location: blog-details.php");
+
+            // 如果有搜尋參數，保留搜尋結果並定位到該文章，並保持展開狀態
+            $searchParam = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '';
+            $expandParam = $expandComments ? '&expand_comments=1' : '';
+            header("Location: blog-details.php?post_id=$postId$searchParam$expandParam#post-$postId");
             exit;
         } else {
             echo "<script>alert('無法找到對應的使用者資訊，請重新登入');</script>";
@@ -186,6 +191,20 @@ if (isset($_GET['search'])) {
          ORDER BY p.Post_Time DESC"
     );
     while ($row = $searchQuery->fetch_assoc()) {
+        // 獲取每篇文章的留言及其點讚數，並按點讚數排序，若點讚數相同則按發布時間排序
+        $postId = $row['Post_ID'];
+        $commentsQuery = $conn->prepare(
+            "SELECT c.*, a.Nickname, 
+                    (SELECT COUNT(*) FROM likes WHERE Comment_ID = c.Comment_ID) AS Likes 
+             FROM comments c 
+             JOIN account a ON c.User_ID = a.User_ID 
+             WHERE c.Post_ID = ? 
+             ORDER BY Likes DESC, c.Comment_Time ASC"
+        );
+        $commentsQuery->bind_param("i", $postId);
+        $commentsQuery->execute();
+        $commentsResult = $commentsQuery->get_result();
+        $row['comments'] = $commentsResult->fetch_all(MYSQLI_ASSOC);
         $searchResults[] = $row;
     }
 }
@@ -241,7 +260,7 @@ function showFullContent(link, fullContent) {
     const parent = link.closest('.short-content');
     const originalContent = parent.innerHTML; // 保存原始內容
     parent.dataset.originalContent = originalContent; // 使用 data 屬性保存原始內容
-    parent.innerHTML = fullContent + '<br><button class="btn btn-link" onclick="restoreContent(this)">(回復原本)</button>';
+    parent.innerHTML = fullContent + '<br><button class="btn btn-link" onclick="restoreContent(this)">(收回)</button>';
 }
 
 function restoreContent(button) {
@@ -266,7 +285,7 @@ function showMoreComments(button, postId) {
     // 添加回復原本按鈕
     const restoreButton = document.createElement('button');
     restoreButton.className = 'btn btn-link';
-    restoreButton.textContent = '(回復原本)';
+    restoreButton.textContent = '(收回)';
     restoreButton.onclick = function () {
         allComments.style.display = 'none';
         button.style.display = 'block';
@@ -274,6 +293,15 @@ function showMoreComments(button, postId) {
         restoreButton.remove();
     };
     allComments.parentNode.appendChild(restoreButton);
+
+    // 防止留言區在新增留言後自動收回
+    const commentForm = allComments.parentNode.querySelector('form');
+    if (commentForm && !commentForm.dataset.preventCollapse) {
+        commentForm.dataset.preventCollapse = true; // 確保只綁定一次事件
+        commentForm.addEventListener('submit', function () {
+            allComments.style.display = 'block'; // 保持展開狀態
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -282,12 +310,35 @@ document.addEventListener('DOMContentLoaded', function() {
             const postId = this.getAttribute('data-post-id');
             const commentId = this.getAttribute('data-comment-id');
 
-            if (postId) {
-                handleLike(this, 'post', postId);
-            } else if (commentId) {
-                handleLike(this, 'comment', commentId);
-            } else {
-                alert('缺少 postId 或 commentId');
+            if (postId || commentId) {
+                fetch('like-handler.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        postId: postId || null, 
+                        commentId: commentId || null 
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.action === 'liked') {
+                            this.classList.add('liked');
+                            this.querySelector('i').classList.remove('bi-heart');
+                            this.querySelector('i').classList.add('bi-heart-fill');
+                        } else if (data.action === 'unliked') {
+                            this.classList.remove('liked');
+                            this.querySelector('i').classList.remove('bi-heart-fill');
+                            this.querySelector('i').classList.add('bi-heart');
+                        }
+                        this.querySelector('span').textContent = data.likes;
+                    } else {
+                        alert(data.message || '操作失敗，請稍後再試');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
             }
         });
     });
@@ -482,15 +533,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
           <h2>搜尋結果:</h2>
 
-          <?php
-          foreach ($searchResults as $post) {
+          <?php foreach ($searchResults as $post): ?>
+              <?php
               $alreadyLiked = in_array($post['Post_ID'], $likedPostIds);
-              $commentsQuery = $conn->prepare("SELECT c.*, a.Nickname FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = ? ORDER BY c.Comment_Time ASC");
-              $commentsQuery->bind_param("i", $post['Post_ID']);
-              $commentsQuery->execute();
-              $commentsResult = $commentsQuery->get_result();
-              $comments = $commentsResult->fetch_all(MYSQLI_ASSOC);
-
+              $comments = $post['comments'];
+              $topComments = array_slice($comments, 0, 3);
               $content = htmlspecialchars($post['Content']);
               ?>
 
@@ -515,17 +562,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
                   <!-- 顯示留言 -->
                   <div class="comments">
-                      <?php foreach ($comments as $comment): ?>
-                          <div class="comment-item">
-                              <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
-                              <div class="meta">留言時間: <?= $comment['Comment_Time'] ?></div>
+                      <div id="top-comments-<?= $post['Post_ID'] ?>">
+                          <?php foreach ($topComments as $comment): ?>
+                              <div class="comment-item">
+                                  <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
+                                  <div class="meta">留言時間: <?= $comment['Comment_Time'] ?></div>
+                                  <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
+                                      <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+                                  </button>
+                              </div>
+                          <?php endforeach; ?>
+                      </div>
+
+                      <?php if (count($comments) > 3): ?>
+                          <button id="show-more-comments" class="btn btn-link" onclick="showMoreComments(this, <?= $post['Post_ID'] ?>)">顯示更多留言</button>
+                          <div id="all-comments-<?= $post['Post_ID'] ?>" style="display: none;">
+                              <?php foreach (array_slice($comments, 3) as $comment): ?>
+                                  <div class="comment-item">
+                                      <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
+                                      <div class="meta">留言時間: <?= $comment['Comment_Time'] ?></div>
+                                      <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
+                                          <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+                                      </button>
+                                  </div>
+                              <?php endforeach; ?>
                           </div>
-                      <?php endforeach; ?>
+                      <?php endif; ?>
                   </div>
 
                   <!-- 新增留言表單 -->
                   <form method="POST" action="">
                       <input type="hidden" name="post_id" value="<?= $post['Post_ID'] ?>">
+                      <input type="hidden" name="expand_comments" value="1">
                       <div class="mb-3">
                           <textarea name="comment" class="form-control" placeholder="新增留言..." required></textarea>
                       </div>
@@ -534,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function () {
                       </div>
                   </form>
               </div>
-          <?php } ?>
+          <?php endforeach; ?>
 
           <?php else: ?>
 
@@ -610,7 +678,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <?php foreach (array_slice($comments, 3) as $comment): ?>
                           <div class="comment-item">
                             <p><strong><?= htmlspecialchars($comment['Nickname']) ?> <span class="role"><?= htmlspecialchars($comment['Roles']) ?></span>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
-                            <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> | 點讚數: <?= $comment['Likes'] ?></div>
+                            <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
                             <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                               <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
                             </button>
@@ -623,6 +691,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   <!-- 新增留言表單 -->
                   <form method="POST" action="">
                     <input type="hidden" name="post_id" value="<?= $post['Post_ID'] ?>">
+                    <input type="hidden" name="expand_comments" value="1">
                     <div class="mb-3">
                       <textarea name="comment" class="form-control" placeholder="新增留言..." required></textarea>
                     </div>
