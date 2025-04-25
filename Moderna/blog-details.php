@@ -550,6 +550,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                   <!-- 顯示留言 -->
                   <div class="comments">
+                      <h4>留言區</h4>
                       <div id="top-comments-<?= $post['Post_ID'] ?>">
                           <?php foreach ($topComments as $comment): ?>
                               <div class="comment-item">
@@ -639,6 +640,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                   <!-- 顯示留言 -->
                   <div class="comments">
+                    <h4>留言區</h4>
                     <?php
                     $commentsQuery = $conn->query("SELECT c.*, a.Nickname, a.Roles FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = " . $post['Post_ID'] . " ORDER BY c.Likes DESC, c.Comment_Time ASC");
                     $comments = [];
