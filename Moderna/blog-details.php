@@ -225,7 +225,19 @@ if (isset($_SESSION['user'])) {
 }
 
 // 從 SESSION 中取得使用者的 Photo
-$photo = isset($_SESSION['photo']) ? $_SESSION['photo'] : "assets/img/personal_photo/default.jpeg"; // 如果 SESSION 中有 photo，使用該值，否則使用預設圖片
+$photo = "assets/img/personal_photo/default.jpeg"; // 預設圖片
+if (isset($_SESSION['user'])) {
+    $userEmail = $_SESSION['user'];
+    $stmt = $conn->prepare("SELECT Photo FROM account WHERE `E-mail` = ?");
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $photo = !empty($user['Photo']) && file_exists($user['Photo']) ? $user['Photo'] : $photo;
+    }
+    $stmt->close();
+}
 
 // 獲取使用者的近期貼文
 $recentPosts = [];
