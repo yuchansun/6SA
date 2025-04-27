@@ -224,7 +224,7 @@ $conn->close();
     margin-top: 5px;
     border: 1px solid #ccc;
     padding: 10px;
-    background-color: #ffffff;
+ 
     position: absolute;
     top: 100%; /* 顯示在按鈕正下方 */
     left: 0;
@@ -234,25 +234,17 @@ $conn->close();
     box-sizing: border-box;
     max-height: 200px;
     overflow-y: auto;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    background-color:  #fff;
+    border-radius: 0.375rem; /* Bootstrap 預設圓角 */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Bootstrap dropdown 陰影 */
+   
 }
 
 .talent-dropdown input {
     margin-right: 5px;
 }
-.talent-dropdown label {
-    display: inline-block; /* 讓選項在一行內顯示 */
-    margin-right: 15px; /* 設定選項間的間距 */
-    margin-bottom: 5px; /* 在每個選項底部添加間距 */
-    
-}
 
-.talent-dropdown input[type="checkbox"]:checked {
-    background-color: #28a745;
-    color: white;
-}
 
 
 </style>
