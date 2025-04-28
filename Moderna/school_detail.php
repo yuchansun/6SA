@@ -126,7 +126,7 @@ $conn->close();
       <div class="col-md-4 d-flex align-items-stretch">
         <div class="card w-100">
           <div class="card-header">
-            <h5 class="card-title">篩選條件</h5>
+            <h5 class="card-title">補充</h5>
           </div>
           <div class="card-body">
             <p><strong>學類：</strong><?= htmlspecialchars($data['Disc_Cluster']) ?></p>
