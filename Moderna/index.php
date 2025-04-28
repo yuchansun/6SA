@@ -241,7 +241,7 @@
                       <div class="timeline-line"></div>
                     </div>
                     <div class="timeline-content flex-fill">
-                      <strong class="fw-semibold">特殊選才報名、繳交審查資料</strong>
+                      <strong class="fw-semibold">報名及繳交審查資料</strong>
                       <div class="text-muted small">完成備審文件準備與上傳</div>
                     </div>
                   </div>
@@ -264,7 +264,7 @@
                       <div class="timeline-dot"><i class="bi bi-check-circle-fill icon-inner"></i></div>
                     </div>
                     <div class="timeline-content flex-fill">
-                      <strong class="fw-semibold">特殊選才放榜</strong>
+                      <strong class="fw-semibold">放榜及報到</strong>
                       <div class="text-muted small">查詢個人錄取結果</div>
                     </div>
                   </div>
@@ -275,11 +275,14 @@
           <!-- 內文 -->
           <div class="col-md-6 order-2 order-md-1" data-aos="fade-up">
             <h3>特殊選才申請流程介紹</h3>
-            <p>由於各特殊選才科系招考的確切時間不同，需留意報名、審查及放榜的具體時間，才能及早準備書面審查資料與面試練習。特殊選才的日程主要集中於每年的 10月~12月，以下是相關的大致時程，提供有意申請的學生作為參考。</p>
+            <p>由於各特殊選才科系招考的確切時間不同，需留意報名、審查及放榜的具體時間，才能及早準備書面審查資料與面試練習。特殊選才的日程主要集中於每年的 10月~12月，以下是相關的大致重要時程，提供有意申請的學生作為參考。</p>
             <ul>
-              <li><i class="bi bi-check"></i> <span>報名時間 : 每年10月 ~ 12月初</span></li>
-              <li><i class="bi bi-check"></i><span>審查時間 : 11月 ~ 12月</span></li>
-              <li><i class="bi bi-check"></i> <span>放榜時間 : 11月 ~ 12月，最遲至隔年1月</span>.</li>
+              <li><i class="bi bi-check"></i> <span>網路報名、繳費、上傳指定繳交資料、推薦函作業</span></li>
+              <li><i class="bi bi-check"></i><span>審查審核考生之報考資格</span></li>
+              <li><i class="bi bi-check"></i> <span>查詢報名狀態、准考證號 </span></li>
+              <li><i class="bi bi-check"></i> <span>開始辦理初、複試</span></li>
+              <li><i class="bi bi-check"></i><span>榜單公告及寄發成績單 </span></li>
+              <li><i class="bi bi-check"></i> <span>報到及註冊</span></li>
             </ul>
           </div>
         </div><!-- Features Item -->
