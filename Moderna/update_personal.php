@@ -43,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Handle password update
         if (!empty($new_password)) {
+            // Hash the new password
             $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
             $stmt = $conn->prepare("UPDATE account SET Password = ? WHERE `E-mail` = ?");
             $stmt->bind_param("ss", $hashed_password, $email);
@@ -192,12 +193,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
               <!-- New Password -->
               <div class="mb-3">
-                <input type="password" name="new_password" class="form-control" placeholder="新密碼">
+                <input type="password" name="new_password" class="form-control" placeholder="更新密碼">
               </div>
 
               <!-- Confirm New Password -->
               <div class="mb-3">
-                <input type="password" name="confirm_password" class="form-control" placeholder="確認新密碼">
+                <input type="password" name="confirm_password" class="form-control" placeholder="確認更新密碼">
               </div>
 
               <div class="mb-3">
@@ -223,12 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
               <!-- Submit Button -->
               <div class="d-grid mb-3">
-                <input type="submit" value="更新資料" class="btn btn-primary">
-              </div>
-
-              <!-- Link back to Profile -->
-              <div class="text-center">
-                <small><a href="index.php">返回首頁</a></small>
+                <input type="submit" value="保存" class="btn btn-primary">
               </div>
             </form>
           </div>
@@ -237,41 +233,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
   </section>
 </main>
-
 <!-- Footer -->
 <?php include('footer.php'); ?>
-
-<!-- Scroll Top -->
-<a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
-<!-- Preloader -->
-<div id="preloader"></div>
+<script>
+  // Photo preview function
+  function previewPhoto(event) {
+    const photoPreview = document.getElementById('photo-preview');
+    photoPreview.src = URL.createObjectURL(event.target.files[0]);
+    photoPreview.style.display = 'block';
+  }
+</script>
 
 <!-- Vendor JS Files -->
 <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="assets/vendor/php-email-form/validate.js"></script>
 <script src="assets/vendor/aos/aos.js"></script>
 <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
-<script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
 <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
-<script src="assets/vendor/waypoints/noframework.waypoints.js"></script>
-<script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
-<script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
 
 <!-- Main JS File -->
 <script src="assets/js/main.js"></script>
-
-<!-- Photo Preview Script -->
-<script>
-  function previewPhoto(event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function() {
-      document.getElementById('photo-preview').src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  }
-</script>
 
 </body>
 
