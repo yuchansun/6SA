@@ -116,17 +116,9 @@ window.onload = function () {
 </h3>
 
 <style>
-  h3 {
-    width: 100%; /* 讓 h3 寬度固定 */
-    overflow: hidden; /* 隱藏溢出 */
-  }
-
+ 
   .portfolio-title {
-    display: inline-block;
-    white-space: nowrap; /* 不換行 */
-    font-size: 24px; /* 預設字體 */
-    max-width: 100%; /* 不超出容器 */
-    transition: font-size 0.2s ease; /* 平滑過渡效果 */
+   
     color: var(--heading-color); /* 這裡指定顏色 */
   }
 </style>
