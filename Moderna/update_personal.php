@@ -233,7 +233,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
   </section>
 </main>
-
+<!-- Footer -->
+<?php include('footer.php'); ?>
 <script>
   // Photo preview function
   function previewPhoto(event) {
