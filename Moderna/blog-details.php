@@ -365,6 +365,31 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- 捲動-->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const params = new URLSearchParams(window.location.search);
+  const highlightId = params.get('highlight_id');
+
+  if (highlightId) {
+    const interval = setInterval(() => {
+      const target = document.querySelector('[data-post-id="' + highlightId + '"]');
+      if (target) {
+        const yOffset = -370; // 如果有固定導覽列，可調整這個值
+        const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        target.classList.add('highlighted-post');
+        clearInterval(interval);
+      }
+    }, 200);
+
+    // 最多等 3 秒
+    setTimeout(() => clearInterval(interval), 3000);
+  }
+});
+</script>
+
+
 <style>
 .highlighted-post {
   border: 2px solid rgb(140, 174, 213) !important;
@@ -807,7 +832,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <?php
               if (isset($_SESSION['user'])) {
                   $userEmail = $_SESSION['user'];
-                  $recentPostsQuery = $conn->prepare("SELECT p.Title, p.Post_Time FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
+                  $recentPostsQuery = $conn->prepare("SELECT p.Title, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
                   $recentPostsQuery->bind_param("s", $userEmail);
                   $recentPostsQuery->execute();
                   $result = $recentPostsQuery->get_result();
@@ -815,7 +840,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <?php while ($post = $result->fetch_assoc()): ?>
                       <div class="post-item">
                         <div>
-                          <h5><?= htmlspecialchars($post['Title']) ?></h5>
+                          <h5><a href="blog-details.php?highlight_id=<?= $post['Post_ID'] ?>"><?= htmlspecialchars($post['Title']) ?></a></h5>
                           <time datetime="<?= $post['Post_Time'] ?>"><?= $post['Post_Time'] ?></time>
                         </div>
                       </div>
@@ -832,7 +857,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <?php
               if (isset($_SESSION['user'])) {
                   $userEmail = $_SESSION['user'];
-                  $recentCommentsQuery = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
+                  $recentCommentsQuery = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
                   $recentCommentsQuery->bind_param("s", $userEmail);
                   $recentCommentsQuery->execute();
                   $result = $recentCommentsQuery->get_result();
@@ -840,7 +865,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <?php while ($comment = $result->fetch_assoc()): ?>
                       <div class="post-item ">
                         <div>
-                          <p>留言於文章: <strong><?= htmlspecialchars($comment['Title']) ?></strong></p>
+                          <p>留言於文章: <strong><a href="blog-details.php?highlight_id=<?= $comment['Post_ID'] ?>"><?= htmlspecialchars($comment['Title']) ?></a></strong></p>
                           <time datetime="<?= $comment['Comment_Time'] ?>">留言時間: <?= $comment['Comment_Time'] ?></time>
                         </div>
                       </div>
