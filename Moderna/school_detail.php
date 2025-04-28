@@ -126,12 +126,12 @@ $conn->close();
       <div class="col-md-4 d-flex align-items-stretch">
         <div class="card w-100">
           <div class="card-header">
-            <h5 class="card-title">興趣、能力與身份</h5>
+            <h5 class="card-title">篩選條件</h5>
           </div>
           <div class="card-body">
             <p><strong>學類：</strong><?= htmlspecialchars($data['Disc_Cluster']) ?></p>
-            <p><strong>興趣：</strong><?= htmlspecialchars($data['requirement']) ?></p>
             <p><strong>能力：</strong><?= htmlspecialchars($data['Talent']) ?></p>
+            <p><strong>備註：</strong><?= htmlspecialchars($data['note']) ?></p>
           </div>
         </div>
       </div>
@@ -143,10 +143,10 @@ $conn->close();
       <div class="col-md-6 d-flex align-items-stretch">
         <div class="card w-100">
           <div class="card-header">
-            <h5 class="card-title">備註</h5>
+            <h5 class="card-title">篩選條件</h5>
           </div>
           <div class="card-body">
-            <p><strong>備註：</strong><?= htmlspecialchars($data['note']) ?></p>
+            <p><strong>資格：</strong><?= htmlspecialchars($data['requirement']) ?></p>
           </div>
         </div>
       </div>
