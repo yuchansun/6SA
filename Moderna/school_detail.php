@@ -114,7 +114,7 @@ $conn->close();
           </div>
           <div class="card-body">
             <p><strong>考試項目：</strong><?= htmlspecialchars($data['Exam_Item']) ?></p>
-            <p><strong>考試項目：</strong><?= htmlspecialchars($data['exam_date']) ?></p>  
+            <p><strong>考試時間：</strong><?= htmlspecialchars($data['exam_date']) ?></p>  
             <p><strong>地址：</strong><?= htmlspecialchars($data['address']) ?></p>
             <p><strong>電話：</strong><?= htmlspecialchars($data['Contact']) ?></p>
             <p><strong>官方連結：</strong><a href="<?= htmlspecialchars($data['link']) ?>" target="_blank"><?= htmlspecialchars($data['link']) ?></a></p>
