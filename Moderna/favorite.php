@@ -71,6 +71,8 @@ $conn->close();
     </section><!-- /Portfolio Details Section -->
 
   </main>
+  
+
   <script>
 window.onload = function () {
   const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
@@ -107,23 +109,42 @@ window.onload = function () {
             style="position: absolute; top: 0px; right: -5px; cursor: pointer; font-size: 22px;color: gold;"
             title="取消收藏"></i>
 
-          <h3><a href="school_detail.php?sch_num=${school.Sch_num}" class="portfolio-title">
-                ${school.School_Name} ${school.Department}
-          </a></h3>
-          <style>
-            .portfolio-title {
-              color: var(--heading-color);
-            }
-          </style>
+ <h3>
+  <a href="school_detail.php?sch_num=${school.Sch_num}" class="portfolio-title">
+    ${school.School_Name} ${school.Department}
+  </a>
+</h3>
+
+<style>
+  h3 {
+    width: 100%; /* 讓 h3 寬度固定 */
+    overflow: hidden; /* 隱藏溢出 */
+  }
+
+  .portfolio-title {
+    display: inline-block;
+    white-space: nowrap; /* 不換行 */
+    font-size: 24px; /* 預設字體 */
+    max-width: 100%; /* 不超出容器 */
+    transition: font-size 0.2s ease; /* 平滑過渡效果 */
+    color: var(--heading-color); /* 這裡指定顏色 */
+  }
+</style>
+
+
           <ul>
            <li><strong>簡章網址</strong>: <a href="${school.link}" target="_blank" class="wrap-link">${school.link}</a></li>
 <style>
 .wrap-link {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* 限制顯示2行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
   word-break: break-all;
 }
 </style>
+
           </ul>
 
           <div class="todo-section">
@@ -138,6 +159,7 @@ window.onload = function () {
     });
   });
 };
+
 
 // 取消收藏（適用於我的最愛頁面）
 function toggleFavorite(schNum, iconElement) {
