@@ -2,7 +2,7 @@
 session_start();
 $error = '';
 if (isset($_GET['redirect'])) {
-  $_SESSION['redirect_to'] = $_GET['redirect'];
+    $_SESSION['redirect_to'] = $_GET['redirect'];
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -22,28 +22,67 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
 
-        if ($password === $user['Password']) {
-            $_SESSION['user'] = $user['E-mail'];
-            $_SESSION['nickname'] = $user['Nickname'];
-            $_SESSION['user_id'] = $user['User_ID'];
+        // Check if the password is already hashed
+        if (strlen($user['Password']) == 60 && strpos($user['Password'], '$2y$') === 0) {
+            // If hashed, use password_verify
+            if (password_verify($password, $user['Password'])) {
+                // Login success
+                $_SESSION['user'] = $user['E-mail'];
+                $_SESSION['nickname'] = $user['Nickname'];
+                $_SESSION['user_id'] = $user['User_ID'];
 
-            // ✅ Set cookies if 'remember' is checked
-            if (isset($_POST['remember'])) {
-                setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
-                setcookie('remember_password', $password, time() + (86400 * 30), "/");
+                // Set cookies if 'remember' is checked
+                if (isset($_POST['remember'])) {
+                    setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
+                    setcookie('remember_password', $password, time() + (86400 * 30), "/");
+                } else {
+                    // Clear cookies if not checked
+                    setcookie('remember_email', '', time() - 3600, "/");
+                    setcookie('remember_password', '', time() - 3600, "/");
+                }
+
+                // Redirect to the stored redirect URL or default
+                $redirect = $_SESSION['redirect_to'] ?? 'index.php';
+                unset($_SESSION['redirect_to']);
+                header("Location: $redirect");
+                exit();
             } else {
-                // ❌ Clear cookies if not checked
-                setcookie('remember_email', '', time() - 3600, "/");
-                setcookie('remember_password', '', time() - 3600, "/");
+                $error = "密碼錯誤.";
             }
-
-            // 修改跳轉邏輯
-            $redirect = $_SESSION['redirect_to'] ?? 'index.php'; // 沒有就回首頁
-            unset($_SESSION['redirect_to']); // 清除 redirect 資訊
-            header("Location: $redirect");
-            exit();
         } else {
-            $error = "密碼錯誤.";
+            // If plain text, hash it and compare
+            if ($password === $user['Password']) {
+                // Hash the password and update it in the database
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+                // Update the password in the database
+                $updateStmt = $conn->prepare("UPDATE account SET Password = ? WHERE `E-mail` = ?");
+                $updateStmt->bind_param("ss", $hashedPassword, $account);
+                $updateStmt->execute();
+
+                // Proceed with login
+                $_SESSION['user'] = $user['E-mail'];
+                $_SESSION['nickname'] = $user['Nickname'];
+                $_SESSION['user_id'] = $user['User_ID'];
+
+                // Set cookies if 'remember' is checked
+                if (isset($_POST['remember'])) {
+                    setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
+                    setcookie('remember_password', $password, time() + (86400 * 30), "/");
+                } else {
+                    // Clear cookies if not checked
+                    setcookie('remember_email', '', time() - 3600, "/");
+                    setcookie('remember_password', '', time() - 3600, "/");
+                }
+
+                // Redirect to the stored redirect URL or default
+                $redirect = $_SESSION['redirect_to'] ?? 'index.php';
+                unset($_SESSION['redirect_to']);
+                header("Location: $redirect");
+                exit();
+            } else {
+                $error = "密碼錯誤.";
+            }
         }
     } else {
         $error = "E-mail 錯誤.";
