@@ -16,8 +16,7 @@ while ($row = $result->fetch_assoc()) {
         'Region' => $row['Region'],
         'Disc_Cluster' => $row['Disc_Cluster'],
         'Talent' => $row['Talent'],
-        'ID' => $row['ID'],
-        'Plan' => $row['Plan'],
+      
         'Quota' => $row['Quota'],
         'Contact' => $row['Contact'],
         'link' => $row['link']

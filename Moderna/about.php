@@ -71,9 +71,7 @@ $filters = [
     "q" => $_GET['q'] ?? "",
     "region" => $_GET['region'] ?? "",
     "department" => $_GET['department'] ?? "",
-    "plan" => $_GET['plan'] ?? "",
     "talent" => $_GET['talent'] ?? [],
-    "ID" => $_GET['ID'] ?? "",
     "school_name" => $_GET['school_name'] ?? "",
     "disc_cluster" => $_GET['disc_cluster'] ?? ""
 ];
@@ -83,8 +81,6 @@ $regionOptions = getDistinctOptions($conn, 'Region');
 $schoolOptions = getDistinctOptions($conn, 'School_Name');
 $departmentOptions = getDistinctOptions($conn, 'Department');
 $discClusterOptions = getDistinctOptions($conn, 'Disc_Cluster');
-$planOptions = getDistinctOptions($conn, 'Plan');
-$idOptions = getDistinctOptions($conn, 'ID');
 $talentOptions = getTalentOptions($conn);
 
 // 當有選學校時再過濾科系和學群
@@ -111,7 +107,7 @@ $sql .= " WHERE 1=1";
 
 // 處理關鍵字搜尋
 if (!empty($filters["q"])) {
-    $columns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "ID", "Plan", "Contact", "link"];
+    $columns = ["Sch_num", "School_Name", "Department", "Region", "Disc_Cluster", "Contact", "link"];
     $searchParts = [];
     $searchTerms = preg_split('/\s+/', trim($filters["q"]));
     foreach ($searchTerms as $term) {
@@ -142,7 +138,7 @@ if (!empty($filters["talent"])) {
 }
 
 // 處理其他欄位條件
-foreach (["region", "department", "plan", "ID", "school_name", "disc_cluster"] as $key) {
+foreach (["region", "department", "school_name", "disc_cluster"] as $key) {
     if (!empty($filters[$key])) {
         $sql .= " AND sd.$key = ?";
         $params[] = $filters[$key];
