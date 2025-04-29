@@ -111,10 +111,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['co
             $insertComment->bind_param("isi", $postId, $comment, $userId);
             $insertComment->execute();
 
+            // 計算該文章所在的分頁
+            $postsPerPage = 5; // ⚠️這要和分頁邏輯中的每頁筆數一致！
+            $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+            $position = $positionResult->fetch_assoc()['position'];
+            $page = floor($position / $postsPerPage) + 1;
+
             // 如果有搜尋參數，保留搜尋結果並定位到該文章，並保持展開狀態
             $searchParam = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '';
             $expandParam = $expandComments ? '&expand_comments=1' : '';
-            header("Location: blog-details.php?post_id=$postId$searchParam$expandParam#post-$postId");
+            header("Location: blog-details.php?page=$page&highlight_id=$postId$searchParam$expandParam#post-$postId");
             exit;
         } else {
             echo "<script>alert('無法找到對應的使用者資訊，請重新登入');</script>";
@@ -243,12 +249,40 @@ if (isset($_SESSION['user'])) {
 $recentPosts = [];
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT p.Title, p.Post_Time FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT p.Title, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
+        // 計算該貼文所在的分頁
+        $postId = $row['Post_ID'];
+        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+        $position = $positionResult->fetch_assoc()['position'];
+        $page = floor($position / $postsPerPage) + 1;
+
+        $row['page'] = $page; // 將分頁資訊加入結果
         $recentPosts[] = $row;
+    }
+    $stmt->close();
+}
+
+// 獲取使用者的近期留言
+$recentComments = [];
+if (isset($_SESSION['user'])) {
+    $userEmail = $_SESSION['user'];
+    $stmt = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        // 計算該留言所在的文章分頁
+        $postId = $row['Post_ID'];
+        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+        $position = $positionResult->fetch_assoc()['position'];
+        $page = floor($position / $postsPerPage) + 1;
+
+        $row['page'] = $page; // 將分頁資訊加入結果
+        $recentComments[] = $row;
     }
     $stmt->close();
 }
@@ -829,54 +863,43 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="recent-posts-widget widget-item">
               
               <h4>近期文章</h4>
-              <?php
-              if (isset($_SESSION['user'])) {
-                  $userEmail = $_SESSION['user'];
-                  $recentPostsQuery = $conn->prepare("SELECT p.Title, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
-                  $recentPostsQuery->bind_param("s", $userEmail);
-                  $recentPostsQuery->execute();
-                  $result = $recentPostsQuery->get_result();
-                  if ($result->num_rows > 0): ?>
-                    <?php while ($post = $result->fetch_assoc()): ?>
-                      <div class="post-item">
-                        <div>
-                          <h5><a href="blog-details.php?highlight_id=<?= $post['Post_ID'] ?>"><?= htmlspecialchars($post['Title']) ?></a></h5>
-                          <time datetime="<?= $post['Post_Time'] ?>"><?= $post['Post_Time'] ?></time>
-                        </div>
-                      </div>
-                    <?php endwhile; ?>
-                  <?php else: ?>
-                    <p>尚未發布任何文章。</p>
-                  <?php endif;
-              } else {
-                  echo '<p>請先登入以查看您的文章。</p>';
-              }
-              ?>
+              <?php if (!empty($recentPosts)): ?>
+                <?php foreach ($recentPosts as $post): ?>
+                  <div class="post-item">
+                    <div>
+                      <h5>
+                        <a href="blog-details.php?page=<?= $post['page'] ?>&highlight_id=<?= $post['Post_ID'] ?>">
+                          <?= htmlspecialchars($post['Title']) ?>
+                        </a>
+                      </h5>
+                      <time datetime="<?= $post['Post_Time'] ?>"><?= $post['Post_Time'] ?></time>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <p>尚未發布任何文章。</p>
+              <?php endif; ?>
 
               <h4>近期留言</h4>
-              <?php
-              if (isset($_SESSION['user'])) {
-                  $userEmail = $_SESSION['user'];
-                  $recentCommentsQuery = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
-                  $recentCommentsQuery->bind_param("s", $userEmail);
-                  $recentCommentsQuery->execute();
-                  $result = $recentCommentsQuery->get_result();
-                  if ($result->num_rows > 0): ?>
-                    <?php while ($comment = $result->fetch_assoc()): ?>
-                      <div class="post-item ">
-                        <div>
-                          <p>留言於文章: <strong><a href="blog-details.php?highlight_id=<?= $comment['Post_ID'] ?>"><?= htmlspecialchars($comment['Title']) ?></a></strong></p>
-                          <time datetime="<?= $comment['Comment_Time'] ?>">留言時間: <?= $comment['Comment_Time'] ?></time>
-                        </div>
-                      </div>
-                    <?php endwhile; ?>
-                  <?php else: ?>
-                    <p>尚未發布任何留言。</p>
-                  <?php endif;
-              } else {
-                  echo '<p>請先登入以查看您的留言。</p>';
-              }
-              ?>
+              <?php if (!empty($recentComments)): ?>
+                <?php foreach ($recentComments as $comment): ?>
+                  <div class="post-item">
+                    <div>
+                      <p>
+                        留言於文章: 
+                        <strong>
+                          <a href="blog-details.php?page=<?= $comment['page'] ?>&highlight_id=<?= $comment['Post_ID'] ?>">
+                            <?= htmlspecialchars($comment['Title']) ?>
+                          </a>
+                        </strong>
+                      </p>
+                      <time datetime="<?= $comment['Comment_Time'] ?>">留言時間: <?= $comment['Comment_Time'] ?></time>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <p>尚未發布任何留言。</p>
+              <?php endif; ?>
             </div><!--/Recent Posts and Comments Widget -->
 
             <!-- Tags Widget -->
