@@ -41,12 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->close();
         }
 
-        // Handle password update
+        // Handle password update (no hashing)
         if (!empty($new_password)) {
-            // Hash the new password
-            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+            // Save password directly (plain text)
             $stmt = $conn->prepare("UPDATE account SET Password = ? WHERE `E-mail` = ?");
-            $stmt->bind_param("ss", $hashed_password, $email);
+            $stmt->bind_param("ss", $new_password, $email);
             if ($stmt->execute()) {
                 $success_message .= "密碼更新成功! ";
             } else {

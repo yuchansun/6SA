@@ -22,67 +22,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
 
-        // Check if the password is already hashed
-        if (strlen($user['Password']) == 60 && strpos($user['Password'], '$2y$') === 0) {
-            // If hashed, use password_verify
-            if (password_verify($password, $user['Password'])) {
-                // Login success
-                $_SESSION['user'] = $user['E-mail'];
-                $_SESSION['nickname'] = $user['Nickname'];
-                $_SESSION['user_id'] = $user['User_ID'];
+        // Plain text password comparison
+        if ($password === $user['Password']) {
+            // Login success
+            $_SESSION['user'] = $user['E-mail'];
+            $_SESSION['nickname'] = $user['Nickname'];
+            $_SESSION['user_id'] = $user['User_ID'];
 
-                // Set cookies if 'remember' is checked
-                if (isset($_POST['remember'])) {
-                    setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
-                    setcookie('remember_password', $password, time() + (86400 * 30), "/");
-                } else {
-                    // Clear cookies if not checked
-                    setcookie('remember_email', '', time() - 3600, "/");
-                    setcookie('remember_password', '', time() - 3600, "/");
-                }
-
-                // Redirect to the stored redirect URL or default
-                $redirect = $_SESSION['redirect_to'] ?? 'index.php';
-                unset($_SESSION['redirect_to']);
-                header("Location: $redirect");
-                exit();
+            // Set cookies if 'remember' is checked
+            if (isset($_POST['remember'])) {
+                setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
+                setcookie('remember_password', $password, time() + (86400 * 30), "/");
             } else {
-                $error = "密碼錯誤.";
+                setcookie('remember_email', '', time() - 3600, "/");
+                setcookie('remember_password', '', time() - 3600, "/");
             }
+
+            $redirect = $_SESSION['redirect_to'] ?? 'index.php';
+            unset($_SESSION['redirect_to']);
+            header("Location: $redirect");
+            exit();
         } else {
-            // If plain text, hash it and compare
-            if ($password === $user['Password']) {
-                // Hash the password and update it in the database
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-                // Update the password in the database
-                $updateStmt = $conn->prepare("UPDATE account SET Password = ? WHERE `E-mail` = ?");
-                $updateStmt->bind_param("ss", $hashedPassword, $account);
-                $updateStmt->execute();
-
-                // Proceed with login
-                $_SESSION['user'] = $user['E-mail'];
-                $_SESSION['nickname'] = $user['Nickname'];
-                $_SESSION['user_id'] = $user['User_ID'];
-
-                // Set cookies if 'remember' is checked
-                if (isset($_POST['remember'])) {
-                    setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
-                    setcookie('remember_password', $password, time() + (86400 * 30), "/");
-                } else {
-                    // Clear cookies if not checked
-                    setcookie('remember_email', '', time() - 3600, "/");
-                    setcookie('remember_password', '', time() - 3600, "/");
-                }
-
-                // Redirect to the stored redirect URL or default
-                $redirect = $_SESSION['redirect_to'] ?? 'index.php';
-                unset($_SESSION['redirect_to']);
-                header("Location: $redirect");
-                exit();
-            } else {
-                $error = "密碼錯誤.";
-            }
+            $error = "密碼錯誤.";
         }
     } else {
         $error = "E-mail 錯誤.";
@@ -92,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $conn->close();
 }
 ?>
+
 <?php include('header.php'); ?>
 
 <!DOCTYPE html>
