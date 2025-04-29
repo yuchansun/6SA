@@ -552,9 +552,9 @@ document.addEventListener('DOMContentLoaded', function () {
                   <div class="meta">
                       <span>由 <?= htmlspecialchars($post['Nickname']) ?> 發布於 <?= $post['Post_Time'] ?></span>
                   </div>
-                  <?php if (strlen($content) > 300): ?>
+                  <?php if (mb_strlen($content) > 300): ?>
                       <p class="short-content">
-                          <?= nl2br(substr($content, 0, 300)) ?>...
+                          <?= nl2br(mb_substr($content, 0, 75)) ?>...
                           <a href="#" class="read-more" onclick="showFullContent(this, '<?= addslashes($content) ?>'); return false;">(查看更多)</a>
                       </p>
                   <?php else: ?>
@@ -637,9 +637,9 @@ document.addEventListener('DOMContentLoaded', function () {
                   </div>
                   <?php
                   $content = htmlspecialchars($post['Content']);
-                  if (strlen($content) > 100): ?>
+                  if (mb_strlen($content) > 30): ?>
                     <p class="short-content">
-                      <?= nl2br(substr($content, 0, 300)) ?>...
+                      <?= nl2br(mb_substr($content, 0, 75)) ?>...
                       <a href="#" class="read-more" onclick="showFullContent(this, '<?= addslashes($content) ?>'); return false;">(查看更多)</a>
                     </p>
                   <?php else: ?>
