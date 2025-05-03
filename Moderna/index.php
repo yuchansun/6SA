@@ -187,7 +187,7 @@
     <section id="features" class="features section">
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
-        <h2>特殊選才總整理</h2>
+        <h2>特殊選才總整理!!!</h2>
         <p></p>
       </div><!-- End Section Title -->
 

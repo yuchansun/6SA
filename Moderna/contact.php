@@ -14,7 +14,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         die("Connection failed: " . $conn->connect_error);
     }
 
-    $stmt = $conn->prepare("SELECT * FROM account WHERE `E-mail` = ?");
+    // 修改查詢以獲取用戶資料和教師資訊（如果有）
+    $stmt = $conn->prepare("SELECT a.*, t.school_name, t.department, t.employment_status, t.verified 
+                           FROM account a 
+                           LEFT JOIN teacher_info t ON a.User_ID = t.account_id 
+                           WHERE a.`E-mail` = ?");
     $stmt->bind_param("s", $account);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -28,6 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user'] = $user['E-mail'];
             $_SESSION['nickname'] = $user['Nickname'];
             $_SESSION['user_id'] = $user['User_ID'];
+            $_SESSION['role'] = $user['Roles']; // 儲存用戶角色
+
+            // 如果是教師，存儲教師相關資訊
+            if ($user['Roles'] == '教師') {
+                $_SESSION['is_teacher'] = true;
+                $_SESSION['school_name'] = $user['school_name'] ?? '';
+                $_SESSION['department'] = $user['department'] ?? '';
+                $_SESSION['employment_status'] = $user['employment_status'] ?? '';
+                $_SESSION['teacher_verified'] = $user['verified'] ?? 0;
+            }
 
             // Set cookies if 'remember' is checked
             if (isset($_POST['remember'])) {
@@ -62,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Contact - Moderna Bootstrap Template</title>
+  <title>登入 - 特殊選材網站</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
 

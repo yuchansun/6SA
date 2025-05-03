@@ -8,6 +8,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
     $roles = $_POST['roles'];
+    
+    // 針對教師角色額外收集資訊
+    $school_name = isset($_POST['school_name']) ? $_POST['school_name'] : "";
+    $department = isset($_POST['department']) ? $_POST['department'] : "";
+    $employment_status = isset($_POST['employment_status']) ? $_POST['employment_status'] : "";
 
     if ($password !== $confirm_password) {
         $message = "密碼不一致，請重新輸入。";
@@ -25,13 +30,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($result->num_rows > 0) {
             $message = "此信箱已被註冊，請使用其他信箱。";
         } else {
-            $stmt = $conn->prepare("INSERT INTO account (`E-mail`, `Password`, `Nickname`, `Roles`) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $account, $password, $nickname, $roles);
-            if ($stmt->execute()) {
+            // 開始一個事務，確保資料一致性
+            $conn->begin_transaction();
+            
+            try {
+                // 插入基本帳號資訊
+                $stmt = $conn->prepare("INSERT INTO account (`E-mail`, `Password`, `Nickname`, `Roles`) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("ssss", $account, $password, $nickname, $roles);
+                $stmt->execute();
+                
+                // 獲取剛剛插入的用戶ID
+                $user_id = $conn->insert_id;
+                
+                // 如果是教師，則加入額外的教師資訊
+                if ($roles == "教師") {
+                    // 插入教師特定資訊到新表格
+                    $stmt_teacher = $conn->prepare("INSERT INTO teacher_info (account_id, school_name, department, employment_status) VALUES (?, ?, ?, ?)");
+                    $stmt_teacher->bind_param("isss", $user_id, $school_name, $department, $employment_status);
+                    $stmt_teacher->execute();
+                }
+                
+                // 提交事務
+                $conn->commit();
+                
                 $_SESSION['user'] = $account;
                 $message = "註冊成功！歡迎 " . htmlspecialchars($nickname) . "！<a href='contact.php'>請前往登入畫面</a>";
-            } else {
-                $message = "註冊失敗，請稍後再試。";
+            } catch (Exception $e) {
+                // 發生錯誤，回滾事務
+                $conn->rollback();
+                $message = "註冊失敗，請稍後再試。錯誤：" . $e->getMessage();
             }
         }
 
@@ -49,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Contact - Moderna Bootstrap Template</title>
+  <title>註冊 - 特殊選材網站</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
 
@@ -81,7 +108,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   z-index: 999;
   background: rgba(0, 55, 67, 0.95);
 }
-  </style>
+  
+  #teacherFields {
+    display: none;
+  }
+</style>
   
 
 
@@ -110,13 +141,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                     <div class="mb-3">
                         你是 ：
-                        <select name="roles" class="form-select" required>
-    <option value="學生" <?= isset($_POST['roles']) && $_POST['roles'] == '學生' ? 'selected' : '' ?>>學生</option>
-    <option value="學長姐" <?= isset($_POST['roles']) && $_POST['roles'] == '學長姐' ? 'selected' : '' ?>>學長姐</option>
-    <option value="教師" <?= isset($_POST['roles']) && $_POST['roles'] == '教師' ? 'selected' : '' ?>>教師</option>
-    
-</select>
+                        <select name="roles" id="roles" class="form-select" required onchange="toggleTeacherFields()">
+                            <option value="學生" <?= isset($_POST['roles']) && $_POST['roles'] == '學生' ? 'selected' : '' ?>>學生</option>
+                            <option value="學長姐" <?= isset($_POST['roles']) && $_POST['roles'] == '學長姐' ? 'selected' : '' ?>>學長姐</option>
+                            <option value="教師" <?= isset($_POST['roles']) && $_POST['roles'] == '教師' ? 'selected' : '' ?>>教師</option>
+                        </select>
                     </div>
+                    
+                    <!-- 教師專用欄位 -->
+                    <div id="teacherFields">
+                        <div class="mb-3">
+                            <input type="text" name="school_name" class="form-control" placeholder="任教學校名稱">
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" name="department" class="form-control" placeholder="系所名稱">
+                        </div>
+                        <div class="mb-3">
+                            <select name="employment_status" class="form-select">
+                                <option value="">請選擇任職狀態</option>
+                                <option value="專任">專任</option>
+                                <option value="兼任">兼任</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">註冊</button>
                     </div>
@@ -156,6 +204,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+
+<!-- 控制教師欄位顯示/隱藏的 JavaScript -->
+<script>
+  function toggleTeacherFields() {
+    var role = document.getElementById('roles').value;
+    var teacherFields = document.getElementById('teacherFields');
+    
+    if (role === '教師') {
+      teacherFields.style.display = 'block';
+      // 當選擇教師時，設置額外欄位為必填
+      var teacherInputs = teacherFields.querySelectorAll('input, select');
+      teacherInputs.forEach(function(input) {
+        input.setAttribute('required', 'required');
+      });
+    } else {
+      teacherFields.style.display = 'none';
+      // 當不選擇教師時，移除必填屬性
+      var teacherInputs = teacherFields.querySelectorAll('input, select');
+      teacherInputs.forEach(function(input) {
+        input.removeAttribute('required');
+      });
+    }
+  }
+  
+  // 頁面載入時執行一次，以處理可能的預設值
+  document.addEventListener('DOMContentLoaded', function() {
+    toggleTeacherFields();
+  });
+</script>
 
 </body>
 
