@@ -249,7 +249,7 @@ if (isset($_SESSION['user'])) {
 $recentPosts = [];
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT p.Title, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT p.Title, p.Content, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -270,7 +270,7 @@ if (isset($_SESSION['user'])) {
 $recentComments = [];
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT c.Content, c.Comment_Time, c.Comment_ID, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -872,13 +872,62 @@ document.addEventListener('DOMContentLoaded', function () {
                           <?= htmlspecialchars($post['Title']) ?>
                         </a>
                       </h5>
-                      <time datetime="<?= $post['Post_Time'] ?>"><?= $post['Post_Time'] ?></time>
+                      <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editPostModal-<?= $post['Post_ID'] ?>">修改</button>
+                    </div>
+                  </div>
+
+                  <!-- Modal for editing post -->
+                  <div class="modal fade" id="editPostModal-<?= $post['Post_ID'] ?>" tabindex="-1" aria-labelledby="editPostModalLabel-<?= $post['Post_ID'] ?>" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="editPostModalLabel-<?= $post['Post_ID'] ?>">修改文章</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <form method="POST" action="edit-post.php">
+                            <input type="hidden" name="post_id" value="<?= $post['Post_ID'] ?>">
+                            <div class="mb-3">
+                              <label for="title-<?= $post['Post_ID'] ?>" class="form-label">標題</label>
+                              <input type="text" class="form-control" id="title-<?= $post['Post_ID'] ?>" name="title" value="<?= htmlspecialchars($post['Title']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                              <label for="content-<?= $post['Post_ID'] ?>" class="form-label">內容</label>
+                              <textarea class="form-control" id="content-<?= $post['Post_ID'] ?>" name="content" rows="4" required><?= htmlspecialchars($post['Content']) ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存修改</button>
+                          </form>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 <?php endforeach; ?>
               <?php else: ?>
                 <p>尚未發布任何文章。</p>
               <?php endif; ?>
+
+              <!-- Modal for all posts -->
+              <div class="modal fade" id="allPostsModal" tabindex="-1" aria-labelledby="allPostsModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="allPostsModalLabel">所有文章</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <?php foreach ($recentPosts as $post): ?>
+                        <div class="post-item">
+                          <h5>
+                            <a href="blog-details.php?page=<?= $post['page'] ?>&highlight_id=<?= $post['Post_ID'] ?>">
+                              <?= htmlspecialchars($post['Title']) ?>
+                            </a>
+                          </h5>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <h4>近期留言</h4>
               <?php if (!empty($recentComments)): ?>
@@ -893,13 +942,61 @@ document.addEventListener('DOMContentLoaded', function () {
                           </a>
                         </strong>
                       </p>
-                      <time datetime="<?= $comment['Comment_Time'] ?>">留言時間: <?= $comment['Comment_Time'] ?></time>
+                      <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editCommentModal-<?= $comment['Comment_ID'] ?>">修改</button>
+                    </div>
+                  </div>
+
+                  <!-- Modal for editing comment -->
+                  <div class="modal fade" id="editCommentModal-<?= $comment['Comment_ID'] ?>" tabindex="-1" aria-labelledby="editCommentModalLabel-<?= $comment['Comment_ID'] ?>" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="editCommentModalLabel-<?= $comment['Comment_ID'] ?>">修改留言</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <form method="POST" action="edit-comment.php">
+                            <input type="hidden" name="comment_id" value="<?= $comment['Comment_ID'] ?>">
+                            <div class="mb-3">
+                              <label for="content-<?= $comment['Comment_ID'] ?>" class="form-label">內容</label>
+                              <textarea class="form-control" id="content-<?= $comment['Comment_ID'] ?>" name="content" rows="4" required><?= htmlspecialchars($comment['Content']) ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存修改</button>
+                          </form>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 <?php endforeach; ?>
               <?php else: ?>
                 <p>尚未發布任何留言。</p>
               <?php endif; ?>
+
+              <!-- Modal for all comments -->
+              <div class="modal fade" id="allCommentsModal" tabindex="-1" aria-labelledby="allCommentsModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="allCommentsModalLabel">所有留言</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <?php foreach ($recentComments as $comment): ?>
+                        <div class="post-item">
+                          <p>
+                            留言於文章: 
+                            <strong>
+                              <a href="blog-details.php?page=<?= $comment['page'] ?>&highlight_id=<?= $comment['Post_ID'] ?>">
+                                <?= htmlspecialchars($comment['Title']) ?>
+                              </a>
+                            </strong>
+                          </p>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div><!--/Recent Posts and Comments Widget -->
 
             <!-- Tags Widget -->
