@@ -403,12 +403,13 @@ function updateSelectOptions(target) {
 <?php if (!empty($results)): ?>
 <table class="table table-striped table-hover align-middle text-center mt-4">
   <thead class="table-dark">
-    <tr><th>學校</th><th>科系</th><th>名額</th><th>詳細資料</th><th>收藏</th></tr>
+    <tr><th>學校</th><th>科系</th><th>名額</th><th>詳細資料</th><th>收藏</th><th>收藏人數</th></tr>
   </thead>
   <tbody>
 <?php foreach ($results as $row): ?>
 <tr>
   <td><?= htmlspecialchars($row['School_Name']); ?></td>
+  
   <td><?= htmlspecialchars($row['Department']); ?></td>
   <td><?= htmlspecialchars($row['Quota']); ?></td>
   <td>
@@ -417,6 +418,33 @@ function updateSelectOptions(target) {
 </a>
 
         </td>
+        <td>
+    <?php
+      // 資料庫連線（使用新連線）
+      $connFav = new mysqli("localhost", "root", "", "SA-6");
+
+      if ($connFav->connect_error) {
+          echo "錯誤";
+      } else {
+          // 分母：使用者總人數
+          $totalUsersResult = $connFav->query("SELECT COUNT(DISTINCT User_ID) AS total_users FROM account");
+          $totalUsers = $totalUsersResult->fetch_assoc()['total_users'] ?? 0;
+
+          // 分子：該科系的收藏人數
+          $stmt = $connFav->prepare("SELECT COUNT(DISTINCT User_ID) AS total_fav FROM my_favorites WHERE Sch_num = ?");
+          $stmt->bind_param("s", $row['Sch_num']);
+          $stmt->execute();
+          $res = $stmt->get_result();
+          $favCount = $res->fetch_assoc()['total_fav'] ?? 0;
+
+          echo $totalUsers > 0 ? "$favCount / $totalUsers" : "0 / 0";
+
+          $stmt->close();
+          $connFav->close();
+      }
+    ?>
+  </td>
+
         <td>
     <!-- 收藏按鈕 -->
 <button class="favorite-btn"   style="background-color: transparent; "
@@ -596,6 +624,8 @@ function showNotification(message, link, clickable = true) {
   }, 3000);
 }
 </script>
+
+
 
 
 
