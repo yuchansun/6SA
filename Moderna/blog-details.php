@@ -112,15 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['co
             $insertComment->execute();
 
             // 計算該文章所在的分頁
-            $postsPerPage = 5; // ⚠️這要和分頁邏輯中的每頁筆數一致！
+            $postsPerPage = 5; // 每頁顯示的文章數量
             $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
             $position = $positionResult->fetch_assoc()['position'];
             $page = floor($position / $postsPerPage) + 1;
 
-            // 如果有搜尋參數，保留搜尋結果並定位到該文章，並保持展開狀態
-            $searchParam = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '';
-            $expandParam = $expandComments ? '&expand_comments=1' : '';
-            header("Location: blog-details.php?page=$page&highlight_id=$postId$searchParam$expandParam#post-$postId");
+            // 重定向到該文章所在的分頁並高亮顯示
+            header("Location: blog-details.php?page=$page&highlight_id=$postId#post-$postId");
             exit;
         } else {
             echo "<script>alert('無法找到對應的使用者資訊，請重新登入');</script>";
@@ -128,6 +126,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['co
     } else {
         echo "<script>alert('用戶未登入，請先登入');</script>";
     }
+
+    // Redirect back to the same page to ensure posts are displayed
+    header("Location: blog-details.php");
+    exit;
 }
 
 // 處理點讚請求
@@ -173,11 +175,11 @@ $postsPerPage = 5;
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 $offset = ($page - 1) * $postsPerPage;
 
-$totalPostsQuery = $conn->query("SELECT COUNT(*) as total FROM posts");
+$totalPostsQuery = $conn->query("SELECT COUNT(*) as total FROM posts WHERE is_deleted = 0");
 $totalPosts = $totalPostsQuery->fetch_assoc()['total'];
 $totalPages = ceil($totalPosts / $postsPerPage);
 
-$postsQuery = $conn->prepare("SELECT p.*, a.Nickname, a.Roles FROM posts p JOIN account a ON p.User_ID = a.User_ID ORDER BY Post_Time DESC LIMIT ? OFFSET ?");
+$postsQuery = $conn->prepare("SELECT p.*, a.Nickname, a.Roles FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE p.is_deleted = 0 ORDER BY Post_Time DESC LIMIT ? OFFSET ?");
 $postsQuery->bind_param("ii", $postsPerPage, $offset);
 $postsQuery->execute();
 $postsResult = $postsQuery->get_result();
@@ -191,9 +193,9 @@ if (isset($_GET['search'])) {
          FROM posts p 
          JOIN account a ON p.User_ID = a.User_ID 
          LEFT JOIN comments c ON p.Post_ID = c.Post_ID 
-         WHERE p.Title LIKE '%$searchTerm%' 
+         WHERE p.is_deleted = 0 AND (p.Title LIKE '%$searchTerm%' 
             OR p.Content LIKE '%$searchTerm%' 
-            OR c.Content LIKE '%$searchTerm%' 
+            OR c.Content LIKE '%$searchTerm%') 
          ORDER BY p.Post_Time DESC"
     );
     while ($row = $searchQuery->fetch_assoc()) {
@@ -204,7 +206,7 @@ if (isset($_GET['search'])) {
                     (SELECT COUNT(*) FROM likes WHERE Comment_ID = c.Comment_ID) AS Likes 
              FROM comments c 
              JOIN account a ON c.User_ID = a.User_ID 
-             WHERE c.Post_ID = ? 
+             WHERE c.Post_ID = ? AND c.is_deleted = 0 
              ORDER BY Likes DESC, c.Comment_Time ASC"
         );
         $commentsQuery->bind_param("i", $postId);
@@ -249,14 +251,14 @@ if (isset($_SESSION['user'])) {
 $recentPosts = [];
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT p.Title, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT p.Title, p.Post_Time, p.Post_ID, p.Content FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? AND p.is_deleted = 0 ORDER BY p.Post_Time DESC LIMIT 5");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         // 計算該貼文所在的分頁
         $postId = $row['Post_ID'];
-        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
         $position = $positionResult->fetch_assoc()['position'];
         $page = floor($position / $postsPerPage) + 1;
 
@@ -270,14 +272,14 @@ if (isset($_SESSION['user'])) {
 $recentComments = [];
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title, p.Post_ID, c.Comment_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? AND c.is_deleted = 0 ORDER BY c.Comment_Time DESC LIMIT 5");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         // 計算該留言所在的文章分頁
         $postId = $row['Post_ID'];
-        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
         $position = $positionResult->fetch_assoc()['position'];
         $page = floor($position / $postsPerPage) + 1;
 
@@ -694,9 +696,12 @@ document.addEventListener('DOMContentLoaded', function () {
                   <div class="comments">
                     <h4>留言區</h4>
                     <?php
-                    $commentsQuery = $conn->query("SELECT c.*, a.Nickname, a.Roles FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = " . $post['Post_ID'] . " ORDER BY c.Likes DESC, c.Comment_Time ASC");
+                    $commentsQuery = $conn->prepare("SELECT c.*, a.Nickname, a.Roles FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = ? AND c.is_deleted = 0 ORDER BY c.Likes DESC, c.Comment_Time ASC");
+                    $commentsQuery->bind_param("i", $post['Post_ID']);
+                    $commentsQuery->execute();
+                    $commentsResult = $commentsQuery->get_result();
                     $comments = [];
-                    while ($comment = $commentsQuery->fetch_assoc()) {
+                    while ($comment = $commentsResult->fetch_assoc()) {
                         $comments[] = $comment;
                     }
                     $topComments = array_slice($comments, 0, 3);
@@ -810,7 +815,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             <!-- 浮動式按鈕 -->
             
-
             <!-- 彈跳視窗 -->
             <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
               <div class="modal-dialog">
@@ -857,7 +861,51 @@ document.addEventListener('DOMContentLoaded', function () {
               }
             </style>
 
-            
+            <!-- Modal for all posts -->
+            <div class="modal fade" id="allPostsModal" tabindex="-1" aria-labelledby="allPostsModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="allPostsModalLabel">所有文章</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <?php
+                    // Fetch all posts by the user
+                    $allPosts = [];
+                    if (isset($_SESSION['user'])) {
+                        $userEmail = $_SESSION['user'];
+                        $stmt = $conn->prepare("SELECT p.Title, p.Content, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? AND p.is_deleted = 0 ORDER BY p.Post_Time DESC");
+                        $stmt->bind_param("s", $userEmail);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                        while ($row = $result->fetch_assoc()) {
+                            // Calculate the page number for each post
+                            $postId = $row['Post_ID'];
+                            $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
+                            $position = $positionResult->fetch_assoc()['position'];
+                            $page = floor($position / $postsPerPage) + 1;
+
+                            $row['page'] = $page; // Add page info to the result
+                            $allPosts[] = $row;
+                        }
+                        $stmt->close();
+                    }
+                    ?>
+
+                    <?php foreach ($allPosts as $post): ?>
+                      <div class="post-item">
+                        <h5>
+                          <a href="blog-details.php?page=<?= urlencode($post['page']) ?>&highlight_id=<?= urlencode($post['Post_ID']) ?>">
+                            <?= htmlspecialchars($post['Title'], ENT_QUOTES, 'UTF-8') ?>
+                          </a>
+                        </h5>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- Recent Posts and Comments Widget -->
             <div class="recent-posts-widget widget-item">
@@ -871,14 +919,67 @@ document.addEventListener('DOMContentLoaded', function () {
                         <a href="blog-details.php?page=<?= $post['page'] ?>&highlight_id=<?= $post['Post_ID'] ?>">
                           <?= htmlspecialchars($post['Title']) ?>
                         </a>
+                        <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editPostModal-<?= $post['Post_ID'] ?>">修改</button>
+                        <button type="button" class="btn btn-link text-danger" data-bs-toggle="modal" data-bs-target="#deletePostModal-<?= $post['Post_ID'] ?>">刪除</button>
                       </h5>
-                      <time datetime="<?= $post['Post_Time'] ?>"><?= $post['Post_Time'] ?></time>
+                    </div>
+                  </div>
+
+                  <!-- Modal for editing post -->
+                  <div class="modal fade" id="editPostModal-<?= $post['Post_ID'] ?>" tabindex="-1" aria-labelledby="editPostModalLabel-<?= $post['Post_ID'] ?>" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="editPostModalLabel-<?= $post['Post_ID'] ?>">修改貼文</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <form method="POST" action="edit-post.php">
+                            <input type="hidden" name="post_id" value="<?= $post['Post_ID'] ?>">
+                            <div class="mb-3">
+                              <label for="title-<?= $post['Post_ID'] ?>" class="form-label">標題</label>
+                              <input type="text" class="form-control" id="title-<?= $post['Post_ID'] ?>" name="title" value="<?= htmlspecialchars($post['Title']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                              <label for="content-<?= $post['Post_ID'] ?>" class="form-label">內容</label>
+                              <textarea class="form-control" id="content-<?= $post['Post_ID'] ?>" name="content" rows="4" required><?= htmlspecialchars($post['Content']) ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存修改</button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Modal for deleting post -->
+                  <div class="modal fade" id="deletePostModal-<?= $post['Post_ID'] ?>" tabindex="-1" aria-labelledby="deletePostModalLabel-<?= $post['Post_ID'] ?>" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="deletePostModalLabel-<?= $post['Post_ID'] ?>">確認刪除貼文</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          您確定要刪除此貼文嗎？此操作無法復原。
+                        </div>
+                        <div class="modal-footer">
+                          <form method="POST" action="delete-post.php">
+                            <input type="hidden" name="post_id" value="<?= $post['Post_ID'] ?>">
+                            <button type="submit" class="btn btn-danger">確認刪除</button>
+                          </form>
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 <?php endforeach; ?>
               <?php else: ?>
                 <p>尚未發布任何文章。</p>
               <?php endif; ?>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#allPostsModal">
+              查看全部貼文
+            </button>
+
 
               <h4>近期留言</h4>
               <?php if (!empty($recentComments)): ?>
@@ -892,14 +993,154 @@ document.addEventListener('DOMContentLoaded', function () {
                             <?= htmlspecialchars($comment['Title']) ?>
                           </a>
                         </strong>
+                        <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editCommentModal-<?= $comment['Comment_ID'] ?>">修改</button>
+                        <button type="button" class="btn btn-link text-danger" data-bs-toggle="modal" data-bs-target="#deleteCommentModal-<?= $comment['Comment_ID'] ?>">刪除</button>
                       </p>
-                      <time datetime="<?= $comment['Comment_Time'] ?>">留言時間: <?= $comment['Comment_Time'] ?></time>
+                    </div>
+                  </div>
+
+                  <!-- Modal for editing comment -->
+                  <div class="modal fade" id="editCommentModal-<?= $comment['Comment_ID'] ?>" tabindex="-1" aria-labelledby="editCommentModalLabel-<?= $comment['Comment_ID'] ?>" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="editCommentModalLabel-<?= $comment['Comment_ID'] ?>">修改留言</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <form method="POST" action="edit-comment.php">
+                            <input type="hidden" name="comment_id" value="<?= $comment['Comment_ID'] ?>">
+                            <div class="mb-3">
+                              <label for="content-<?= $comment['Comment_ID'] ?>" class="form-label">內容</label>
+                              <textarea class="form-control" id="content-<?= $comment['Comment_ID'] ?>" name="content" rows="4" required><?= htmlspecialchars($comment['Content']) ?></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存修改</button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Modal for deleting comment -->
+                  <div class="modal fade" id="deleteCommentModal-<?= $comment['Comment_ID'] ?>" tabindex="-1" aria-labelledby="deleteCommentModalLabel-<?= $comment['Comment_ID'] ?>" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="deleteCommentModalLabel-<?= $comment['Comment_ID'] ?>">確認刪除留言</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          您確定要刪除此留言嗎？此操作無法復原。
+                        </div>
+                        <div class="modal-footer">
+                          <form method="POST" action="delete-comment.php">
+                            <input type="hidden" name="comment_id" value="<?= $comment['Comment_ID'] ?>">
+                            <button type="submit" class="btn btn-danger">確認刪除</button>
+                          </form>
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 <?php endforeach; ?>
               <?php else: ?>
                 <p>尚未發布任何留言。</p>
               <?php endif; ?>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#allCommentsModal">
+                查看全部留言
+              </button>
+
+              <!-- Modal for all comments -->
+              <div class="modal fade" id="allCommentsModal" tabindex="-1" aria-labelledby="allCommentsModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="allCommentsModalLabel">所有留言</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <?php
+                      // Fetch all comments by the user
+                      $allComments = [];
+                      if (isset($_SESSION['user'])) {
+                          $userEmail = $_SESSION['user'];
+                          $stmt = $conn->prepare("SELECT c.Comment_ID, c.Content, c.Comment_Time, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? AND c.is_deleted = 0 ORDER BY c.Comment_Time DESC");
+                          $stmt->bind_param("s", $userEmail);
+                          $stmt->execute();
+                          $result = $stmt->get_result();
+                          while ($row = $result->fetch_assoc()) {
+                              // Calculate the page number for each post
+                              $postId = $row['Post_ID'];
+                              $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
+                              $position = $positionResult->fetch_assoc()['position'];
+                              $page = floor($position / $postsPerPage) + 1;
+
+                              $row['page'] = $page; // Add page info to the result
+                              $allComments[] = $row;
+                          }
+                          $stmt->close();
+                      }
+                      ?>
+
+                      <?php foreach ($allComments as $comment): ?>
+                        <div class="post-item">
+                          <h5>
+                            <a href="blog-details.php?page=<?= urlencode($comment['page']) ?>&highlight_id=<?= urlencode($comment['Post_ID']) ?>">
+                              <?= htmlspecialchars($comment['Title'], ENT_QUOTES, 'UTF-8') ?>
+                            </a>
+                            <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editCommentModal-<?= $comment['Comment_ID'] ?>">修改</button>
+                            <button type="button" class="btn btn-link text-danger" data-bs-toggle="modal" data-bs-target="#deleteCommentModal-<?= $comment['Comment_ID'] ?>">刪除</button>
+                          </h5>
+                        </div>
+
+                        <!-- Modal for editing comment -->
+                        <div class="modal fade" id="editCommentModal-<?= $comment['Comment_ID'] ?>" tabindex="-1" aria-labelledby="editCommentModalLabel-<?= $comment['Comment_ID'] ?>" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="editCommentModalLabel-<?= $comment['Comment_ID'] ?>">修改留言</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <form method="POST" action="edit-comment.php">
+                                  <input type="hidden" name="comment_id" value="<?= $comment['Comment_ID'] ?>">
+                                  <div class="mb-3">
+                                    <label for="content-<?= $comment['Comment_ID'] ?>" class="form-label">內容</label>
+                                    <textarea class="form-control" id="content-<?= $comment['Comment_ID'] ?>" name="content" rows="4" required><?= htmlspecialchars($comment['Content']) ?></textarea>
+                                  </div>
+                                  <button type="submit" class="btn btn-primary">保存修改</button>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Modal for deleting comment -->
+                        <div class="modal fade" id="deleteCommentModal-<?= $comment['Comment_ID'] ?>" tabindex="-1" aria-labelledby="deleteCommentModalLabel-<?= $comment['Comment_ID'] ?>" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="deleteCommentModalLabel-<?= $comment['Comment_ID'] ?>">確認刪除留言</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                您確定要刪除此留言嗎？此操作無法復原。
+                              </div>
+                              <div class="modal-footer">
+                                <form method="POST" action="delete-comment.php">
+                                  <input type="hidden" name="comment_id" value="<?= $comment['Comment_ID'] ?>">
+                                  <button type="submit" class="btn btn-danger">確認刪除</button>
+                                </form>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div><!--/Recent Posts and Comments Widget -->
 
             <!-- Tags Widget -->
