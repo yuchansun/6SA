@@ -249,7 +249,7 @@ if (isset($_SESSION['user'])) {
 $recentPosts = [];
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT p.Title, p.Content, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT p.Title, p.Post_Time, p.Post_ID, p.Content FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -270,7 +270,7 @@ if (isset($_SESSION['user'])) {
 $recentComments = [];
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT c.Content, c.Comment_Time, c.Comment_ID, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title, p.Post_ID, c.Comment_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -810,7 +810,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             <!-- 浮動式按鈕 -->
             
-
             <!-- 彈跳視窗 -->
             <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
               <div class="modal-dialog">
@@ -857,19 +856,63 @@ document.addEventListener('DOMContentLoaded', function () {
               }
             </style>
 
-            
+            <!-- Modal for all posts -->
+            <div class="modal fade" id="allPostsModal" tabindex="-1" aria-labelledby="allPostsModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="allPostsModalLabel">所有文章</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <?php
+                    // Fetch all posts by the user
+                    $allPosts = [];
+                    if (isset($_SESSION['user'])) {
+                        $userEmail = $_SESSION['user'];
+                        $stmt = $conn->prepare("SELECT p.Title, p.Content, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? AND p.is_deleted = 0 ORDER BY p.Post_Time DESC");
+                        $stmt->bind_param("s", $userEmail);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                        while ($row = $result->fetch_assoc()) {
+                            // Calculate the page number for each post
+                            $postId = $row['Post_ID'];
+                            $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
+                            $position = $positionResult->fetch_assoc()['position'];
+                            $page = floor($position / $postsPerPage) + 1;
+
+                            $row['page'] = $page; // Add page info to the result
+                            $allPosts[] = $row;
+                        }
+                        $stmt->close();
+                    }
+                    ?>
+
+                    <?php foreach ($allPosts as $post): ?>
+                      <div class="post-item">
+                        <h5>
+                          <a href="blog-details.php?page=<?= urlencode($post['page']) ?>&highlight_id=<?= urlencode($post['Post_ID']) ?>">
+                            <?= htmlspecialchars($post['Title'], ENT_QUOTES, 'UTF-8') ?>
+                          </a>
+                        </h5>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- Recent Posts and Comments Widget -->
             <div class="recent-posts-widget widget-item">
-            
+              
               <h4>近期文章</h4>
               <?php if (!empty($recentPosts)): ?>
                 <?php foreach ($recentPosts as $post): ?>
                   <div class="post-item">
                     <div>
                       <h5>
-                        <a href="blog-details.php?page=<?= urlencode($post['page']) ?>&highlight_id=<?= urlencode($post['Post_ID']) ?>">
-                          <?= htmlspecialchars($post['Title'], ENT_QUOTES, 'UTF-8') ?>
+                        <a href="blog-details.php?page=<?= $post['page'] ?>&highlight_id=<?= $post['Post_ID'] ?>">
+                          <?= htmlspecialchars($post['Title']) ?>
                         </a>
                         <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editPostModal-<?= $post['Post_ID'] ?>">修改</button>
                       </h5>
@@ -881,7 +924,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="modal-dialog">
                       <div class="modal-content">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="editPostModalLabel-<?= $post['Post_ID'] ?>">修改文章</h5>
+                          <h5 class="modal-title" id="editPostModalLabel-<?= $post['Post_ID'] ?>">修改貼文</h5>
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
@@ -905,80 +948,11 @@ document.addEventListener('DOMContentLoaded', function () {
               <?php else: ?>
                 <p>尚未發布任何文章。</p>
               <?php endif; ?>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#allPostsModal">
+              查看全部貼文
+            </button>
 
-              <!-- Modal for all posts -->
-              <div class="modal fade" id="allPostsModal" tabindex="-1" aria-labelledby="allPostsModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="allPostsModalLabel">所有文章</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                      <?php
-                      // Fetch all posts by the user
-                      $allPosts = [];
-                      if (isset($_SESSION['user'])) {
-                          $userEmail = $_SESSION['user'];
-                          $stmt = $conn->prepare("SELECT p.Title, p.Content, p.Post_Time, p.Post_ID FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC");
-                          $stmt->bind_param("s", $userEmail);
-                          $stmt->execute();
-                          $result = $stmt->get_result();
-                          while ($row = $result->fetch_assoc()) {
-                              // Calculate the page number for each post
-                              $postId = $row['Post_ID'];
-                              $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
-                              $position = $positionResult->fetch_assoc()['position'];
-                              $page = floor($position / $postsPerPage) + 1;
 
-                              $row['page'] = $page; // Add page info to the result
-                              $allPosts[] = $row;
-                          }
-                          $stmt->close();
-                      }
-                      ?>
-
-                      <?php foreach ($allPosts as $post): ?>
-                        <div class="post-item">
-                          <h5>
-                            <a href="blog-details.php?page=<?= urlencode($post['page']) ?>&highlight_id=<?= urlencode($post['Post_ID']) ?>">
-                              <?= htmlspecialchars($post['Title'], ENT_QUOTES, 'UTF-8') ?>
-                            </a>
-                            <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editPostModal-<?= $post['Post_ID'] ?>">修改</button>
-                          </h5>
-                        </div>
-
-                        <!-- Modal for editing post -->
-                        <div class="modal fade" id="editPostModal-<?= $post['Post_ID'] ?>" tabindex="-1" aria-labelledby="editPostModalLabel-<?= $post['Post_ID'] ?>" aria-hidden="true">
-                          <div class="modal-dialog">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <h5 class="modal-title" id="editPostModalLabel-<?= $post['Post_ID'] ?>">修改文章</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                              </div>
-                              <div class="modal-body">
-                                <form method="POST" action="edit-post.php">
-                                  <input type="hidden" name="post_id" value="<?= $post['Post_ID'] ?>">
-                                  <div class="mb-3">
-                                    <label for="title-<?= $post['Post_ID'] ?>" class="form-label">標題</label>
-                                    <input type="text" class="form-control" id="title-<?= $post['Post_ID'] ?>" name="title" value="<?= htmlspecialchars($post['Title']) ?>" required>
-                                  </div>
-                                  <div class="mb-3">
-                                    <label for="content-<?= $post['Post_ID'] ?>" class="form-label">內容</label>
-                                    <textarea class="form-control" id="content-<?= $post['Post_ID'] ?>" name="content" rows="4" required><?= htmlspecialchars($post['Content']) ?></textarea>
-                                  </div>
-                                  <button type="submit" class="btn btn-primary">保存修改</button>
-                                </form>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      <?php endforeach; ?>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#allPostsModal">查看全部文章</button>
               <h4>近期留言</h4>
               <?php if (!empty($recentComments)): ?>
                 <?php foreach ($recentComments as $comment): ?>
@@ -991,11 +965,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             <?= htmlspecialchars($comment['Title']) ?>
                           </a>
                         </strong>
+                        <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editCommentModal-<?= $comment['Comment_ID'] ?>">修改</button>
                       </p>
-                      <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editCommentModal-<?= $comment['Comment_ID'] ?>">修改</button>
                     </div>
                   </div>
-                  
+
                   <!-- Modal for editing comment -->
                   <div class="modal fade" id="editCommentModal-<?= $comment['Comment_ID'] ?>" tabindex="-1" aria-labelledby="editCommentModalLabel-<?= $comment['Comment_ID'] ?>" aria-hidden="true">
                     <div class="modal-dialog">
@@ -1017,12 +991,14 @@ document.addEventListener('DOMContentLoaded', function () {
                       </div>
                     </div>
                   </div>
-                  
                 <?php endforeach; ?>
               <?php else: ?>
                 <p>尚未發布任何留言。</p>
               <?php endif; ?>
-              <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#allCommentsModal">查看全部留言</button>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#allCommentsModal">
+                查看全部留言
+              </button>
+
               <!-- Modal for all comments -->
               <div class="modal fade" id="allCommentsModal" tabindex="-1" aria-labelledby="allCommentsModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
@@ -1037,14 +1013,14 @@ document.addEventListener('DOMContentLoaded', function () {
                       $allComments = [];
                       if (isset($_SESSION['user'])) {
                           $userEmail = $_SESSION['user'];
-                          $stmt = $conn->prepare("SELECT c.Comment_ID, c.Content, c.Comment_Time, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC");
+                          $stmt = $conn->prepare("SELECT c.Comment_ID, c.Content, c.Comment_Time, p.Title, p.Post_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? AND c.is_deleted = 0 ORDER BY c.Comment_Time DESC");
                           $stmt->bind_param("s", $userEmail);
                           $stmt->execute();
                           $result = $stmt->get_result();
                           while ($row = $result->fetch_assoc()) {
                               // Calculate the page number for each post
                               $postId = $row['Post_ID'];
-                              $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+                              $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
                               $position = $positionResult->fetch_assoc()['position'];
                               $page = floor($position / $postsPerPage) + 1;
 
