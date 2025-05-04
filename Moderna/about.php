@@ -619,6 +619,7 @@ function showNotification(message, link, clickable = true) {
     background-color: color-mix(in srgb, var(--default-color), transparent 94%);
     border-radius: 20px;
     padding: 8px;
+    color: #000;
   }
 
 
@@ -641,6 +642,7 @@ function showNotification(message, link, clickable = true) {
     padding: 10px 20px;
     border: 0;
     background-color: color-mix(in srgb, var(--default-color), transparent 94%);
+    color: #000;
   }
 
 
