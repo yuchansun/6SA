@@ -13,7 +13,7 @@ $photoPath = 'assets/img/personal_photo/default.jpeg'; // Default photo path
 // Get photo from database if user is logged in
 if (isset($_SESSION['user_id'])) {
     $userId = $_SESSION['user_id'];
-    $query = "SELECT Photo FROM account WHERE User_ID = ?";
+    $query = "SELECT Photo, Roles FROM account WHERE User_ID = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $userId);
     if ($stmt->execute()) {
@@ -23,6 +23,7 @@ if (isset($_SESSION['user_id'])) {
             if (!empty($row['Photo']) && $row['Photo'] !== 'assets/img/personal_photo/default.jpeg') {
                 $photoPath = $row['Photo']; // Use user's uploaded photo if it's not the default
             }
+            $userRole = $row['Roles']; // Get user role (e.g., '教師')
         }
     }
     $stmt->close();
@@ -74,6 +75,11 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
             <span>Hi, <?= htmlspecialchars($_SESSION['nickname']) ?></span></a>
           </li>
           <li><a href="logout.php">登出</a></li>
+          
+          <!-- Add Teacher Verification link for 教師 role -->
+          <?php if ($userRole === '教師'): ?>
+            <li><a href="teacher_verification.php">教師驗證</a></li>
+          <?php endif; ?>
         <?php else: ?>
           <li><a href="contact.php">登入</a></li>
         <?php endif; ?>
