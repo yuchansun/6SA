@@ -403,11 +403,17 @@ function updateSelectOptions(target) {
 <?php if (!empty($results)): ?>
 <table class="table table-striped table-hover align-middle text-center mt-4">
   <thead class="table-dark">
-    <tr><th>學校</th><th>科系</th><th>名額</th><th>詳細資料</th><th>收藏人數</th><th>收藏</th></tr>
+    <tr><th>比較</th><th>學校</th><th>科系</th><th>名額</th><th>詳細資料</th><th>收藏人數</th><th>收藏</th></tr>
   </thead>
   <tbody>
+    
 <?php foreach ($results as $row): ?>
 <tr>
+
+  <!-- ✅ 新增「比較」欄位 -->
+  <td>
+    <input type="checkbox" class="compare-checkbox" value="<?= htmlspecialchars($row['Sch_num']) ?>">
+  </td>
   <td><?= htmlspecialchars($row['School_Name']); ?></td>
   
   <td><?= htmlspecialchars($row['Department']); ?></td>
@@ -722,6 +728,15 @@ function showNotification(message, link, clickable = true) {
     color: #000;
   }
 
+  #comparison-result > div {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  min-height: 300px;
+  overflow-y: auto;
+}
+
 
 </style>
 
@@ -748,6 +763,42 @@ function showNotification(message, link, clickable = true) {
   <script src="assets/vendor/waypoints/noframework.waypoints.js"></script>
   <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
   <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+
+
+  <div id="comparison-section" style="display:none; margin-top:30px;">
+  <h3 class="text-center mb-4">比較結果</h3>
+  <div id="comparison-result" class="row">
+    <div class="col-md-6" id="left-compare"></div>
+    <div class="col-md-6" id="right-compare"></div>
+  </div>
+</div>
+
+<script>
+const compareCheckboxes = document.querySelectorAll('.compare-checkbox');
+
+compareCheckboxes.forEach(checkbox => {
+  checkbox.addEventListener('change', () => {
+    const checked = document.querySelectorAll('.compare-checkbox:checked');
+
+    if (checked.length > 2) {
+      checkbox.checked = false;
+      alert("最多只能選擇兩所學校進行比較");
+      return;
+    }
+
+    if (checked.length === 2) {
+      const sch1 = checked[0].value;
+      const sch2 = checked[1].value;
+
+      // ✅ 跳轉至新的比較頁面
+      window.location.href = `compare_result.php?sch1=${encodeURIComponent(sch1)}&sch2=${encodeURIComponent(sch2)}`;
+    }
+  });
+});
+
+
+</script>
+
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
