@@ -112,15 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['co
             $insertComment->execute();
 
             // 計算該文章所在的分頁
-            $postsPerPage = 5; // ⚠️這要和分頁邏輯中的每頁筆數一致！
+            $postsPerPage = 5; // 每頁顯示的文章數量
             $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
             $position = $positionResult->fetch_assoc()['position'];
             $page = floor($position / $postsPerPage) + 1;
 
-            // 如果有搜尋參數，保留搜尋結果並定位到該文章，並保持展開狀態
-            $searchParam = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '';
-            $expandParam = $expandComments ? '&expand_comments=1' : '';
-            header("Location: blog-details.php?page=$page&highlight_id=$postId$searchParam$expandParam#post-$postId");
+            // 重定向到該文章所在的分頁並高亮顯示
+            header("Location: blog-details.php?page=$page&highlight_id=$postId#post-$postId");
             exit;
         } else {
             echo "<script>alert('無法找到對應的使用者資訊，請重新登入');</script>";
@@ -128,6 +126,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['co
     } else {
         echo "<script>alert('用戶未登入，請先登入');</script>";
     }
+
+    // Redirect back to the same page to ensure posts are displayed
+    header("Location: blog-details.php");
+    exit;
 }
 
 // 處理點讚請求
