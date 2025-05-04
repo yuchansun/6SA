@@ -173,11 +173,11 @@ $postsPerPage = 5;
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 $offset = ($page - 1) * $postsPerPage;
 
-$totalPostsQuery = $conn->query("SELECT COUNT(*) as total FROM posts");
+$totalPostsQuery = $conn->query("SELECT COUNT(*) as total FROM posts WHERE is_deleted = 0");
 $totalPosts = $totalPostsQuery->fetch_assoc()['total'];
 $totalPages = ceil($totalPosts / $postsPerPage);
 
-$postsQuery = $conn->prepare("SELECT p.*, a.Nickname, a.Roles FROM posts p JOIN account a ON p.User_ID = a.User_ID ORDER BY Post_Time DESC LIMIT ? OFFSET ?");
+$postsQuery = $conn->prepare("SELECT p.*, a.Nickname, a.Roles FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE p.is_deleted = 0 ORDER BY Post_Time DESC LIMIT ? OFFSET ?");
 $postsQuery->bind_param("ii", $postsPerPage, $offset);
 $postsQuery->execute();
 $postsResult = $postsQuery->get_result();
@@ -191,9 +191,9 @@ if (isset($_GET['search'])) {
          FROM posts p 
          JOIN account a ON p.User_ID = a.User_ID 
          LEFT JOIN comments c ON p.Post_ID = c.Post_ID 
-         WHERE p.Title LIKE '%$searchTerm%' 
+         WHERE p.is_deleted = 0 AND (p.Title LIKE '%$searchTerm%' 
             OR p.Content LIKE '%$searchTerm%' 
-            OR c.Content LIKE '%$searchTerm%' 
+            OR c.Content LIKE '%$searchTerm%') 
          ORDER BY p.Post_Time DESC"
     );
     while ($row = $searchQuery->fetch_assoc()) {
@@ -204,7 +204,7 @@ if (isset($_GET['search'])) {
                     (SELECT COUNT(*) FROM likes WHERE Comment_ID = c.Comment_ID) AS Likes 
              FROM comments c 
              JOIN account a ON c.User_ID = a.User_ID 
-             WHERE c.Post_ID = ? 
+             WHERE c.Post_ID = ? AND c.is_deleted = 0 
              ORDER BY Likes DESC, c.Comment_Time ASC"
         );
         $commentsQuery->bind_param("i", $postId);
@@ -249,14 +249,14 @@ if (isset($_SESSION['user'])) {
 $recentPosts = [];
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT p.Title, p.Post_Time, p.Post_ID, p.Content FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY p.Post_Time DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT p.Title, p.Post_Time, p.Post_ID, p.Content FROM posts p JOIN account a ON p.User_ID = a.User_ID WHERE a.`E-mail` = ? AND p.is_deleted = 0 ORDER BY p.Post_Time DESC LIMIT 5");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         // 計算該貼文所在的分頁
         $postId = $row['Post_ID'];
-        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
         $position = $positionResult->fetch_assoc()['position'];
         $page = floor($position / $postsPerPage) + 1;
 
@@ -270,14 +270,14 @@ if (isset($_SESSION['user'])) {
 $recentComments = [];
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title, p.Post_ID, c.Comment_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? ORDER BY c.Comment_Time DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT c.Content, c.Comment_Time, p.Title, p.Post_ID, c.Comment_ID FROM comments c JOIN posts p ON c.Post_ID = p.Post_ID JOIN account a ON c.User_ID = a.User_ID WHERE a.`E-mail` = ? AND c.is_deleted = 0 ORDER BY c.Comment_Time DESC LIMIT 5");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         // 計算該留言所在的文章分頁
         $postId = $row['Post_ID'];
-        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
         $position = $positionResult->fetch_assoc()['position'];
         $page = floor($position / $postsPerPage) + 1;
 
@@ -694,9 +694,12 @@ document.addEventListener('DOMContentLoaded', function () {
                   <div class="comments">
                     <h4>留言區</h4>
                     <?php
-                    $commentsQuery = $conn->query("SELECT c.*, a.Nickname, a.Roles FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = " . $post['Post_ID'] . " ORDER BY c.Likes DESC, c.Comment_Time ASC");
+                    $commentsQuery = $conn->prepare("SELECT c.*, a.Nickname, a.Roles FROM comments c JOIN account a ON c.User_ID = a.User_ID WHERE c.Post_ID = ? AND c.is_deleted = 0 ORDER BY c.Likes DESC, c.Comment_Time ASC");
+                    $commentsQuery->bind_param("i", $post['Post_ID']);
+                    $commentsQuery->execute();
+                    $commentsResult = $commentsQuery->get_result();
                     $comments = [];
-                    while ($comment = $commentsQuery->fetch_assoc()) {
+                    while ($comment = $commentsResult->fetch_assoc()) {
                         $comments[] = $comment;
                     }
                     $topComments = array_slice($comments, 0, 3);
@@ -915,6 +918,7 @@ document.addEventListener('DOMContentLoaded', function () {
                           <?= htmlspecialchars($post['Title']) ?>
                         </a>
                         <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editPostModal-<?= $post['Post_ID'] ?>">修改</button>
+                        <button type="button" class="btn btn-link text-danger" data-bs-toggle="modal" data-bs-target="#deletePostModal-<?= $post['Post_ID'] ?>">刪除</button>
                       </h5>
                     </div>
                   </div>
@@ -944,6 +948,28 @@ document.addEventListener('DOMContentLoaded', function () {
                       </div>
                     </div>
                   </div>
+
+                  <!-- Modal for deleting post -->
+                  <div class="modal fade" id="deletePostModal-<?= $post['Post_ID'] ?>" tabindex="-1" aria-labelledby="deletePostModalLabel-<?= $post['Post_ID'] ?>" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="deletePostModalLabel-<?= $post['Post_ID'] ?>">確認刪除貼文</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          您確定要刪除此貼文嗎？此操作無法復原。
+                        </div>
+                        <div class="modal-footer">
+                          <form method="POST" action="delete-post.php">
+                            <input type="hidden" name="post_id" value="<?= $post['Post_ID'] ?>">
+                            <button type="submit" class="btn btn-danger">確認刪除</button>
+                          </form>
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 <?php endforeach; ?>
               <?php else: ?>
                 <p>尚未發布任何文章。</p>
@@ -966,6 +992,7 @@ document.addEventListener('DOMContentLoaded', function () {
                           </a>
                         </strong>
                         <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editCommentModal-<?= $comment['Comment_ID'] ?>">修改</button>
+                        <button type="button" class="btn btn-link text-danger" data-bs-toggle="modal" data-bs-target="#deleteCommentModal-<?= $comment['Comment_ID'] ?>">刪除</button>
                       </p>
                     </div>
                   </div>
@@ -987,6 +1014,28 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                             <button type="submit" class="btn btn-primary">保存修改</button>
                           </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Modal for deleting comment -->
+                  <div class="modal fade" id="deleteCommentModal-<?= $comment['Comment_ID'] ?>" tabindex="-1" aria-labelledby="deleteCommentModalLabel-<?= $comment['Comment_ID'] ?>" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="deleteCommentModalLabel-<?= $comment['Comment_ID'] ?>">確認刪除留言</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          您確定要刪除此留言嗎？此操作無法復原。
+                        </div>
+                        <div class="modal-footer">
+                          <form method="POST" action="delete-comment.php">
+                            <input type="hidden" name="comment_id" value="<?= $comment['Comment_ID'] ?>">
+                            <button type="submit" class="btn btn-danger">確認刪除</button>
+                          </form>
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                         </div>
                       </div>
                     </div>
@@ -1038,6 +1087,7 @@ document.addEventListener('DOMContentLoaded', function () {
                               <?= htmlspecialchars($comment['Title'], ENT_QUOTES, 'UTF-8') ?>
                             </a>
                             <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editCommentModal-<?= $comment['Comment_ID'] ?>">修改</button>
+                            <button type="button" class="btn btn-link text-danger" data-bs-toggle="modal" data-bs-target="#deleteCommentModal-<?= $comment['Comment_ID'] ?>">刪除</button>
                           </h5>
                         </div>
 
@@ -1058,6 +1108,28 @@ document.addEventListener('DOMContentLoaded', function () {
                                   </div>
                                   <button type="submit" class="btn btn-primary">保存修改</button>
                                 </form>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Modal for deleting comment -->
+                        <div class="modal fade" id="deleteCommentModal-<?= $comment['Comment_ID'] ?>" tabindex="-1" aria-labelledby="deleteCommentModalLabel-<?= $comment['Comment_ID'] ?>" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="deleteCommentModalLabel-<?= $comment['Comment_ID'] ?>">確認刪除留言</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                您確定要刪除此留言嗎？此操作無法復原。
+                              </div>
+                              <div class="modal-footer">
+                                <form method="POST" action="delete-comment.php">
+                                  <input type="hidden" name="comment_id" value="<?= $comment['Comment_ID'] ?>">
+                                  <button type="submit" class="btn btn-danger">確認刪除</button>
+                                </form>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                               </div>
                             </div>
                           </div>
