@@ -403,7 +403,7 @@ function updateSelectOptions(target) {
 <?php if (!empty($results)): ?>
 <table class="table table-striped table-hover align-middle text-center mt-4">
   <thead class="table-dark">
-    <tr><th>學校</th><th>科系</th><th>名額</th><th>詳細資料</th><th>收藏</th><th>收藏人數</th></tr>
+    <tr><th>學校</th><th>科系</th><th>名額</th><th>詳細資料</th><th>收藏人數</th><th>收藏</th></tr>
   </thead>
   <tbody>
 <?php foreach ($results as $row): ?>
