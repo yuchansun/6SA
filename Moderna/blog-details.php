@@ -112,13 +112,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['co
             $insertComment->execute();
 
             // 計算該文章所在的分頁
-            $postsPerPage = 5; // 每頁顯示的文章數量
-            $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+            $postsPerPage = 5; // ⚠️這要和分頁邏輯中的每頁筆數一致！
+            $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
             $position = $positionResult->fetch_assoc()['position'];
             $page = floor($position / $postsPerPage) + 1;
 
-            // 重定向到該文章所在的分頁並高亮顯示
-            header("Location: blog-details.php?page=$page&highlight_id=$postId#post-$postId");
+            // 如果有搜尋參數，保留搜尋結果並定位到該文章，並保持展開狀態
+            $searchParam = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '';
+            $expandParam = $expandComments ? '&expand_comments=1' : '';
+            header("Location: blog-details.php?page=$page&highlight_id=$postId$searchParam$expandParam#post-$postId");
             exit;
         } else {
             echo "<script>alert('無法找到對應的使用者資訊，請重新登入');</script>";
@@ -247,6 +249,7 @@ if (isset($_SESSION['user'])) {
     $stmt->close();
 }
 
+
 // 獲取使用者的近期貼文
 $recentPosts = [];
 if (isset($_SESSION['user'])) {
@@ -258,7 +261,7 @@ if (isset($_SESSION['user'])) {
     while ($row = $result->fetch_assoc()) {
         // 計算該貼文所在的分頁
         $postId = $row['Post_ID'];
-        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
+        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");  // 這裡已經有is_deleted = 0
         $position = $positionResult->fetch_assoc()['position'];
         $page = floor($position / $postsPerPage) + 1;
 
@@ -279,7 +282,7 @@ if (isset($_SESSION['user'])) {
     while ($row = $result->fetch_assoc()) {
         // 計算該留言所在的文章分頁
         $postId = $row['Post_ID'];
-        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
+        $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");  // 這裡已經有is_deleted = 0
         $position = $positionResult->fetch_assoc()['position'];
         $page = floor($position / $postsPerPage) + 1;
 
