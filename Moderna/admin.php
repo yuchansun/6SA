@@ -159,7 +159,7 @@ if ($result && $row = $result->fetch_assoc()) {
             </div>
             <div class="card-body">
                 <p>批准或拒絕教師身份驗證請求。確保所有教師資料已經驗證。.</p>
-                <a href="verify_teachers.php" class="btn btn-success btn-block">前往驗證頁面</a>
+                <a href="teacher_verify.php" class="btn btn-success btn-block">前往驗證頁面</a>
             </div>
         </div>
     </div>
