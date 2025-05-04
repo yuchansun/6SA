@@ -403,12 +403,13 @@ function updateSelectOptions(target) {
 <?php if (!empty($results)): ?>
 <table class="table table-striped table-hover align-middle text-center mt-4">
   <thead class="table-dark">
-    <tr><th>學校</th><th>科系</th><th>名額</th><th>詳細資料</th><th>收藏</th></tr>
+    <tr><th>學校</th><th>科系</th><th>名額</th><th>詳細資料</th><th>收藏人數</th><th>收藏</th></tr>
   </thead>
   <tbody>
 <?php foreach ($results as $row): ?>
 <tr>
   <td><?= htmlspecialchars($row['School_Name']); ?></td>
+  
   <td><?= htmlspecialchars($row['Department']); ?></td>
   <td><?= htmlspecialchars($row['Quota']); ?></td>
   <td>
@@ -417,6 +418,40 @@ function updateSelectOptions(target) {
 </a>
 
         </td>
+        
+
+
+        <!-- 收藏人數與進度條 -->
+        <td>
+  <?php
+    $connFav = new mysqli("localhost", "root", "", "SA-6");
+    $totalUsersResult = $connFav->query("SELECT COUNT(DISTINCT User_ID) AS total_users FROM account");
+    $totalUsers = $totalUsersResult->fetch_assoc()['total_users'] ?? 0;
+
+    $stmt = $connFav->prepare("SELECT COUNT(DISTINCT User_ID) AS total_fav FROM my_favorites WHERE Sch_num = ?");
+    $stmt->bind_param("s", $row['Sch_num']);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $favCount = $res->fetch_assoc()['total_fav'] ?? 0;
+
+    $percentage = ($totalUsers > 0) ? round($favCount / $totalUsers * 100) : 0;
+    $schNum = htmlspecialchars($row['Sch_num']);
+  ?>
+  <div id="fav-info-<?= $schNum ?>">
+    <?= $favCount ?> / <?= $totalUsers ?>
+    <div class="progress mt-2" style="height: 10px;">
+      <div class="progress-bar" id="fav-bar-<?= $schNum ?>" role="progressbar" 
+        style="width: <?= $percentage ?>%; background-color: #FFCC00;" 
+        aria-valuenow="<?= $percentage ?>" aria-valuemin="0" aria-valuemax="100">
+      </div>
+    </div>
+  </div>
+</td>
+
+  
+
+
+
         <td>
     <!-- 收藏按鈕 -->
 <button class="favorite-btn"   style="background-color: transparent; "
@@ -424,6 +459,8 @@ function updateSelectOptions(target) {
   onclick="toggleStar(this)">
   <i class="bi bi-star"></i>
 </button>
+    </td>
+    
 
 <!-- 中央通知 -->
 <div id="notification" style="
@@ -496,6 +533,24 @@ function toggleStar(button) {
         })
         .then(response => response.text())
         .then(data => console.log('加入 user_todos 結果：', data));
+              // 🎯 加上這段即時更新收藏人數與進度條
+      fetch('get_fav_count.php?sch_num=' + encodeURIComponent(schNum))
+        .then(res => res.json())
+        .then(data => {
+          const infoDiv = document.getElementById('fav-info-' + schNum);
+          const barDiv = document.getElementById('fav-bar-' + schNum);
+          if (infoDiv && barDiv) {
+            infoDiv.innerHTML = `
+              ${data.fav} / ${data.total}
+              <div class="progress mt-2" style="height: 10px;">
+                <div class="progress-bar" id="fav-bar-${schNum}" role="progressbar" 
+                  style="width: ${data.percent}%; background-color: #FFCC00;" 
+                  aria-valuenow="${data.percent}" aria-valuemin="0" aria-valuemax="100">
+                </div>
+              </div>`;
+          }
+        });
+
       }
     }
 
@@ -510,13 +565,33 @@ function toggleStar(button) {
     showNotification("已解除收藏", "#", false);
 
     if (isLoggedIn) {
-      fetch('remove_favorite.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'sch_num=' + encodeURIComponent(schNum),
-        credentials: 'include'
+  fetch('remove_favorite.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'sch_num=' + encodeURIComponent(schNum),
+    credentials: 'include'
+  })
+  .then(() => {
+    // 🎯 這段會即時更新收藏人數和進度條
+    fetch('get_fav_count.php?sch_num=' + encodeURIComponent(schNum))
+      .then(res => res.json())
+      .then(data => {
+        const infoDiv = document.getElementById('fav-info-' + schNum);
+        const barDiv = document.getElementById('fav-bar-' + schNum);
+        if (infoDiv && barDiv) {
+          infoDiv.innerHTML = `
+            ${data.fav} / ${data.total}
+            <div class="progress mt-2" style="height: 10px;">
+              <div class="progress-bar" id="fav-bar-${schNum}" role="progressbar" 
+                style="width: ${data.percent}%; background-color: #FFCC00;" 
+                aria-valuenow="${data.percent}" aria-valuemin="0" aria-valuemax="100">
+              </div>
+            </div>`;
+        }
       });
-    }
+  });
+}
+
   }
 }
 
@@ -599,6 +674,8 @@ function showNotification(message, link, clickable = true) {
 
 
 
+
+
 </tr>
 <?php endforeach; ?>
 </tbody></table>
@@ -619,6 +696,7 @@ function showNotification(message, link, clickable = true) {
     background-color: color-mix(in srgb, var(--default-color), transparent 94%);
     border-radius: 20px;
     padding: 8px;
+    color: #000;
   }
 
 
@@ -641,6 +719,7 @@ function showNotification(message, link, clickable = true) {
     padding: 10px 20px;
     border: 0;
     background-color: color-mix(in srgb, var(--default-color), transparent 94%);
+    color: #000;
   }
 
 

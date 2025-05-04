@@ -77,8 +77,8 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
           <li><a href="logout.php">登出</a></li>
           
           <!-- Add Teacher Verification link for 教師 role -->
-          <?php if ($userRole === '教師'): ?>
-            <li><a href="teacher_verification.php">教師驗證</a></li>
+          <?php if ($userRole === '管理者'): ?>
+            <li><a href="admin.php">管理者操作</a></li>
           <?php endif; ?>
         <?php else: ?>
           <li><a href="contact.php">登入</a></li>
