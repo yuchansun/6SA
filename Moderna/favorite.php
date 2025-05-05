@@ -55,6 +55,12 @@ $conn->close();
   </main>
 
 
+<!-- Loading Spinner -->
+<div id="loading-spinner" style="text-align: center; display: none;">
+  <div class="spinner-border" role="status">
+    <span class="sr-only">載入中...</span>
+  </div>
+</div>
 
     <!-- Portfolio Details Section -->
     <section id="portfolio-details" class="portfolio-details section">
@@ -147,7 +153,7 @@ window.onload = function () {
       `;
 
       container.appendChild(div);
-      renderTodos(school.Sch_num, userId); // ✅ 修正這裡，加上 userId
+      renderTodos(school.Sch_num, userId); 
     });
   });
 };
@@ -240,6 +246,33 @@ function renderTodos(schNum, userId) {
         const title = document.createElement('strong');
         title.textContent = todo.title;
 
+        const gcalIcon = document.createElement('i');
+gcalIcon.className = 'bi bi-google';
+gcalIcon.style.cursor = 'pointer';
+gcalIcon.style.marginLeft = '10px';
+gcalIcon.title = '新增到 Google 行事曆';
+
+gcalIcon.addEventListener('click', () => {
+  const title = encodeURIComponent(`${todo.title} `);
+  const details = encodeURIComponent(todo.description || '');
+  
+  const start = todo.start_time ? new Date(todo.start_time) : null;
+  const end = todo.end_time ? new Date(todo.end_time) : null;
+
+  const startISOString = start && !isNaN(start.getTime()) ? start.toISOString().replace(/[-:]|(\.\d{3})/g, '') : '';
+  const endISOString = end && !isNaN(end.getTime()) ? end.toISOString().replace(/[-:]|(\.\d{3})/g, '') : '';
+
+  if (startISOString) {
+    // 如果有開始時間，生成 URL 並只加上開始時間
+    const url = `https://calendar.google.com/calendar/r/eventedit?text=${title}&details=${details}` +
+                `&dates=${startISOString}` + // 只加上開始時間
+                (endISOString ? `/${endISOString}` : ''); // 如果有結束時間才加上
+    window.open(url, '_blank');
+  } else {
+    alert("未提供事件時間資訊！");
+  }
+});
+
         // 判斷是否已過期或快到期
         if (todo.end_time) {
           const endTime = new Date(todo.end_time.replace(/-/g, '/'));
@@ -251,7 +284,7 @@ function renderTodos(schNum, userId) {
             title.textContent = todo.title + '（已過期）';
           } else if (hoursLeft <= 24 && todo.is_done !== 1) {
             title.style.color = 'red';
-            title.textContent = '⏰ ' + todo.title;
+            title.textContent = todo.title;
 
             if (!hasShownAlert) {
               alert(`提醒：有待辦事項即將到期！ (${todo.title})`);
@@ -344,7 +377,7 @@ bellIcon.addEventListener('click', () => {
 
         rightContent.appendChild(calendarIcon);
         rightContent.appendChild(bellIcon);
-
+        rightContent.appendChild(gcalIcon);
         todoWrapper.appendChild(leftContent);
         todoWrapper.appendChild(rightContent);
 

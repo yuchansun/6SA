@@ -20,6 +20,8 @@ if (!$schNum || !$userId) {
 // 查詢 todos 並合併使用者是否完成和是否已通知
 $sql = "
     SELECT 
+        sd.School_Name,
+        sd.Department,
         t.todo_id,
         t.title,
         t.start_time,
@@ -29,9 +31,12 @@ $sql = "
     FROM todos t
     LEFT JOIN user_todos ut 
         ON t.todo_id = ut.todo_id AND ut.user_id = ?
+    LEFT JOIN sch_description sd 
+        ON t.sch_num = sd.Sch_num
     WHERE t.sch_num = ?
     ORDER BY t.todo_id
 ";
+
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param('ss', $userId, $schNum);
