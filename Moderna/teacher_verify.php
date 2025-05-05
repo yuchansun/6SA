@@ -102,91 +102,98 @@ if (!$teachers) {
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center">
             <h3>待審核教師清單</h3>
-            <a href="https://udb.moe.edu.tw/ulist/Teacher" class="btn btn-info btn-sm"><b>教師查詢</b></a>
+            <a href="https://udb.moe.edu.tw/ulist/Teacher" class="btn btn-info btn-sm"><b>教師查詢連結🔗</b></a>
         </div>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>姓名</th>
-                    <th>Email</th>
-                    <th>學校</th>
-                    <th>系所</th>
-                    <th>任職狀態</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php while ($row = $teachers->fetch_assoc()): ?>
+        <div class="table-container">
+            <table class="table table-bordered">
+                <thead>
                     <tr>
-                        <td><?= htmlspecialchars($row['Nickname']) ?></td>
-                        <td><?= htmlspecialchars($row['E-mail']) ?></td>
-                        <td><?= htmlspecialchars($row['school_name']) ?></td>
-                        <td><?= htmlspecialchars($row['department']) ?></td>
-                        <td><?= htmlspecialchars($row['employment_status']) ?></td>
-                        <td>
-                            <form method="post" action="approve_teacher.php" style="display:inline;">
-                                <input type="hidden" name="teacher_id" value="<?= $row['id'] ?>">
-                                <button type="submit" class="btn btn-custom btn-sm">通過</button>
-                            </form>
-                            <form method="post" action="reject_teacher.php" style="display:inline;">
-                                <input type="hidden" name="teacher_id" value="<?= $row['id'] ?>">
-                                <button type="submit" class="btn btn-danger btn-sm">拒絕</button>
-                            </form>
-                        </td>
+                        <th>姓名</th>
+                        <th>Email</th>
+                        <th>學校</th>
+                        <th>系所</th>
+                        <th>任職狀態</th>
+                        <th>操作</th>
                     </tr>
-                <?php endwhile; ?>
-            </tbody>
-        </table>
-
+                </thead>
+                <tbody>
+                    <?php while ($row = $teachers->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['Nickname']) ?></td>
+                            <td><?= htmlspecialchars($row['E-mail']) ?></td>
+                            <td><?= htmlspecialchars($row['school_name']) ?></td>
+                            <td><?= htmlspecialchars($row['department']) ?></td>
+                            <td><?= htmlspecialchars($row['employment_status']) ?></td>
+                            <td>
+                                <form method="post" action="approve_teacher.php" style="display:inline;">
+                                    <input type="hidden" name="teacher_id" value="<?= $row['id'] ?>">
+                                    <button type="submit" class="btn btn-custom btn-sm">通過</button>
+                                </form>
+                                <form method="post" action="reject_teacher.php" style="display:inline;">
+                                    <input type="hidden" name="teacher_id" value="<?= $row['id'] ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm">拒絕</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+        <br></br>
         <!-- 已審核教師清單 -->
-        <h3>已審核教師清單</h3>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>姓名</th>
-                    <th>Email</th>
-                    <th>學校</th>
-                    <th>系所</th>
-                    <th>任職狀態</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php while ($row = $approved_teachers->fetch_assoc()): ?>
+        <details>
+            <summary><h3>已審核教師清單</h3></summary>
+
+            <table class="table table-bordered">
+                <thead>
                     <tr>
-                        <td><?= htmlspecialchars($row['Nickname']) ?></td>
-                        <td><?= htmlspecialchars($row['E-mail']) ?></td>
-                        <td><?= htmlspecialchars($row['school_name']) ?></td>
-                        <td><?= htmlspecialchars($row['department']) ?></td>
-                        <td><?= htmlspecialchars($row['employment_status']) ?></td>
+                        <th>姓名</th>
+                        <th>Email</th>
+                        <th>學校</th>
+                        <th>系所</th>
+                        <th>任職狀態</th>
                     </tr>
-                <?php endwhile; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php while ($row = $approved_teachers->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['Nickname']) ?></td>
+                            <td><?= htmlspecialchars($row['E-mail']) ?></td>
+                            <td><?= htmlspecialchars($row['school_name']) ?></td>
+                            <td><?= htmlspecialchars($row['department']) ?></td>
+                            <td><?= htmlspecialchars($row['employment_status']) ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </details>
 
         <!-- 已拒絕教師清單 -->
-        <h3>已拒絕教師清單</h3>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>姓名</th>
-                    <th>Email</th>
-                    <th>學校</th>
-                    <th>系所</th>
-                    <th>任職狀態</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php while ($row = $rejected_teachers->fetch_assoc()): ?>
+        <details>
+            <summary><h3>已拒絕教師清單</h3></summary>
+            <table class="table table-bordered">
+                <thead>
                     <tr>
-                        <td><?= htmlspecialchars($row['Nickname']) ?></td>
-                        <td><?= htmlspecialchars($row['E-mail']) ?></td>
-                        <td><?= htmlspecialchars($row['school_name']) ?></td>
-                        <td><?= htmlspecialchars($row['department']) ?></td>
-                        <td><?= htmlspecialchars($row['employment_status']) ?></td>
+                        <th>姓名</th>
+                        <th>Email</th>
+                        <th>學校</th>
+                        <th>系所</th>
+                        <th>任職狀態</th>
                     </tr>
-                <?php endwhile; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php while ($row = $rejected_teachers->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['Nickname']) ?></td>
+                            <td><?= htmlspecialchars($row['E-mail']) ?></td>
+                            <td><?= htmlspecialchars($row['school_name']) ?></td>
+                            <td><?= htmlspecialchars($row['department']) ?></td>
+                            <td><?= htmlspecialchars($row['employment_status']) ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </details>
     </div>
 
 
@@ -249,6 +256,78 @@ if (!$teachers) {
 
         .btn-danger:hover {
             background-color: rgb(78, 80, 80);
+        }
+
+        /* 包裝表格容器，確保表格在小螢幕上可以水平滾動 */
+        .table-container {
+            overflow-x: auto;
+            /* 使表格在小螢幕上可以水平滾動 */
+            -webkit-overflow-scrolling: touch;
+            /* 為觸控設備啟用平滑滾動 */
+        }
+
+        /* 固定表格列寬，並設置表格為100%寬度 */
+        table {
+            table-layout: fixed;
+            /* 固定表格列寬 */
+            width: 100%;
+            /* 表格寬度佔滿父容器 */
+        }
+
+        /* 表頭和表格單元格的樣式 */
+        th,
+        td {
+            padding: 10px;
+            /* 增加內邊距 */
+            /* 可選：使文字居中對齊 */
+            word-wrap: break-word;
+            /* 使長文字換行 */
+        }
+
+        /* 自訂列寬，確保每列的寬度相同 */
+        th,
+        td {
+            width: 20%;
+            /* 假設表格有5列，這裡將每列寬度設為20% */
+        }
+
+        /* 設定折疊按鈕三角形 */
+        details {
+            margin-bottom: 20px;
+            /* 增加清單間距 */
+        }
+
+        summary {
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        summary::before {
+            content: "▶";
+            /* 預設為右邊的三角形 */
+            margin-right: 10px;
+            font-size: 18px;
+            transition: transform 0.2s ease;
+        }
+
+        details[open] summary::before {
+            transform: rotate(90deg);
+            /* 打開時將三角形旋轉 */
+        }
+
+        /* 響應式設計：當螢幕小於某個寬度時，調整表格樣式 */
+        @media (max-width: 768px) {
+
+            th,
+            td {
+                font-size: 12px;
+                /* 讓文字在小螢幕上更小 */
+                padding: 8px;
+                /* 減小內邊距，避免擠壓 */
+            }
         }
     </style>
 </body>
