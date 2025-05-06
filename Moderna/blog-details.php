@@ -88,6 +88,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'], $_POST['comm
 
     $stmt->close();
 }
+// 處理刪除貼文
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_post_id'])) {
+  $postId = intval($_POST['delete_post_id']);
+  $userEmail = $_SESSION['user'] ?? null;
+
+  if ($userEmail) {
+      $stmt = $conn->prepare("SELECT User_ID FROM account WHERE `E-mail` = ?");
+      $stmt->bind_param("s", $userEmail);
+      $stmt->execute();
+      $userResult = $stmt->get_result();
+      if ($userResult->num_rows > 0) {
+          $user = $userResult->fetch_assoc();
+          $userId = $user['User_ID'];
+
+          // 確保是自己的貼文才能刪
+          $checkPost = $conn->prepare("SELECT * FROM posts WHERE Post_ID = ? AND User_ID = ?");
+          $checkPost->bind_param("ii", $postId, $userId);
+          $checkPost->execute();
+          $postResult = $checkPost->get_result();
+          if ($postResult->num_rows > 0) {
+              $deletePost = $conn->prepare("UPDATE posts SET is_deleted = 1 WHERE Post_ID = ?");
+              $deletePost->bind_param("i", $postId);
+              $deletePost->execute();
+          }
+      }
+  }
+  header("Location: blog-details.php");
+  exit;
+}
+
+// 處理刪除留言
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment_id'])) {
+  $commentId = intval($_POST['delete_comment_id']);
+  $userEmail = $_SESSION['user'] ?? null;
+
+  if ($userEmail) {
+      $stmt = $conn->prepare("SELECT User_ID FROM account WHERE `E-mail` = ?");
+      $stmt->bind_param("s", $userEmail);
+      $stmt->execute();
+      $userResult = $stmt->get_result();
+      if ($userResult->num_rows > 0) {
+          $user = $userResult->fetch_assoc();
+          $userId = $user['User_ID'];
+
+          // 確保是自己的留言才能刪
+          $checkComment = $conn->prepare("SELECT * FROM comments WHERE Comment_ID = ? AND User_ID = ?");
+          $checkComment->bind_param("ii", $commentId, $userId);
+          $checkComment->execute();
+          $commentResult = $checkComment->get_result();
+          if ($commentResult->num_rows > 0) {
+              $deleteComment = $conn->prepare("UPDATE comments SET is_deleted = 1 WHERE Comment_ID = ?");
+              $deleteComment->bind_param("i", $commentId);
+              $deleteComment->execute();
+          }
+      }
+  }
+  header("Location: blog-details.php");
+  exit;
+}
 
 // 處理留言提交
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['comment'])) {
@@ -220,19 +279,27 @@ if (isset($_GET['search'])) {
 }
 
 // 從 SESSION 中取得使用者的 Nickname
-$nickname = "訪客"; // 預設值
+$nickname = "訪客";
+$role = "";
+
 if (isset($_SESSION['user'])) {
     $userEmail = $_SESSION['user'];
-    $stmt = $conn->prepare("SELECT Nickname FROM account WHERE `E-mail` = ?");
+    $stmt = $conn->prepare("SELECT Nickname, Roles FROM account WHERE `E-mail` = ?");
     $stmt->bind_param("s", $userEmail);
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         $nickname = $user['Nickname'];
+        $role = $user['Roles'];
+
+        // ✅ Store into session for later use
+        $_SESSION['user_role'] = $role;
+        $_SESSION['nickname'] = $nickname;
     }
     $stmt->close();
 }
+
 
 // 從 SESSION 中取得使用者的 Photo
 $photo = "assets/img/personal_photo/default.jpeg"; // 預設圖片
@@ -550,6 +617,10 @@ document.addEventListener('DOMContentLoaded', function () {
     .floating-btn i {
       margin-left: 5px;
     }
+    #dlt {
+      float: right; /* 純紅色背景 */
+    }
+   
   </style>
 </head>
 
@@ -608,17 +679,25 @@ document.addEventListener('DOMContentLoaded', function () {
                   <!-- 顯示留言 -->
                   <div class="comments">
                       <h4>留言區</h4>
+                      
                       <div id="top-comments-<?= $post['Post_ID'] ?>">
                           <?php foreach ($topComments as $comment): ?>
                               <div class="comment-item">
                                   <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
-                                  <div class="meta">留言時間: <?= $comment['Comment_Time'] ?></div>
+                                  <div class="meta">留言時間:  <?= $comment['Comment_Time'] ?></div>
                                   <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                                       <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
-                                  </button>
+                                      
+                                
+                                  </button> 
+                                  
+
+                                 
+  
                               </div>
                           <?php endforeach; ?>
                       </div>
+                      
 
                       <?php if (count($comments) > 3): ?>
                           <button id="show-more-comments" class="btn btn-link" onclick="showMoreComments(this, <?= $post['Post_ID'] ?>)">顯示更多留言</button>
@@ -668,9 +747,19 @@ document.addEventListener('DOMContentLoaded', function () {
           <!-- 顯示貼文 -->
           <section id="blog-posts" class="blog-posts section">
             <div class="container">
+              
               <?php while ($post = $postsResult->fetch_assoc()): ?>
+                
                 <div class="post-item data-post-id="<?= $post['Post_ID'] ?>" id="post-<?= $post['Post_ID'] ?>">
-                  <h3><?= htmlspecialchars($post['Title']) ?></h3>
+                  <h3><?= htmlspecialchars($post['Title']) ?><?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === '管理者'): ?>
+  <form method="POST" action="delete-post.php" style="display:inline;">
+    <input type="hidden" name="post_id" value="<?= htmlspecialchars($post['Post_ID']) ?>">
+    <button id="dlt" type="submit" class="btn btn-danger btn-sm" onclick="return confirm('確定要刪除這篇貼文嗎？')">
+      刪除貼文
+    </button>
+  </form>
+<?php endif; ?></h3>
+                  
                   <div class="meta">
                     <span>由 <?= htmlspecialchars($post['Nickname']) ?> <span class="role"><?= htmlspecialchars($post['Roles']) ?></span> 發布於 <?= $post['Post_Time'] ?></span>
                   </div>
@@ -692,6 +781,7 @@ document.addEventListener('DOMContentLoaded', function () {
   data-post-id="<?= $post['Post_ID'] ?>" 
   <?= $alreadyLiked ? 'disabled' : '' ?>
 >
+
   <i class="bi bi-heart"></i> <span><?= $post['Likes'] ?></span>
 </button>
 
@@ -714,11 +804,21 @@ document.addEventListener('DOMContentLoaded', function () {
                       <?php foreach ($topComments as $comment): ?>
                         <div class="comment-item">
                           <p><strong><?= htmlspecialchars($comment['Nickname']) ?> <span class="role"><?= htmlspecialchars($comment['Roles']) ?></span>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
-                          <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
+                          <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div> 
+                          
                           <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                             <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
                           </button>
-                        </div>
+                          <?php if (
+      isset($_SESSION['user_id']) &&
+      ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
+  ): ?>
+    <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
+      <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
+      <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+    </form>
+  <?php endif; ?></div>
+                        
                       <?php endforeach; ?>
                     </div>
 
@@ -732,6 +832,15 @@ document.addEventListener('DOMContentLoaded', function () {
                             <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                               <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
                             </button>
+                            <?php if (
+      isset($_SESSION['user_id']) &&
+      ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
+  ): ?>
+    <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
+      <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
+      <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+    </form>
+  <?php endif; ?>
                           </div>
                         <?php endforeach; ?>
                       </div>

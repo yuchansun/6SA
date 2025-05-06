@@ -149,7 +149,7 @@ if ($result && $row = $result->fetch_assoc()) {
             </div>
             <div class="card-body">
                 <p>查看、編輯或刪除使用者發佈的貼文。您擁有完全的權限來管理討論區。.</p>
-                <a href="manage_posts.php" class="btn btn-primary btn-block">前往貼文管理</a>
+                <a href="blog-details.php" class="btn btn-primary btn-block">前往貼文管理</a>
             </div>
         </div>
 
