@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 .role {
   font-style: italic;
-  color:rgb(42, 120, 126); /* 橘色 */
+  color:rgb(41, 120, 126); /* 橘色 */
   font-size: 0.85em;
   
   border-radius: 4px;
