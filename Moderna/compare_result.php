@@ -30,6 +30,14 @@ $conn->close();
       border-radius: 10px;
       background-color: #f8f8f8;
     }
+
+    .compare-box p {
+      margin-bottom: 10px;
+    }
+
+    .compare-box h4 {
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
@@ -42,7 +50,10 @@ $conn->close();
         <p><strong>地區：</strong><?= htmlspecialchars($data1['Region']) ?></p>
         <p><strong>學群：</strong><?= htmlspecialchars($data1['Disc_Cluster']) ?></p>
         <p><strong>招生名額：</strong><?= htmlspecialchars($data1['Quota']) ?></p>
-        <p><a href="<?= htmlspecialchars($data1['link']) ?>" target="_blank">前往簡章</a></p>
+       
+        <p><strong>簡章連結：</strong><a href="<?= htmlspecialchars($data1['link']) ?>" target="_blank">點我查看</a></p>
+        <p><strong>招生說明：</strong><?= nl2br(htmlspecialchars($data1['requirement'])) ?></p> <!-- 新增招生說明 -->
+        
       <?php else: ?>
         <p>找不到第一筆資料。</p>
       <?php endif; ?>
@@ -53,8 +64,8 @@ $conn->close();
         <p><strong>地區：</strong><?= htmlspecialchars($data2['Region']) ?></p>
         <p><strong>學群：</strong><?= htmlspecialchars($data2['Disc_Cluster']) ?></p>
         <p><strong>招生名額：</strong><?= htmlspecialchars($data2['Quota']) ?></p>
-        <p><a href="<?= htmlspecialchars($data2['link']) ?>" target="_blank">前往簡章</a></p>
-      <?php else: ?>
+        <p><strong>簡章連結：</strong><a href="<?= htmlspecialchars($data2['link']) ?>" target="_blank">點我查看</a></p>
+        <p><strong>招生說明：</strong><?= nl2br(htmlspecialchars($data2['requirement'])) ?></p> <!-- 新增招生說明 -->
         <p>找不到第二筆資料。</p>
       <?php endif; ?>
     </div>
