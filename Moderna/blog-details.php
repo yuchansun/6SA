@@ -293,16 +293,21 @@ $nickname = "訪客";
 $role = "";
 
 if (isset($_SESSION['user'])) {
-  $userEmail = $_SESSION['user'];
-  $stmt = $conn->prepare("SELECT Nickname FROM account WHERE `E-mail` = ?");
-  $stmt->bind_param("s", $userEmail);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  if ($result->num_rows > 0) {
-    $user = $result->fetch_assoc();
-    $nickname = $user['Nickname'];
-  }
-  $stmt->close();
+    $userEmail = $_SESSION['user'];
+    $stmt = $conn->prepare("SELECT Nickname, Roles FROM account WHERE `E-mail` = ?");
+    $stmt->bind_param("s", $userEmail);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $nickname = $user['Nickname'];
+        $role = $user['Roles'];
+
+        // ✅ Store into session for later use
+        $_SESSION['user_role'] = $role;
+        $_SESSION['nickname'] = $nickname;
+    }
+    $stmt->close();
 }
 
 
@@ -664,6 +669,9 @@ if (isset($_SESSION['user'])) {
       font-weight: bold;
       margin: 0;
     }
+    #dlt {
+      float:right;
+    }
   </style>
 </head>
 
@@ -784,6 +792,14 @@ if (isset($_SESSION['user'])) {
               <div class="container">
                 <?php while ($post = $postsResult->fetch_assoc()): ?>
                   <div class="post-item data-post-id=" <?= $post['Post_ID'] ?>" id="post-<?= $post['Post_ID'] ?>">
+                  <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === '管理者'): ?>
+  <form method="POST" action="delete-post.php" style="display:inline;">
+    <input type="hidden" name="post_id" value="<?= htmlspecialchars($post['Post_ID']) ?>">
+    <button id="dlt" type="submit" class="btn btn-danger btn-sm" onclick="return confirm('確定要刪除這篇貼文嗎？')">
+      刪除貼文
+    </button>
+  </form>
+<?php endif; ?>
                     <?php
                     $avatarPath = !empty($post['Photo']) && file_exists($post['Photo'])
                       ? $post['Photo']
@@ -791,7 +807,7 @@ if (isset($_SESSION['user'])) {
                     ?>
                     <div class="post-header">
                       <img src="<?= htmlspecialchars($avatarPath) ?>" class="avatar" alt="作者頭像">
-                      <h3><?= htmlspecialchars($post['Title']) ?></h3>
+                      <h3><?= htmlspecialchars($post['Title']) ?><?= htmlspecialchars($post['Title']) ?></h3>
                     </div>
 
 
@@ -867,7 +883,15 @@ if (isset($_SESSION['user'])) {
                             <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
                             <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                               <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
-                            </button>
+                            </button><?php if (
+      isset($_SESSION['user_id']) &&
+      ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
+  ): ?>
+    <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
+      <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
+      <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+    </form>
+  <?php endif; ?>
                           </div>
                         <?php endforeach; ?>
                       </div>
@@ -893,6 +917,15 @@ if (isset($_SESSION['user'])) {
                               <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
                                 <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
                               </button>
+                              <?php if (
+      isset($_SESSION['user_id']) &&
+      ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
+  ): ?>
+    <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
+      <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
+      <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+    </form>
+  <?php endif; ?>
                             </div>
                           <?php endforeach; ?>
                         </div>
