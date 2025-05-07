@@ -1,4 +1,4 @@
-<?php include('header.php'); ?>
+<?php ob_start(); include('header.php'); ?>
 
 
 <?php
@@ -1100,6 +1100,8 @@ if (isset($_SESSION['user'])) {
                           <a href="blog-details.php?page=<?= urlencode($post['page']) ?>&highlight_id=<?= urlencode($post['Post_ID']) ?>">
                             <?= htmlspecialchars($post['Title'], ENT_QUOTES, 'UTF-8') ?>
                           </a>
+                          <button type="button" class="btn btn-link edit-post-btn" data-post-id="<?= $post['Post_ID'] ?>" data-title="<?= htmlspecialchars($post['Title'], ENT_QUOTES, 'UTF-8') ?>" data-content="<?= htmlspecialchars($post['Content'], ENT_QUOTES, 'UTF-8') ?>">修改</button>
+                          <button type="button" class="btn btn-link text-danger delete-post-btn" data-post-id="<?= $post['Post_ID'] ?>">刪除</button>
                         </h5>
                       </div>
                     <?php endforeach; ?>
@@ -1107,6 +1109,85 @@ if (isset($_SESSION['user'])) {
                 </div>
               </div>
             </div>
+
+            <!-- Edit Post Modal -->
+            <div class="modal fade" id="editPostModal" tabindex="-1" aria-labelledby="editPostModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="editPostModalLabel">修改貼文</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form method="POST" action="edit-post.php">
+                      <input type="hidden" name="post_id" id="edit-post-id">
+                      <div class="mb-3">
+                        <label for="edit-title" class="form-label">標題</label>
+                        <input type="text" class="form-control" id="edit-title" name="title" required>
+                      </div>
+                      <div class="mb-3">
+                        <label for="edit-content" class="form-label">內容</label>
+                        <textarea class="form-control" id="edit-content" name="content" rows="4" required></textarea>
+                      </div>
+                      <button type="submit" class="btn btn-primary">保存修改</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Delete Post Modal -->
+            <div class="modal fade" id="deletePostModal" tabindex="-1" aria-labelledby="deletePostModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="deletePostModalLabel">確認刪除貼文</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    您確定要刪除此貼文嗎？此操作無法復原。
+                  </div>
+                  <div class="modal-footer">
+                    <form method="POST" action="delete-post.php">
+                      <input type="hidden" name="post_id" id="delete-post-id">
+                      <button type="submit" class="btn btn-danger">確認刪除</button>
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              // 編輯貼文按鈕點擊事件
+              document.querySelectorAll('.edit-post-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                  const postId = this.dataset.postId;
+                  const title = this.dataset.title;
+                  const content = this.dataset.content;
+                  
+                  document.getElementById('edit-post-id').value = postId;
+                  document.getElementById('edit-title').value = title;
+                  document.getElementById('edit-content').value = content;
+                  
+                  const editModal = new bootstrap.Modal(document.getElementById('editPostModal'));
+                  editModal.show();
+                });
+              });
+
+              // 刪除貼文按鈕點擊事件
+              document.querySelectorAll('.delete-post-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                  const postId = this.dataset.postId;
+                  document.getElementById('delete-post-id').value = postId;
+                  
+                  const deleteModal = new bootstrap.Modal(document.getElementById('deletePostModal'));
+                  deleteModal.show();
+                });
+              });
+            });
+            </script>
 
             <!-- Recent Posts and Comments Widget -->
             <div class="recent-posts-widget widget-item">
