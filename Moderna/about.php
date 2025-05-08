@@ -192,6 +192,9 @@ $conn->close();
 
 <div class="filter-container">
 <form method="GET" action="" class="filter-form">
+    <?php if ($showAdminInterface): ?>
+    <input type="hidden" name="admin" value="1">
+    <?php endif; ?>
     <select name="region" id="region">
         <option value="">選擇地區</option>
         <?php foreach ($regionOptions as $option): ?>
@@ -427,7 +430,10 @@ function updateSelectOptions(target) {
           </a>
         <?php endif; ?>
         <form method="GET" >
-          <button type="submit" class="clear-button">重置 <i class="bi bi-arrow-clockwise"></i></button>
+        <?php if ($showAdminInterface): ?>
+        <input type="hidden" name="admin" value="1">
+        <?php endif; ?>
+        <button type="submit" class="clear-button">重置 <i class="bi bi-arrow-clockwise"></i></button>
         </form>
       </div>
 
