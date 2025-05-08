@@ -114,7 +114,8 @@ window.onload = function () {
 
     loadFavoriteDetails(favorites);
   }
-
+// 取得收藏的學校詳細資料
+  // 這裡的 favorites 是從資料庫或 localStorage 取得的收藏學校編號陣列
   function loadFavoriteDetails(favorites) {
     fetch('get_fav_detail.php', {
       method: 'POST',
@@ -127,6 +128,7 @@ window.onload = function () {
 
       data.forEach(school => {
         const div = document.createElement('div');
+        div.dataset.school = `${school.School_Name} ${school.Department}`;
         div.className = 'portfolio-info';
         div.setAttribute('data-aos', 'fade-up');
         div.setAttribute('data-aos-delay', '200');
@@ -199,7 +201,7 @@ function toggleFavorite(schNum, iconElement) {
     location.reload();
   }
 }
-
+// todo-list
 function renderTodos(schNum, userId) {
   const list = document.getElementById(`todo-${schNum}`);
   if (!list) return;
@@ -235,56 +237,61 @@ function renderTodos(schNum, userId) {
       let hasShownAlert = false;
 
       todos.forEach(todo => {
-        const li = document.createElement('li');
-        li.style.marginBottom = '10px';
+  const li = document.createElement('li');
+  li.style.marginBottom = '10px';
 
-        const todoWrapper = document.createElement('div');
-        todoWrapper.style.display = 'flex';
-        todoWrapper.style.alignItems = 'center';
-        todoWrapper.style.justifyContent = 'space-between';
+  const todoWrapper = document.createElement('div');
+  todoWrapper.style.display = 'flex';
+  todoWrapper.style.alignItems = 'center';
+  todoWrapper.style.justifyContent = 'space-between';
 
-        const leftContent = document.createElement('div');
-        leftContent.style.display = 'flex';
-        leftContent.style.alignItems = 'center';
+  const leftContent = document.createElement('div');
+  leftContent.style.display = 'flex';
+  leftContent.style.alignItems = 'center';
 
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = todo.is_done === 1;
-        checkbox.style.marginRight = '8px';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = todo.is_done === 1;
+  checkbox.style.marginRight = '8px';
 
-        checkbox.addEventListener('change', () => {
-          updateTodoStatus(userId, todo.todo_id, checkbox.checked ? 1 : 0);
-        });
+  checkbox.addEventListener('change', () => {
+    updateTodoStatus(userId, todo.todo_id, checkbox.checked ? 1 : 0);
+  });
 
-        const title = document.createElement('strong');
-        title.textContent = todo.title;
+  const title = document.createElement('strong');
+  title.textContent = todo.title;
 
-        const gcalIcon = document.createElement('i');
-gcalIcon.className = 'bi bi-google';
-gcalIcon.style.cursor = 'pointer';
-gcalIcon.style.marginLeft = '10px';
-gcalIcon.title = '新增到 Google 行事曆';
+  // Google 行事曆 icon
+  const gcalIcon = document.createElement('i');
+  gcalIcon.className = 'bi bi-google';
+  gcalIcon.style.cursor = 'pointer';
+  gcalIcon.style.marginLeft = '10px';
+  gcalIcon.title = '新增到 Google 行事曆';
 
-gcalIcon.addEventListener('click', () => {
-  const title = encodeURIComponent(`${todo.title} `);
-  const details = encodeURIComponent(todo.description || '');
-  
-  const start = todo.start_time ? new Date(todo.start_time) : null;
-  const end = todo.end_time ? new Date(todo.end_time) : null;
+  gcalIcon.addEventListener('click', () => {
+    // 往上找到最近的 .portfolio-info，再從 data-school 拿校系名稱
+    const parentDiv = li.closest('.portfolio-info');
+    const schoolTitle = parentDiv?.dataset.school || '';
 
-  const startISOString = start && !isNaN(start.getTime()) ? start.toISOString().replace(/[-:]|(\.\d{3})/g, '') : '';
-  const endISOString = end && !isNaN(end.getTime()) ? end.toISOString().replace(/[-:]|(\.\d{3})/g, '') : '';
+    const fullTitle = encodeURIComponent(`${schoolTitle} - ${todo.title}`);
+    const details = encodeURIComponent(todo.description || '');
 
-  if (startISOString) {
-    // 如果有開始時間，生成 URL 並只加上開始時間
-    const url = `https://calendar.google.com/calendar/r/eventedit?text=${title}&details=${details}` +
-                `&dates=${startISOString}` + // 只加上開始時間
-                (endISOString ? `/${endISOString}` : ''); // 如果有結束時間才加上
-    window.open(url, '_blank');
-  } else {
-    alert("未提供事件時間資訊！");
-  }
-});
+    const start = todo.start_time ? new Date(todo.start_time) : null;
+    const end = todo.end_time ? new Date(todo.end_time) : null;
+
+    const startISOString = start && !isNaN(start.getTime()) ? start.toISOString().replace(/[-:]|(\.\d{3})/g, '') : '';
+    const endISOString = end && !isNaN(end.getTime()) ? end.toISOString().replace(/[-:]|(\.\d{3})/g, '') : '';
+
+    if (startISOString) {
+      const url = `https://calendar.google.com/calendar/r/eventedit?text=${fullTitle}&details=${details}` +
+                  `&dates=${startISOString}` +
+                  (endISOString ? `/${endISOString}` : '');
+      window.open(url, '_blank');
+    } else {
+      alert("未提供事件時間資訊！");
+    }
+  });
+
 
         // 判斷是否已過期或快到期
         if (todo.end_time) {
