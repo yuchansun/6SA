@@ -21,6 +21,23 @@ if (isset($_SESSION['user_id'])) {
             if (!empty($row['Photo']) && $row['Photo'] !== 'assets/img/personal_photo/default.jpeg') {
                 $photoPath = $row['Photo'];
             }
+            $_SESSION['user_role'] = $row['Roles'];
+            $userRole = $row['Roles'];
+        }
+    }
+    $stmt->close();
+}
+
+// 確保在每個頁面都檢查並設置 user_role
+if (isset($_SESSION['user_id']) && !isset($_SESSION['user_role'])) {
+    $userId = $_SESSION['user_id'];
+    $query = "SELECT Roles FROM account WHERE User_ID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $userId);
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $_SESSION['user_role'] = $row['Roles'];
             $userRole = $row['Roles'];
         }
     }
@@ -127,7 +144,7 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
 
           <!-- 管理者特有選項 -->
           <?php if ($userRole === '管理者'): ?>
-            <li><a href="">管理校系簡章</a></li>
+            <li><a href="about.php?admin=1">管理校系簡章</a></li>
             <li><a href="blog-details.php">管理討論區</a></li>
             <li><a href="teacher_verify.php">教師驗證</a></li>
             <li><a href="">新增管理者</a></li>

@@ -1,5 +1,31 @@
 <?php
 session_start();
+require_once 'db.php';
+
+// 檢查是否為管理者
+$isAdmin = false;
+if (isset($_SESSION['user_id'])) {
+    $userId = $_SESSION['user_id'];
+    $query = "SELECT Roles FROM account WHERE User_ID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $userId);
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $isAdmin = ($row['Roles'] === '管理者');
+            $_SESSION['user_role'] = $row['Roles'];
+        }
+    }
+    $stmt->close();
+}
+
+$showAdminInterface = isset($_GET['admin']) && $isAdmin;
+
+// 如果不是管理者但嘗試訪問管理介面，重定向到首頁
+if (isset($_GET['admin']) && !$isAdmin) {
+    header('Location: index.php');
+    exit;
+}
 ?>
 
 <?php include('header.php'); ?>
@@ -103,7 +129,7 @@ if (!empty($filters["talent"])) {
     ";
 }
 
-$sql .= " WHERE 1=1";
+$sql .= " WHERE sd.is_deleted = 0";
 
 // 處理關鍵字搜尋
 if (!empty($filters["q"])) {
@@ -166,6 +192,9 @@ $conn->close();
 
 <div class="filter-container">
 <form method="GET" action="" class="filter-form">
+    <?php if ($showAdminInterface): ?>
+    <input type="hidden" name="admin" value="1">
+    <?php endif; ?>
     <select name="region" id="region">
         <option value="">選擇地區</option>
         <?php foreach ($regionOptions as $option): ?>
@@ -395,10 +424,18 @@ function updateSelectOptions(target) {
 
 </div>
       <div style="display: flex; justify-content: flex-end;">
+        <?php if ($showAdminInterface): ?>
+          <a href="add_school.php" class="btn btn-primary me-2" style="background-color: var(--accent-color); border: none;">
+            <i class="bi bi-plus-circle"></i> 新增校系
+          </a>
+        <?php endif; ?>
         <form method="GET" >
+        <?php if ($showAdminInterface): ?>
+        <input type="hidden" name="admin" value="1">
+        <?php endif; ?>
         <button type="submit" class="clear-button">重置 <i class="bi bi-arrow-clockwise"></i></button>
         </form>
-       </div>
+      </div>
 
 <?php if (!empty($results)): ?>
 <table class="table table-striped table-hover align-middle text-center mt-4">
@@ -419,11 +456,16 @@ function updateSelectOptions(target) {
   <td><?= htmlspecialchars($row['Department']); ?></td>
   <td><?= htmlspecialchars($row['Quota']); ?></td>
   <td>
-  <a href="school_detail.php?sch_num=<?= urlencode($row['Sch_num']) ?>" class="btn btn-sm" style="background-color: var(--accent-color); color:white;">
-  詳細介紹
-</a>
-
-        </td>
+  <?php if ($showAdminInterface): ?>
+    <a href="about-admin.php?sch_num=<?= urlencode($row['Sch_num']) ?>" class="btn btn-sm" style="background-color: var(--accent-color); color:white;">
+      管理校系簡章
+    </a>
+  <?php else: ?>
+    <a href="school_detail.php?sch_num=<?= urlencode($row['Sch_num']) ?>" class="btn btn-sm" style="background-color: var(--accent-color); color:white;">
+      詳細介紹
+    </a>
+  <?php endif; ?>
+  </td>
         
 
 
