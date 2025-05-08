@@ -81,83 +81,96 @@ $conn->close();
 
   <script>
 window.onload = function () {
-  const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
   const container = document.getElementById('favorite-list');
-
   const userId = <?php echo json_encode($_SESSION['user_id'] ?? null); ?>;
+  const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
 
-  if (favorites.length === 0) {
-    container.innerHTML = "<p style='text-align:center;'>尚未收藏任何學校。</p>";
-    return;
-  }
+  // 如果使用者已登入，從資料庫取得收藏
+  if (isLoggedIn) {
+    fetch('get_favorites.php', {
+      credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(favorites => {
+      if (favorites.length === 0) {
+        container.innerHTML = "<p style='text-align:center;'>尚未收藏任何學校。</p>";
+        return;
+      }
 
-  fetch('get_fav_detail.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ schNums: favorites })
-  })
-  .then(res => res.json())
-  .then(data => {
-    container.innerHTML = ''; // 清空原本內容
-
-    data.forEach(school => {
-      const div = document.createElement('div');
-      div.className = 'portfolio-info';
-      div.setAttribute('data-aos', 'fade-up');
-      div.setAttribute('data-aos-delay', '200');
-
-      const todoId = `todo-${school.Sch_num}`;
-
-      div.innerHTML = `
-        <div style="position: relative; padding-top: 30px;">
-          <i class="bi bi-star-fill"
-            onclick="toggleFavorite('${school.Sch_num}', this)"
-            style="position: absolute; top: 0px; right: -5px; cursor: pointer; font-size: 22px;color: gold;"
-            title="取消收藏"></i>
-
- <h3>
-  <a href="school_detail.php?sch_num=${school.Sch_num}" class="portfolio-title">
-    ${school.School_Name} ${school.Department}
-  </a>
-</h3>
-
-<style>
- 
-  .portfolio-title {
-   
-    color: var(--heading-color); /* 這裡指定顏色 */
-  }
-</style>
-
-
-          <ul>
-           <li><strong>簡章網址</strong>: <a href="${school.link}" target="_blank" class="wrap-link">${school.link}</a></li>
-<style>
-.wrap-link {
-  display: -webkit-box;
-  -webkit-line-clamp: 1; /* 限制顯示2行 */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  word-break: break-all;
-}
-</style>
-
-          </ul>
-
-          <div class="todo-section">
-            <h5>To-Do List</h5>
-            <ul id="${todoId}" class="todo-list"></ul>
-          </div>
-        </div>
-      `;
-
-      container.appendChild(div);
-      renderTodos(school.Sch_num, userId); 
+      loadFavoriteDetails(favorites);
+    })
+    .catch(error => {
+      console.error('取得收藏失敗:', error);
+      container.innerHTML = "<p style='text-align:center;'>載入失敗，請稍後再試。</p>";
     });
-  });
-};
+  } else {
+    // 未登入時從 localStorage 取得收藏
+    const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
+    if (favorites.length === 0) {
+      container.innerHTML = "<p style='text-align:center;'>尚未收藏任何學校。</p>";
+      return;
+    }
+
+    loadFavoriteDetails(favorites);
+  }
+
+  function loadFavoriteDetails(favorites) {
+    fetch('get_fav_detail.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ schNums: favorites })
+    })
+    .then(res => res.json())
+    .then(data => {
+      container.innerHTML = '';
+
+      data.forEach(school => {
+        const div = document.createElement('div');
+        div.className = 'portfolio-info';
+        div.setAttribute('data-aos', 'fade-up');
+        div.setAttribute('data-aos-delay', '200');
+
+        const todoId = `todo-${school.Sch_num}`;
+
+        div.innerHTML = `
+          <div style="position: relative; padding-top: 30px;">
+            <i class="bi bi-star-fill"
+              onclick="toggleFavorite('${school.Sch_num}', this)"
+              style="position: absolute; top: 0px; right: -5px; cursor: pointer; font-size: 22px;color: gold;"
+              title="取消收藏"></i>
+
+            <h3>
+              <a href="school_detail.php?sch_num=${school.Sch_num}" class="portfolio-title">
+                ${school.School_Name} ${school.Department}
+              </a>
+            </h3>
+
+            <ul>
+              <li><strong>簡章網址</strong>: 
+                <a href="${school.link}" target="_blank" class="wrap-link">${school.link}</a>
+              </li>
+            </ul>
+
+            <div class="todo-section">
+              <h5>To-Do List</h5>
+              <ul id="${todoId}" class="todo-list"></ul>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(div);
+
+        renderTodos(school.Sch_num, userId);
+
+      });
+    })
+    .catch(err => {
+      console.error("取得學校資料錯誤：", err);
+      container.innerHTML = "<p style='text-align:center;'>載入失敗，請稍後再試。</p>";
+    });
+  }
+};
 
 // 取消收藏（適用於我的最愛頁面）
 function toggleFavorite(schNum, iconElement) {
@@ -436,7 +449,23 @@ function updateNotificationStatus(userId, todoId, isNotified) {
 
 
 </script>
-
+<style>
+.wrap-link {
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* 限制顯示2行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+</style>
+<style>
+ 
+  .portfolio-title {
+   
+    color: var(--heading-color); /* 這裡指定顏色 */
+  }
+</style>
 
 <style>
     table {
