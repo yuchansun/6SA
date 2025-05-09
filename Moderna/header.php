@@ -131,7 +131,7 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
             </li>
             <li>
               <a href="javascript:void(0);" id="openNotifications">
-                <i class="bi bi-bell-fill"></i>
+                <i class="bi bi-bell-fill" style="font-size: 15px;"></i>
               </a>
             </li> 
             <li class="d-flex align-items-center"><a href="update_personal.php">
