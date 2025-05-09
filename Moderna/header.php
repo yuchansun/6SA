@@ -145,6 +145,7 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
           <!-- 管理者特有選項 -->
           <?php if ($userRole === '管理者'): ?>
             <li><a href="about.php?admin=1">管理校系簡章</a></li>
+            <li><a href="crudtodos.php">管理todo list</a></li>
             <li><a href="blog-details.php">管理討論區</a></li>
             <li><a href="teacher_verify.php">教師驗證</a></li>
             <li><a href="">新增管理者</a></li>

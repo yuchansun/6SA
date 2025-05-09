@@ -50,7 +50,8 @@ $conn->close();
         
       </div>
     </div><!-- End Page Title -->
-
+   
+           
    
   </main>
 
@@ -274,7 +275,7 @@ function renderTodos(schNum, userId) {
     const schoolTitle = parentDiv?.dataset.school || '';
 
     const fullTitle = encodeURIComponent(`${schoolTitle} - ${todo.title}`);
-    const details = encodeURIComponent(todo.description || '');
+    const details = encodeURIComponent(todo.description || '特殊選才todo');
 
     const start = todo.start_time ? new Date(todo.start_time) : null;
     const end = todo.end_time ? new Date(todo.end_time) : null;
@@ -299,9 +300,9 @@ function renderTodos(schNum, userId) {
           const hoursLeft = (endTime - now) / (1000 * 60 * 60);
 
           if (endTime < now && todo.is_done !== 1) {
-            title.style.textDecoration = 'line-through';
+           
             title.style.color = 'gray';
-            title.textContent = todo.title + '（已過期）';
+          
           } else if (hoursLeft <= 24 && todo.is_done !== 1) {
             title.style.color = 'red';
             title.textContent = todo.title;

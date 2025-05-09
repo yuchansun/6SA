@@ -27,35 +27,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $result->fetch_assoc();
 
         // Plain text password comparison
-        if ($password === $user['Password']) {
-            // Login success
-            $_SESSION['user'] = $user['E-mail'];
-            $_SESSION['nickname'] = $user['Nickname'];
-            $_SESSION['user_id'] = $user['User_ID'];
-            $_SESSION['role'] = $user['Roles']; // 儲存用戶角色
+if ($password === $user['Password']) {
+    // Login success
+    $_SESSION['user'] = $user['E-mail'];
+    $_SESSION['nickname'] = $user['Nickname'];
+    $_SESSION['user_id'] = $user['User_ID'];
+    $_SESSION['role'] = $user['Roles']; // 儲存用戶角色
 
-            // 如果是教師，存儲教師相關資訊
-            if ($user['Roles'] == '教師') {
-                $_SESSION['is_teacher'] = true;
-                $_SESSION['school_name'] = $user['school_name'] ?? '';
-                $_SESSION['department'] = $user['department'] ?? '';
-                $_SESSION['employment_status'] = $user['employment_status'] ?? '';
-                $_SESSION['teacher_verified'] = $user['verified'] ?? 0;
-            }
+    // 如果是教師，存儲教師相關資訊
+    if ($user['Roles'] === '教師') {
+        $_SESSION['is_teacher'] = true;
+        $_SESSION['school_name'] = $user['school_name'] ?? '';
+        $_SESSION['department'] = $user['department'] ?? '';
+        $_SESSION['employment_status'] = $user['employment_status'] ?? '';
+        $_SESSION['teacher_verified'] = $user['verified'] ?? 0;
+    }
 
-            // Set cookies if 'remember' is checked
-            if (isset($_POST['remember'])) {
-                setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 days
-                setcookie('remember_password', $password, time() + (86400 * 30), "/");
-            } else {
-                setcookie('remember_email', '', time() - 3600, "/");
-                setcookie('remember_password', '', time() - 3600, "/");
-            }
+    // Remember me 功能
+    if (isset($_POST['remember'])) {
+        setcookie('remember_email', $account, time() + (86400 * 30), "/"); // 30 天
+        setcookie('remember_password', $password, time() + (86400 * 30), "/");
+    } else {
+        setcookie('remember_email', '', time() - 3600, "/");
+        setcookie('remember_password', '', time() - 3600, "/");
+    }
 
-            $redirect = $_SESSION['redirect_to'] ?? 'index.php';
-            unset($_SESSION['redirect_to']);
-            header("Location: $redirect");
-            exit();
+    // 導向頁面邏輯：依角色導向不同頁面
+    if ($_SESSION['role'] === '管理者') {
+        header("Location: about.php?admin=1"); // 管理者導向後台首頁
+    } else {
+        $redirect = $_SESSION['redirect_to'] ?? 'index.php'; // 其他人導向原本頁面或首頁
+        unset($_SESSION['redirect_to']);
+        header("Location: $redirect");
+    }
+    exit();
         } else {
             $error = "密碼錯誤.";
         }
