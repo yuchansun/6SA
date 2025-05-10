@@ -491,7 +491,7 @@ if (isset($_SESSION['user'])) {
       const interval = setInterval(() => {
         const target = document.querySelector('[data-post-id="' + highlightId + '"]');
         if (target) {
-          const yOffset = -370; // 如果有固定導覽列，可調整這個值
+          const yOffset = -400; // 增加偏移量，確保內容在 header 下方
           const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
           window.scrollTo({
             top: y,
@@ -733,11 +733,40 @@ if (isset($_SESSION['user'])) {
                   <div id="top-comments-<?= $post['Post_ID'] ?>">
                     <?php foreach ($topComments as $comment): ?>
                       <div class="comment-item">
-                        <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
-                        <div class="meta">留言時間: <?= $comment['Comment_Time'] ?></div>
-                        <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
-                          <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
-                        </button>
+                        <div class="d-flex align-items-start gap-3">
+                          <?php
+                          $avatarPath = !empty($comment['Photo']) && file_exists($comment['Photo'])
+                            ? $comment['Photo']
+                            : 'assets/img/personal_photo/default.jpeg';
+                          ?>
+                          <img src="<?= htmlspecialchars($avatarPath) ?>" class="avatar" alt="留言者頭像" style="width: 40px; height: 40px;">
+                          <div>
+                            <?php
+                            $roleText = $comment['Roles'];
+                            if ($roleText === '教師') {
+                              $roleText = ($comment['verified']) ? '教師(已驗證)' : '教師(尚未驗證)';
+                            }
+                            ?>
+                            <p>
+                              <strong><?= htmlspecialchars($comment['Nickname']) ?></strong>
+                              <span class="role"><?= htmlspecialchars($roleText) ?></span>:
+                              <?= nl2br(htmlspecialchars($comment['Content'])) ?>
+                            </p>
+                            <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
+                            <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
+                              <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+                            </button>
+                            <?php if (
+                              isset($_SESSION['user_id']) &&
+                              ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
+                            ): ?>
+                              <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
+                                <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
+                                <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+                              </form>
+                            <?php endif; ?>
+                          </div>
+                        </div>
                       </div>
                     <?php endforeach; ?>
                   </div>
@@ -747,11 +776,40 @@ if (isset($_SESSION['user'])) {
                     <div id="all-comments-<?= $post['Post_ID'] ?>" style="display: none;">
                       <?php foreach (array_slice($comments, 3) as $comment): ?>
                         <div class="comment-item">
-                          <p><strong><?= htmlspecialchars($comment['Nickname']) ?>:</strong> <?= nl2br(htmlspecialchars($comment['Content'])) ?></p>
-                          <div class="meta">留言時間: <?= $comment['Comment_Time'] ?></div>
-                          <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
-                            <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
-                          </button>
+                          <div class="d-flex align-items-start gap-3">
+                            <?php
+                            $avatarPath = !empty($comment['Photo']) && file_exists($comment['Photo'])
+                              ? $comment['Photo']
+                              : 'assets/img/personal_photo/default.jpeg';
+                            ?>
+                            <img src="<?= htmlspecialchars($avatarPath) ?>" class="avatar" alt="留言者頭像" style="width: 40px; height: 40px;">
+                            <div>
+                              <?php
+                              $roleText = $comment['Roles'];
+                              if ($roleText === '教師') {
+                                $roleText = ($comment['verified']) ? '教師(已驗證)' : '教師(尚未驗證)';
+                              }
+                              ?>
+                              <p>
+                                <strong><?= htmlspecialchars($comment['Nickname']) ?></strong>
+                                <span class="role"><?= htmlspecialchars($roleText) ?></span>:
+                                <?= nl2br(htmlspecialchars($comment['Content'])) ?>
+                              </p>
+                              <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
+                              <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
+                                <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+                              </button>
+                              <?php if (
+                                isset($_SESSION['user_id']) &&
+                                ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
+                              ): ?>
+                                <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
+                                  <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
+                                  <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+                                </form>
+                              <?php endif; ?>
+                            </div>
+                          </div>
                         </div>
                       <?php endforeach; ?>
                     </div>
@@ -849,7 +907,7 @@ if (isset($_SESSION['user'])) {
                       <h4>留言區</h4>
                       <?php
                       $commentsQuery = $conn->prepare("
-                      SELECT c.*, a.Nickname, a.Roles, t.verified 
+                      SELECT c.*, a.Nickname, a.Roles, a.Photo, t.verified 
                       FROM comments c 
                       JOIN account a ON c.User_ID = a.User_ID 
                       LEFT JOIN teacher_info t ON a.User_ID = t.account_id 
@@ -869,29 +927,40 @@ if (isset($_SESSION['user'])) {
                       <div id="top-comments-<?= $post['Post_ID'] ?>">
                         <?php foreach ($topComments as $comment): ?>
                           <div class="comment-item">
-                            <?php
-                            $roleText = $comment['Roles'];
-                            if ($roleText === '教師') {
-                              $roleText = ($comment['verified']) ? '教師(已驗證)' : '教師(尚未驗證)';
-                            }
-                            ?>
-                            <p>
-                              <strong><?= htmlspecialchars($comment['Nickname']) ?></strong>
-                              <span class="role"><?= htmlspecialchars($roleText) ?></span>:
-                              <?= nl2br(htmlspecialchars($comment['Content'])) ?>
-                            </p>
-                            <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
-                            <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
-                              <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
-                            </button><?php if (
-      isset($_SESSION['user_id']) &&
-      ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
-  ): ?>
-    <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
-      <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
-      <button type="submit" class="btn btn-danger btn-sm">刪除</button>
-    </form>
-  <?php endif; ?>
+                            <div class="d-flex align-items-start gap-3">
+                              <?php
+                              $avatarPath = !empty($comment['Photo']) && file_exists($comment['Photo'])
+                                ? $comment['Photo']
+                                : 'assets/img/personal_photo/default.jpeg';
+                              ?>
+                              <img src="<?= htmlspecialchars($avatarPath) ?>" class="avatar" alt="留言者頭像" style="width: 40px; height: 40px;">
+                              <div>
+                                <?php
+                                $roleText = $comment['Roles'];
+                                if ($roleText === '教師') {
+                                  $roleText = ($comment['verified']) ? '教師(已驗證)' : '教師(尚未驗證)';
+                                }
+                                ?>
+                                <p>
+                                  <strong><?= htmlspecialchars($comment['Nickname']) ?></strong>
+                                  <span class="role"><?= htmlspecialchars($roleText) ?></span>:
+                                  <?= nl2br(htmlspecialchars($comment['Content'])) ?>
+                                </p>
+                                <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
+                                <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
+                                  <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+                                </button>
+                                <?php if (
+                                  isset($_SESSION['user_id']) &&
+                                  ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
+                                ): ?>
+                                  <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
+                                    <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+                                  </form>
+                                <?php endif; ?>
+                              </div>
+                            </div>
                           </div>
                         <?php endforeach; ?>
                       </div>
@@ -901,31 +970,40 @@ if (isset($_SESSION['user'])) {
                         <div id="all-comments-<?= $post['Post_ID'] ?>" style="display: none;">
                           <?php foreach (array_slice($comments, 3) as $comment): ?>
                             <div class="comment-item">
-                              <?php
-                              $roleText = $comment['Roles'];
-                              if ($roleText === '教師') {
-                                $roleText = ($comment['verified']) ? '教師(已驗證)' : '教師(尚未驗證)';
-                              }
-                              ?>
-                              <p>
-                                <strong><?= htmlspecialchars($comment['Nickname']) ?></strong>
-                                <span class="role"><?= htmlspecialchars($roleText) ?></span>:
-
-                                <?= nl2br(htmlspecialchars($comment['Content'])) ?>
-                              </p>
-                              <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
-                              <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
-                                <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
-                              </button>
-                              <?php if (
-      isset($_SESSION['user_id']) &&
-      ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
-  ): ?>
-    <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
-      <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
-      <button type="submit" class="btn btn-danger btn-sm">刪除</button>
-    </form>
-  <?php endif; ?>
+                              <div class="d-flex align-items-start gap-3">
+                                <?php
+                                $avatarPath = !empty($comment['Photo']) && file_exists($comment['Photo'])
+                                  ? $comment['Photo']
+                                  : 'assets/img/personal_photo/default.jpeg';
+                                ?>
+                                <img src="<?= htmlspecialchars($avatarPath) ?>" class="avatar" alt="留言者頭像" style="width: 40px; height: 40px;">
+                                <div>
+                                  <?php
+                                  $roleText = $comment['Roles'];
+                                  if ($roleText === '教師') {
+                                    $roleText = ($comment['verified']) ? '教師(已驗證)' : '教師(尚未驗證)';
+                                  }
+                                  ?>
+                                  <p>
+                                    <strong><?= htmlspecialchars($comment['Nickname']) ?></strong>
+                                    <span class="role"><?= htmlspecialchars($roleText) ?></span>:
+                                    <?= nl2br(htmlspecialchars($comment['Content'])) ?>
+                                  </p>
+                                  <div class="meta">留言時間: <?= $comment['Comment_Time'] ?> </div>
+                                  <button class="btn-like" data-comment-id="<?= $comment['Comment_ID'] ?>">
+                                    <i class="bi bi-heart"></i> <span><?= $comment['Likes'] ?></span>
+                                  </button>
+                                  <?php if (
+                                    isset($_SESSION['user_id']) &&
+                                    ($comment['User_ID'] === $_SESSION['user_id'] || $_SESSION['user_role'] === '管理者')
+                                  ): ?>
+                                    <form method="POST" action="blog-details.php" onsubmit="return confirm('確定要刪除這則留言嗎？');" style="display:inline;">
+                                      <input type="hidden" name="delete_comment_id" value="<?= $comment['Comment_ID'] ?>">
+                                      <button type="submit" class="btn btn-danger btn-sm">刪除</button>
+                                    </form>
+                                  <?php endif; ?>
+                                </div>
+                              </div>
                             </div>
                           <?php endforeach; ?>
                         </div>

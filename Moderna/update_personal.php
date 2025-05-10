@@ -9,22 +9,21 @@ if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
 
-
-// 取得使用者目前的教師資料（如果有）
+// 取得使用者目前的資料
 $user_data = [];
-if (!empty($email)) {
+if (isset($_SESSION['user'])) {
+  $email = $_SESSION['user'];
   $stmt = $conn->prepare("
-        SELECT a.Nickname, a.Roles, a.Photo, t.school_name, t.department, t.employment_status
-        FROM account a
-        LEFT JOIN teacher_info t ON a.User_ID = t.account_id
-        WHERE a.`E-mail` = ?
-    ");
+    SELECT a.*, t.school_name, t.department, t.employment_status
+    FROM account a
+    LEFT JOIN teacher_info t ON a.User_ID = t.account_id
+    WHERE a.`E-mail` = ?
+  ");
   $stmt->bind_param("s", $email);
   $stmt->execute();
   $user_data = $stmt->get_result()->fetch_assoc();
   $stmt->close();
 }
-
 
 // Handle form submission for updating information
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -37,8 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   $school_name = $_POST['school_name'] ?? '';
   $department = $_POST['department'] ?? '';
   $employment_status = $_POST['employment_status'] ?? '';
-
-
 
   // Fetch latest role from database to sync session
   $result = $conn->query("SELECT Roles FROM account WHERE `E-mail` = '$email'");
@@ -110,7 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $success_message .= "教師資訊已新增！";
       }
     }
-
 
     // Handle photo upload with validation
     if ($photo['error'] == 0) {
@@ -249,31 +245,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <!-- Nickname Update -->
                 <div class="mb-3">
-                  <input type="text" name="nickname" class="form-control" placeholder="暱稱" value="<?= $_SESSION['nickname'] ?>" required>
+                  <input type="text" name="nickname" class="form-control" placeholder="暱稱" value="<?= htmlspecialchars($user_data['Nickname'] ?? '') ?>" required>
                 </div>
 
                 <!-- New Password -->
                 <div class="mb-3">
-                  <input type="password" name="new_password" class="form-control" placeholder="更新密碼">
+                  <input type="password" name="new_password" class="form-control" placeholder="更新密碼" value="<?= htmlspecialchars($user_data['Password'] ?? '') ?>">
                 </div>
 
                 <!-- Confirm New Password -->
                 <div class="mb-3">
-                  <input type="password" name="confirm_password" class="form-control" placeholder="確認更新密碼">
+                  <input type="password" name="confirm_password" class="form-control" placeholder="確認更新密碼" value="<?= htmlspecialchars($user_data['Password'] ?? '') ?>">
                 </div>
 
                 <div class="mb-3">
                   你是 ：
-                  <select name="roles" class="form-select" required>
-                    <option value="學生" <?= isset($_POST['roles']) && $_POST['roles'] == '學生' ? 'selected' : '' ?>>學生</option>
-                    <option value="學長姐" <?= isset($_POST['roles']) && $_POST['roles'] == '學長姐' ? 'selected' : '' ?>>學長姐</option>
-                    <option value="教師" <?= isset($_POST['roles']) && $_POST['roles'] == '教師' ? 'selected' : '' ?>>教師</option>
-
-                  </select>
+                  <?php if ($user_data['Roles'] === '管理者'): ?>
+                    <input type="text" class="form-control" value="管理者" readonly>
+                    <input type="hidden" name="roles" value="管理者">
+                  <?php else: ?>
+                    <select name="roles" class="form-select" required>
+                      <option value="學生" <?= ($user_data['Roles'] ?? '') == '學生' ? 'selected' : '' ?>>學生</option>
+                      <option value="學長姐" <?= ($user_data['Roles'] ?? '') == '學長姐' ? 'selected' : '' ?>>學長姐</option>
+                      <option value="教師" <?= ($user_data['Roles'] ?? '') == '教師' ? 'selected' : '' ?>>教師</option>
+                    </select>
+                  <?php endif; ?>
                   </br>
 
                   <!-- 教師欄位 -->
-                  <div id="teacherFields">
+                  <div id="teacherFields" style="display: <?= ($user_data['Roles'] ?? '') == '教師' ? 'block' : 'none' ?>;">
                     <div class="mb-3">
                       <input type="text" name="school_name" class="form-control" placeholder="任教學校名稱" value="<?= htmlspecialchars($user_data['school_name'] ?? '') ?>">
                     </div>
@@ -297,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                   <!-- Photo Preview -->
                   <div class="mb-3">
-                    <img id="photo-preview" src="<?= isset($_SESSION['photo']) ? $_SESSION['photo'] : '' ?>" alt="Your Photo">
+                    <img id="photo-preview" src="<?= htmlspecialchars($user_data['Photo'] ?? 'assets/img/personal_photo/default.jpeg') ?>" alt="Your Photo">
                   </div>
 
                   <!-- Submit Button -->

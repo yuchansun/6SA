@@ -337,7 +337,7 @@
                   $postsPerPage = 5; // ⚠️這要和 blog-details.php 的每頁筆數一致！
 
                   // 找出該貼文在所有貼文中排名第幾（依時間遞減排序）
-                  $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId)");
+                  $positionResult = $conn->query("SELECT COUNT(*) AS position FROM posts WHERE Post_Time > (SELECT Post_Time FROM posts WHERE Post_ID = $postId) AND is_deleted = 0");
                   $position = $positionResult->fetch_assoc()['position'];
                   $page = floor($position / $postsPerPage) + 1;
                   ?>
