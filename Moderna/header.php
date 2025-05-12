@@ -55,7 +55,18 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>特殊選才</title>
+  <title>
+  <?php 
+  if ($currentPage === 'index.php') {
+      echo "首頁 - 特殊選才";
+  } elseif ($currentPage === 'blog-details.php') {
+      echo "討論區 - 特殊選才";
+  } else {
+      echo "特殊選才";
+  }
+  ?>
+</title>
+
   <link rel="icon" href="assets/img/friend.png" type="image/png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 

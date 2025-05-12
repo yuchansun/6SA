@@ -60,38 +60,64 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 }
 
 
+
 // 新增 TODO
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {
-    if (!isset($_POST['title'], $_POST['Sch_num'])) {
-        die("請填寫標題和學校編號");
+    $error_message = ''; // 用來儲存錯誤訊息
+
+    // 檢查標題和學校編號是否填寫
+    if (empty($_POST['title']) || empty($_POST['Sch_num'])) {
+        $error_message = "請填寫標題和學校編號";
     }
 
-    $title = $_POST['title'];
-    $start_time = $_POST['start_time'] ?? NULL;
-    $end_time = $_POST['end_time'] ?? NULL;
-    $sch_num = $_POST['Sch_num'];
+    // 檢查至少填寫 start_time 或 end_time
+    $start_time = $_POST['start_time'] ?: NULL;
+    $end_time = $_POST['end_time'] ?: NULL;
 
-    if (empty($title) || empty($sch_num)) {
-        die("請填寫標題和學校編號");
+    if (empty($start_time) && empty($end_time)) {
+        $error_message = "請填寫開始時間或結束時間其中一個";
     }
 
-    $start_time = empty($start_time) ? NULL : $start_time;
-    $end_time = empty($end_time) ? NULL : $end_time;
-
-    $stmt = $conn->prepare("INSERT INTO todos (title, start_time, end_time, Sch_num) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $title, $start_time, $end_time, $sch_num);
-
-    if ($stmt->execute()) {
-        echo "<script>
-            alert('新增成功！');
-            window.location.href = window.location.href.split('?')[0] + '?sch_num=" . $sch_num . "#' + '" . $sch_num . "';
-        </script>";
+    // 檢查時間格式
+    if ($start_time && $end_time && strtotime($start_time) > strtotime($end_time)) {
+        echo "<script>alert('開始時間不能晚於結束時間');</script>";
         exit;
-    } else {
-        echo "新增失敗：" . $conn->error;
     }
 
-    $stmt->close();
+    // 如果沒有錯誤，進行資料庫操作
+    if ($error_message) {
+        // 顯示錯誤訊息並停止執行
+        echo "<script>alert('$error_message');</script>";
+    } else {
+        $title = $_POST['title'];
+        $sch_num = $_POST['Sch_num'];
+
+        // 確認 Sch_num 是否是有效選項
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM sch_description WHERE Sch_num = ?");
+        $stmt->bind_param("s", $sch_num);
+        $stmt->execute();
+        $stmt->bind_result($count);
+        $stmt->fetch();
+        $stmt->close();
+
+        if ($count == 0) {
+            echo "<script>alert('無效的學校編號');</script>";
+        } else {
+            // 新增 TODO
+            $stmt = $conn->prepare("INSERT INTO todos (title, start_time, end_time, Sch_num) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $title, $start_time, $end_time, $sch_num);
+
+            if ($stmt->execute()) {
+                echo "<script>alert('新增成功！');</script>";
+                // 跳轉回目標頁面，並傳遞學校編號
+                echo "<script>window.location.href='crudtodos.php?sch_num=$sch_num';</script>";
+            } else {
+                echo "<script>alert('新增失敗：" . $stmt->error . "');</script>";
+            }
+
+            $stmt->close();
+        }
+    }
 }
 
 // 搜尋條件
@@ -122,7 +148,7 @@ if (!empty($where_clauses)) {
     $sql .= " WHERE " . implode(" AND ", $where_clauses);
 }
 
-$sql .= " ORDER BY t.Sch_num";
+$sql .= " ORDER BY t.Sch_num, COALESCE(t.start_time, t.end_time)";
 
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
@@ -137,18 +163,7 @@ if (!$todos) {
 
 $current_sch_num = null;
 
-// HTML 和 CSS 部分
-echo "<style>
-    body { background-color: #f4f4f4; }
-    .container { width: 80%; margin: 0 auto; padding: 20px; }
-    h3 { background-color: var(--heading-color); color: white; padding: 10px; margin-top: 0; }
-    .todo-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    .todo-table th, .todo-table td { padding: 10px; text-align: left; border: 1px solid #ddd; }
-    .todo-table th { background-color: #f2f2f2; }
-    .search-box { margin-bottom: 20px; }
-    .crud-buttons form { display:inline; }
-    .crud-buttons button { margin-right: 5px; }
-</style>";
+
 
 echo "<div class='container'>";
 
@@ -230,80 +245,244 @@ while ($row = $todos->fetch_assoc()) {
 }
 echo "</table></section>";
 echo "</div>";
+echo "
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const hash = window.location.hash;
+    if (hash) {
+        const target = document.querySelector(hash);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+});
+</script>
+";
+
 $conn->close();
 ?>
 
 
 
-<script>
-function formatToDatetimeLocal(datetime) {
-    const date = new Date(datetime);
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - offset * 60000);
-    return localDate.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+
+
+<?php include('header.php'); ?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>校系簡章</title>
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="assets/css/main.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<style>
+/* 頁首固定樣式 */
+body #header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 999;
+    background: rgba(0, 55, 67, 0.95);
 }
 
-document.querySelectorAll('.edit-btn').forEach(button => {
-    button.addEventListener('click', function () {
-        const todoId = this.dataset.id;
-        const row = document.getElementById('todo-' + todoId);
-        const titleCell = row.querySelector('.todo-title');
-        const startTimeCell = row.querySelector('.todo-start-time');
-        const endTimeCell = row.querySelector('.todo-end-time');
+/* 容器，避免與固定頁首重疊 */
+.container {
+    margin-top: 50px;
+    padding-top: 100px; /* 根據需要調整 */
+}
 
-        // 儲存原始資料
-        titleCell.setAttribute('data-original', titleCell.innerText);
-        startTimeCell.setAttribute('data-original', startTimeCell.innerText);
-        endTimeCell.setAttribute('data-original', endTimeCell.innerText);
+/* 編輯單元格的樣式 */
+.editing-cell {
+    border: 2px solid black;
+    background-color: #fffbe6; /* 使編輯中的單元格顯眼 */
+}
 
-        // 可編輯樣式
-titleCell.setAttribute('contenteditable', 'true');
-titleCell.classList.add('editing-cell');
+.editing-cell input {
+    border: none;
+    outline: none;
+    width: 100%;
+    background-color: #fffbe6;
+}
 
-const formattedStart = startTimeCell.innerText.trim() ? formatToDatetimeLocal(startTimeCell.innerText) : '';
-const formattedEnd = endTimeCell.innerText.trim() ? formatToDatetimeLocal(endTimeCell.innerText) : '';
+/* 按鈕樣式 */
+.edit-btn, .cancel-btn, .submit-btn, .delete-btn {
+    background-color: rgb(59, 59, 60);
+    color: white;
+    border: none;
+    border-radius: 10px;
+}
 
-startTimeCell.innerHTML = `<input type="datetime-local" value="${formattedStart}">`;
-endTimeCell.innerHTML = `<input type="datetime-local" value="${formattedEnd}">`;
+.edit-btn:hover, .cancel-btn:hover, .submit-btn:hover, .delete-btn:hover {
+    background-color: rgb(165, 165, 167);
+    cursor: pointer;
+}
 
-startTimeCell.classList.add('editing-cell');
-endTimeCell.classList.add('editing-cell');
+/* 刪除按鈕特殊樣式 */
+.delete-btn {
+    background-color: rgb(234, 56, 56);
+}
 
-        // 顯示按鈕
-        row.querySelector('.cancel-btn').style.display = 'inline';
-        row.querySelector('.submit-btn').style.display = 'inline';
-        row.querySelector('.edit-btn').style.display = 'none';
-    });
-});
+/* 表格容器，確保可水平滾動 */
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
 
-document.querySelectorAll('.cancel-btn').forEach(button => {
-    button.addEventListener('click', function () {
-        const todoId = this.dataset.id;
-        const row = document.getElementById('todo-' + todoId);
-        const titleCell = row.querySelector('.todo-title');
-        const startTimeCell = row.querySelector('.todo-start-time');
-        const endTimeCell = row.querySelector('.todo-end-time');
+/* 固定表格列寬 */
+table {
+    table-layout: fixed;
+    width: 100%;
+}
 
-        // 還原原始內容
-        titleCell.innerText = titleCell.getAttribute('data-original');
-        startTimeCell.innerText = startTimeCell.getAttribute('data-original');
-        endTimeCell.innerText = endTimeCell.getAttribute('data-original');
+/* 表格標題和單元格的樣式 */
+th, td {
+    padding: 10px;
+    word-wrap: break-word;
+    width: 20%; /* 假設表格有5列，這裡將每列寬度設為20% */
+}
 
-        // 移除可編輯和樣式
-        titleCell.removeAttribute('contenteditable');
-        titleCell.classList.remove('editing-cell');
-        startTimeCell.classList.remove('editing-cell');
-        endTimeCell.classList.remove('editing-cell');
+/* 標題樣式 */
+h3 {
+    background-color: var(--heading-color);
+    color: white;
+    padding: 10px;
+    margin-top: 0;
+}
 
-        // 還原按鈕狀態
-        row.querySelector('.cancel-btn').style.display = 'none';
-        row.querySelector('.submit-btn').style.display = 'none';
-        row.querySelector('.edit-btn').style.display = 'inline';
-    });
-});
+/* 代辦清單表格樣式 */
+.todo-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.todo-table th, .todo-table td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.todo-table th {
+    background-color: #f2f2f2;
+}
 
 
-document.querySelectorAll('.submit-btn').forEach(button => {
+
+/* CRUD 按鈕的樣式 */
+.crud-buttons form {
+    display: inline;
+}
+
+.crud-buttons button {
+    margin: 5px;
+}
+
+/* 手機版響應式設計 */
+@media screen and (max-width: 768px) {
+    .container {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .todo-table th, .todo-table td {
+        font-size: 12px;
+    }
+
+    .crud-buttons {
+        text-align: center;
+    }
+
+    .crud-buttons button {
+        display: block;
+        margin: 5px 0;
+        width: 100%;
+    }
+}
+</style>
+
+
+<script>
+        function formatToDatetimeLocal(datetime) {
+            if (!datetime) return '';
+            const date = new Date(datetime);
+            const offset = date.getTimezoneOffset();
+            const localDate = new Date(date.getTime() - offset * 60000);
+            return localDate.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+        }
+
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const todoId = this.dataset.id;
+                const row = document.getElementById('todo-' + todoId);
+                const titleCell = row.querySelector('.todo-title');
+                const startTimeCell = row.querySelector('.todo-start-time');
+                const endTimeCell = row.querySelector('.todo-end-time');
+
+                // 儲存原始資料
+                titleCell.setAttribute('data-original', titleCell.innerText);
+                startTimeCell.setAttribute('data-original', startTimeCell.innerText);
+                endTimeCell.setAttribute('data-original', endTimeCell.innerText);
+
+                // 可編輯樣式
+                titleCell.setAttribute('contenteditable', 'true');
+                titleCell.classList.add('editing-cell');
+
+                const formattedStart = startTimeCell.innerText.trim() ? formatToDatetimeLocal(startTimeCell.innerText) : '';
+                const formattedEnd = endTimeCell.innerText.trim() ? formatToDatetimeLocal(endTimeCell.innerText) : '';
+
+                startTimeCell.innerHTML = `<input type="datetime-local" value="${formattedStart}">`;
+                endTimeCell.innerHTML = `<input type="datetime-local" value="${formattedEnd}">`;
+
+                startTimeCell.classList.add('editing-cell');
+                endTimeCell.classList.add('editing-cell');
+
+                // 顯示按鈕
+                row.querySelector('.cancel-btn').style.display = 'inline';
+                row.querySelector('.submit-btn').style.display = 'inline';
+                row.querySelector('.edit-btn').style.display = 'none';
+            });
+        });
+
+        document.querySelectorAll('.cancel-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const todoId = this.dataset.id;
+                const row = document.getElementById('todo-' + todoId);
+                const titleCell = row.querySelector('.todo-title');
+                const startTimeCell = row.querySelector('.todo-start-time');
+                const endTimeCell = row.querySelector('.todo-end-time');
+
+                // 還原原始內容
+                titleCell.innerText = titleCell.getAttribute('data-original');
+                startTimeCell.innerText = startTimeCell.getAttribute('data-original');
+                endTimeCell.innerText = endTimeCell.getAttribute('data-original');
+
+                // 移除可編輯和樣式
+                titleCell.removeAttribute('contenteditable');
+                titleCell.classList.remove('editing-cell');
+                startTimeCell.classList.remove('editing-cell');
+                endTimeCell.classList.remove('editing-cell');
+
+                // 還原按鈕狀態
+                row.querySelector('.cancel-btn').style.display = 'none';
+                row.querySelector('.submit-btn').style.display = 'none';
+                row.querySelector('.edit-btn').style.display = 'inline';
+            });
+        });
+
+       document.querySelectorAll('.submit-btn').forEach(button => {
     button.addEventListener('click', function () {
         const todoId = this.dataset.id;
         const row = document.getElementById('todo-' + todoId);
@@ -339,171 +518,7 @@ document.querySelectorAll('.submit-btn').forEach(button => {
         });
     });
 });
-
-</script>
-
-
-
-<?php include('header.php'); ?>
-
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理todos</title>
-
-    <!-- Favicons -->
-    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
-
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com" rel="preconnect">
-    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Poppins&family=Raleway&display=swap" rel="stylesheet">
-
-    <!-- Vendor CSS Files -->
-    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
-
-    <!-- Main CSS File -->
-    <link href="assets/css/main.css" rel="stylesheet">
-</head>
-
-<body>
-
-    
-
-
-
-
-    <style>
-        body #header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 999;
-            background: rgba(0, 55, 67, 0.95);
-        }
-
-        .container {
-            margin-top: 50px;
-            padding-top: 100px;
-            /* 或根據需要調整 */
-            /* Adjust for fixed header */
-        }
-
-        .editing-cell {
-    border: 2px solid black;
-    background-color: #fffbe6; /* 可選：讓使用者更清楚是編輯中 */
-}
-
-.editing-cell input {
-    border: none;
-    outline: none;
-    width: 100%;
-    background-color: #fffbe6;
-}
-
-
-        .edit-btn {
-            background-color: rgb(59, 59, 60);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            
-        }
-
-         .edit-btn:hover {
-            background-color: rgb(165, 165, 167);
-            /* 當滑鼠懸停時的顏色 */
-            cursor: pointer;
-            /* 改變游標為指標 */
-        }
-
-       
-        .cancel-btn,.submit-btn {
-            background-color: rgb(59, 59, 60);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            
-        }
-
-        
-         .cancel-btn,.submit-btn:hover {
-            background-color: rgb(165, 165, 167);
-            /* 當滑鼠懸停時的顏色 */
-            cursor: pointer;
-            /* 改變游標為指標 */
-        }
-        .delete-btn {
-            background-color: rgb(234, 56, 56);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            
-        }
-
-        
-        .delete-btn:hover {
-            background-color: rgb(165, 165, 167);
-            /* 當滑鼠懸停時的顏色 */
-            cursor: pointer;
-            /* 改變游標為指標 */
-        }
-
-
-        /* 包裝表格容器，確保表格在小螢幕上可以水平滾動 */
-        .table-container {
-            overflow-x: auto;
-            /* 使表格在小螢幕上可以水平滾動 */
-            -webkit-overflow-scrolling: touch;
-            /* 為觸控設備啟用平滑滾動 */
-        }
-
-        /* 固定表格列寬，並設置表格為100%寬度 */
-        table {
-            table-layout: fixed;
-            /* 固定表格列寬 */
-            width: 100%;
-            /* 表格寬度佔滿父容器 */
-        }
-
-        /* 表頭和表格單元格的樣式 */
-        th,
-        td {
-            padding: 10px;
-            /* 增加內邊距 */
-            /* 可選：使文字居中對齊 */
-            word-wrap: break-word;
-            /* 使長文字換行 */
-        }
-
-        /* 自訂列寬，確保每列的寬度相同 */
-        th,
-        td {
-            width: 20%;
-            /* 假設表格有5列，這裡將每列寬度設為20% */
-        }
-
-  
-
-        /* 響應式設計：當螢幕小於某個寬度時，調整表格樣式 */
-        @media (max-width: 768px) {
-
-            th,
-            td {
-                font-size: 12px;
-                /* 讓文字在小螢幕上更小 */
-                padding: 8px;
-                /* 減小內邊距，避免擠壓 */
-            }
-        }
-    </style>
+        </script>
 </body>
 
 </html>
