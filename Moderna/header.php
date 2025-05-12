@@ -159,7 +159,7 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
             <li><a href="crudtodos.php">管理todo list</a></li>
             <li><a href="blog-details.php">管理討論區</a></li>
             <li><a href="teacher_verify.php">教師驗證</a></li>
-            <li><a href="">新增管理者</a></li>
+            <li><a href="manage_users.php">新增管理者</a></li>
             <li class="d-flex align-items-center"><a href="update_personal.php">
               <img src="<?= htmlspecialchars($photoPath) ?>" alt="Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
               <span>Hi, <?= htmlspecialchars($_SESSION['nickname']) ?></span></a>
