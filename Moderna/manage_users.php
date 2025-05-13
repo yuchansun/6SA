@@ -49,8 +49,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['make_admin'], $_POST[
     }
 }
 
-// Fetch updated user list for display
-$result = $conn->query("SELECT User_ID, Nickname, Roles, `E-mail` FROM account ORDER BY User_ID ASC");
+// Handle search query for user email
+$searchEmail = isset($_GET['search_email']) ? $_GET['search_email'] : '';
+
+// Modify the SQL query to filter by email if a search is provided
+if ($searchEmail) {
+    $sql = "SELECT User_ID, Nickname, Roles, `E-mail` FROM account WHERE `E-mail` LIKE ? ORDER BY User_ID ASC";
+    $stmt = $conn->prepare($sql);
+    $searchEmail = '%' . $searchEmail . '%'; // Add '%' for partial match
+    $stmt->bind_param("s", $searchEmail);
+} else {
+    // If no search query, fetch all users
+    $sql = "SELECT User_ID, Nickname, Roles, `E-mail` FROM account ORDER BY User_ID ASC";
+    $stmt = $conn->prepare($sql);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -136,6 +151,15 @@ $result = $conn->query("SELECT User_ID, Nickname, Roles, `E-mail` FROM account O
 
 <div class="container">
     <h2>管理使用者角色</h2>
+    
+    <!-- Search Form -->
+    <form method="get" action="">
+        <input type="text" name="search_email" placeholder="搜尋使用者 Email" style="padding: 8px; width: 300px; margin-bottom: 20px;">
+        <button type="submit" style="padding: 8px 12px;">搜尋</button>
+        <button type="button" onclick="window.location.href = window.location.pathname;" style="padding: 8px 12px; margin-left: 10px;">重置搜尋</button>
+    
+    </form>
+    
     <table>
         <tr>
             <th>User ID</th>
