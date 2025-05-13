@@ -877,7 +877,7 @@ if (isset($_SESSION['user'])) {
                     ?>
                     <div class="post-header">
                       <img src="<?= htmlspecialchars($avatarPath) ?>" class="avatar" alt="作者頭像">
-                      <h3><?= htmlspecialchars($post['Title']) ?><?= htmlspecialchars($post['Title']) ?></h3>
+                      <h3><?= htmlspecialchars($post['Title']) ?></h3>
                     </div>
 
 
