@@ -49,6 +49,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['make_admin'], $_POST[
     }
 }
 
+// Handle delete user action
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'], $_POST['user_id'])) {
+    $delete_id = intval($_POST['user_id']);
+
+    // Prevent admin from deleting themselves (still protect the logged-in user)
+    if ($delete_id === $user_id) {
+        echo "<script>alert('不能刪除自己');</script>";
+    } else {
+        $delete_sql = "DELETE FROM account WHERE User_ID = ?";
+        $delete_stmt = $conn->prepare($delete_sql);
+        $delete_stmt->bind_param("i", $delete_id);
+        if ($delete_stmt->execute()) {
+            echo "<script>alert('使用者已成功刪除'); window.location.href = window.location.href;</script>";
+        } else {
+            echo "<script>alert('刪除失敗，請稍後再試');</script>";
+        }
+    }
+}
+
 // Handle search query for user email
 $searchEmail = isset($_GET['search_email']) ? $_GET['search_email'] : '';
 
@@ -131,7 +150,7 @@ $result = $stmt->get_result();
         background-color: #f9f9f9;
     }
     button {
-        background-color: #008080;
+        background-color: blue;;
         color: white;
         border: none;
         padding: 8px 12px;
@@ -145,6 +164,7 @@ $result = $stmt->get_result();
         background-color: #aaa;
         cursor: not-allowed;
     }
+    
 </style>
 </head>
 <body>
@@ -183,6 +203,12 @@ $result = $stmt->get_result();
                 <?php else: ?>
                     <button class="disabled-btn" disabled>已管理者</button>
                 <?php endif; ?>
+
+                <!-- Delete User Button -->
+<form method="post" style="margin:0;">
+    <input type="hidden" name="user_id" value="<?= $row["User_ID"] ?>"> </br>
+    <button class="btn btn-danger" type="submit" name="delete_user" onclick="return confirm('確定要刪除這個使用者嗎？')">刪除使用者</button>
+</form>
             </td>
         </tr>
         <?php endwhile; ?>
