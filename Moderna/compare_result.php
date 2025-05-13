@@ -1,75 +1,121 @@
 <?php
-include 'db.php';
+session_start();
+require_once 'db.php'; // 資料庫連接
 
-$sch1 = $_GET['sch1'] ?? '';
-$sch2 = $_GET['sch2'] ?? '';
+// 取得傳遞的學校編號
+$sch1 = $_GET['sch1'] ?? null;
+$sch2 = $_GET['sch2'] ?? null;
 
-function getSchoolData($conn, $sch_num) {
-    $stmt = $conn->prepare("SELECT * FROM sch_description WHERE Sch_num = ?");
-    $stmt->bind_param("s", $sch_num);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    return $result->fetch_assoc();
+// 檢查是否有兩個學校編號
+if (!$sch1 || !$sch2) {
+    echo "請選擇兩所學校進行比較。";
+    exit;
 }
 
-$data1 = getSchoolData($conn, $sch1);
-$data2 = getSchoolData($conn, $sch2);
-$conn->close();
+// 查詢兩所學校的資料
+$sql = "SELECT * FROM sch_description WHERE Sch_num IN (?, ?)";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("ss", $sch1, $sch2); // 綁定學校編號參數
+$stmt->execute();
+$result = $stmt->get_result();
+
+$schools = [];
+while ($row = $result->fetch_assoc()) {
+    $schools[] = $row;
+}
+
+$stmt->close();
+
+// 如果找不到兩所學校的資料
+if (count($schools) !== 2) {
+    echo "未找到比較的學校資料。";
+    exit;
+}
+
+// 取得學校資料
+$school1 = $schools[0];
+$school2 = $schools[1];
+
+// 顯示頁面內容
 ?>
+
+<?php include('header.php'); ?>
 
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>學校比較結果</title>
-  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    .compare-box {
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      background-color: #f8f8f8;
-    }
-
-    .compare-box p {
-      margin-bottom: 10px;
-    }
-
-    .compare-box h4 {
-      margin-bottom: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>學校比較</title>
+    <link href="assets/img/favicon.png" rel="icon">
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/main.css" rel="stylesheet">
 </head>
-<body>
-<div class="container mt-5">
-  <h2 class="text-center mb-4">比較結果</h2>
-  <div class="row">
-    <div class="col-md-6 compare-box">
-      <?php if ($data1): ?>
-        <h4><?= htmlspecialchars($data1['School_Name']) ?> - <?= htmlspecialchars($data1['Department']) ?></h4>
-        <p><strong>地區：</strong><?= htmlspecialchars($data1['Region']) ?></p>
-        <p><strong>學群：</strong><?= htmlspecialchars($data1['Disc_Cluster']) ?></p>
-        <p><strong>招生名額：</strong><?= htmlspecialchars($data1['Quota']) ?></p>
-       
-        <p><strong>簡章連結：</strong><a href="<?= htmlspecialchars($data1['link']) ?>" target="_blank">點我查看</a></p>
-        <p><strong>招生說明：</strong><?= nl2br(htmlspecialchars($data1['requirement'])) ?></p> <!-- 新增招生說明 -->
-        
-      <?php else: ?>
-        <p>找不到第一筆資料。</p>
-      <?php endif; ?>
+<body class="result-page">
+
+<main class="main">
+    <div class="page-title dark-background">
+        <div class="container position-relative">
+            <h2>學校資料比較</h2>
+        </div>
     </div>
-    <div class="col-md-6 compare-box">
-      <?php if ($data2): ?>
-        <h4><?= htmlspecialchars($data2['School_Name']) ?> - <?= htmlspecialchars($data2['Department']) ?></h4>
-        <p><strong>地區：</strong><?= htmlspecialchars($data2['Region']) ?></p>
-        <p><strong>學群：</strong><?= htmlspecialchars($data2['Disc_Cluster']) ?></p>
-        <p><strong>招生名額：</strong><?= htmlspecialchars($data2['Quota']) ?></p>
-        <p><strong>簡章連結：</strong><a href="<?= htmlspecialchars($data2['link']) ?>" target="_blank">點我查看</a></p>
-        <p><strong>招生說明：</strong><?= nl2br(htmlspecialchars($data2['requirement'])) ?></p> <!-- 新增招生說明 -->
-        <p>找不到第二筆資料。</p>
-      <?php endif; ?>
+
+    <div class="container mt-5">
+        <table class="table table-striped">
+            <thead class="thead dark-background">
+                <tr>
+                    <th>項目</th>
+                    <th><?= htmlspecialchars($school1['School_Name']) ?> - <?= htmlspecialchars($school1['Department']) ?></th>
+                    <th><?= htmlspecialchars($school2['School_Name']) ?> - <?= htmlspecialchars($school2['Department']) ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>學校</th>
+                    <td><?= htmlspecialchars($school1['School_Name']) ?></td>
+                    <td><?= htmlspecialchars($school2['School_Name']) ?></td>
+                </tr>
+                <tr>
+                    <th>科系</th>
+                    <td><?= htmlspecialchars($school1['Department']) ?></td>
+                    <td><?= htmlspecialchars($school2['Department']) ?></td>
+                </tr>
+                <tr>
+                    <th>地區</th>
+                    <td><?= htmlspecialchars($school1['Region']) ?></td>
+                    <td><?= htmlspecialchars($school2['Region']) ?></td>
+                </tr>
+                <tr>
+                    <th>學群</th>
+                    <td><?= htmlspecialchars($school1['Disc_Cluster']) ?></td>
+                    <td><?= htmlspecialchars($school2['Disc_Cluster']) ?></td>
+                </tr>
+                <tr>
+                    <th>名額</th>
+                    <td><?= htmlspecialchars($school1['Quota']) ?></td>
+                    <td><?= htmlspecialchars($school2['Quota']) ?></td>
+                </tr>
+                <tr>
+                    <th>聯繫方式</th>
+                    <td><?= htmlspecialchars($school1['Contact']) ?></td>
+                    <td><?= htmlspecialchars($school2['Contact']) ?></td>
+                </tr>
+                <tr>
+                    <th>詳細資訊</th>
+                    <td><?= htmlspecialchars($school1['requirement']) ?></td>
+                    <td><?= htmlspecialchars($school2['requirement']) ?></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-  </div>
-</div>
+</main>
+
+<footer class="footer mt-5">
+    <div class="container text-center">
+        <p>© 2025 學校比較系統</p>
+    </div>
+</footer>
+
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
