@@ -120,33 +120,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_post_id'])) {
 
 // 處理刪除留言
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment_id'])) {
-  $commentId = intval($_POST['delete_comment_id']);
-  $userEmail = $_SESSION['user'] ?? null;
+    $commentId = intval($_POST['delete_comment_id']);
+    $userEmail = $_SESSION['user'] ?? null;
+    $userRole = $_SESSION['user_role'] ?? null;
 
-  if ($userEmail) {
-      $stmt = $conn->prepare("SELECT User_ID FROM account WHERE `E-mail` = ?");
-      $stmt->bind_param("s", $userEmail);
-      $stmt->execute();
-      $userResult = $stmt->get_result();
-      if ($userResult->num_rows > 0) {
-          $user = $userResult->fetch_assoc();
-          $userId = $user['User_ID'];
+    if ($userEmail) {
+        $stmt = $conn->prepare("SELECT User_ID FROM account WHERE `E-mail` = ?");
+        $stmt->bind_param("s", $userEmail);
+        $stmt->execute();
+        $userResult = $stmt->get_result();
 
-          // 確保是自己的留言才能刪
-          $checkComment = $conn->prepare("SELECT * FROM comments WHERE Comment_ID = ? AND User_ID = ?");
-          $checkComment->bind_param("ii", $commentId, $userId);
-          $checkComment->execute();
-          $commentResult = $checkComment->get_result();
-          if ($commentResult->num_rows > 0) {
-              $deleteComment = $conn->prepare("UPDATE comments SET is_deleted = 1 WHERE Comment_ID = ?");
-              $deleteComment->bind_param("i", $commentId);
-              $deleteComment->execute();
-          }
-      }
-  }
-  header("Location: blog-details.php");
-  exit;
+        if ($userResult->num_rows > 0) {
+            $user = $userResult->fetch_assoc();
+            $userId = $user['User_ID'];
+
+            // 如果是管理者，允許刪除任何留言
+            if ($userRole === '管理者') {
+                $deleteComment = $conn->prepare("UPDATE comments SET is_deleted = 1 WHERE Comment_ID = ?");
+                $deleteComment->bind_param("i", $commentId);
+                $deleteComment->execute();
+            } else {
+                // 否則，只能刪除自己的留言
+                $checkComment = $conn->prepare("SELECT * FROM comments WHERE Comment_ID = ? AND User_ID = ?");
+                $checkComment->bind_param("ii", $commentId, $userId);
+                $checkComment->execute();
+                $commentResult = $checkComment->get_result();
+
+                if ($commentResult->num_rows > 0) {
+                    $deleteComment = $conn->prepare("UPDATE comments SET is_deleted = 1 WHERE Comment_ID = ?");
+                    $deleteComment->bind_param("i", $commentId);
+                    $deleteComment->execute();
+                }
+            }
+        }
+    }
+
+    header("Location: blog-details.php");
+    exit;
 }
+
 
 // 處理留言提交
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'], $_POST['comment'])) {
@@ -849,7 +861,7 @@ if (isset($_SESSION['user'])) {
             <section id="blog-posts" class="blog-posts section">
               <div class="container">
                 <?php while ($post = $postsResult->fetch_assoc()): ?>
-                  <div class="post-item data-post-id=" <?= $post['Post_ID'] ?>" id="post-<?= $post['Post_ID'] ?>">
+                  <div class="post-item data-post-id=" <?= $post['Post_ID'] ?> id="post-<?= $post['Post_ID'] ?>">
                   <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === '管理者'): ?>
   <form method="POST" action="delete-post.php" style="display:inline;">
     <input type="hidden" name="post_id" value="<?= htmlspecialchars($post['Post_ID']) ?>">
