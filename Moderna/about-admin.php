@@ -49,6 +49,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                     break;
                     
                 case 'update_basic':
+                    // 檢查必填欄位
+                    $requiredFields = [
+                        'School_Name' => '學校名稱',
+                        'Department' => '科系名稱',
+                        'Region' => '地區',
+                        'address' => '地址',
+                        'Disc_Cluster' => '學群',
+                        'Quota' => '招生名額',
+                        'exam_date' => '考試日期',
+                        'Contact' => '聯絡方式',
+                        'link' => '簡章連結'
+                    ];
+                    
+                    $emptyFields = [];
+                    foreach ($requiredFields as $field => $fieldName) {
+                        if (empty($_POST[$field])) {
+                            $emptyFields[] = $fieldName;
+                        }
+                    }
+                    
+                    if (!empty($emptyFields)) {
+                        $response['success'] = false;
+                        $response['message'] = implode('、', $emptyFields) . '需要填寫相對應資料';
+                        break;
+                    }
+
                     $sql = "UPDATE sch_description SET 
                             School_Name = ?, 
                             Department = ?, 
@@ -227,52 +253,52 @@ include('header.php');
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">學校名稱</label>
+                                <label class="form-label">學校名稱 *</label>
                                 <input type="text" class="form-control" name="School_Name" value="<?= htmlspecialchars($data['School_Name']) ?>" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">科系名稱</label>
+                                <label class="form-label">科系名稱 *</label>
                                 <input type="text" class="form-control" name="Department" value="<?= htmlspecialchars($data['Department']) ?>" required>
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">地區</label>
+                                <label class="form-label">地區 *</label>
                                 <input type="text" class="form-control" name="Region" value="<?= htmlspecialchars($data['Region']) ?>" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">地址</label>
+                                <label class="form-label">地址 *</label>
                                 <input type="text" class="form-control" name="address" value="<?= htmlspecialchars($data['address']) ?>" required>
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">學群</label>
+                                <label class="form-label">學群 *</label>
                                 <input type="text" class="form-control" name="Disc_Cluster" value="<?= htmlspecialchars($data['Disc_Cluster']) ?>" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">招生名額</label>
+                                <label class="form-label">招生名額 *</label>
                                 <input type="number" class="form-control" name="Quota" value="<?= htmlspecialchars($data['Quota']) ?>" required>
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">考試日期</label>
-                                <input type="date" class="form-control" name="exam_date" value="<?= htmlspecialchars($data['exam_date']) ?>">
+                                <label class="form-label">考試日期 *</label>
+                                <input type="date" class="form-control" name="exam_date" value="<?= htmlspecialchars($data['exam_date']) ?>" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">聯絡方式</label>
-                                <input type="text" class="form-control" name="Contact" value="<?= htmlspecialchars($data['Contact']) ?>">
+                                <label class="form-label">聯絡方式 *</label>
+                                <input type="text" class="form-control" name="Contact" value="<?= htmlspecialchars($data['Contact']) ?>" required>
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">簡章連結</label>
-                                <input type="url" class="form-control" name="link" value="<?= htmlspecialchars($data['link']) ?>">
+                                <label class="form-label">簡章連結 *</label>
+                                <input type="url" class="form-control" name="link" value="<?= htmlspecialchars($data['link']) ?>" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">備註</label>
@@ -281,6 +307,7 @@ include('header.php');
                         </div>
 
                         <div class="text-end">
+                            <small class="text-muted mb-2 d-block">* 為必填欄位</small>
                             <button type="submit" class="btn btn-primary">更新基本資料</button>
                         </div>
                     </form>
