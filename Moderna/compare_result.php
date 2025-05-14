@@ -50,6 +50,12 @@ $school2 = $schools[1];
     <link href="assets/img/favicon.png" rel="icon">
     <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/main.css" rel="stylesheet">
+    <style>
+        /* 防止表格標題換行，保持水平顯示 */
+        th {
+            white-space: nowrap;
+        }
+    </style>
 </head>
 <body class="result-page">
 
@@ -62,7 +68,7 @@ $school2 = $schools[1];
 
     <div class="container mt-5">
         <table class="table table-striped">
-            <thead class="thead dark-background">
+            <thead class="table-dark">
                 <tr>
                     <th>項目</th>
                     <th><?= htmlspecialchars($school1['School_Name']) ?> - <?= htmlspecialchars($school1['Department']) ?></th>
@@ -96,9 +102,9 @@ $school2 = $schools[1];
                     <td><?= htmlspecialchars($school2['Quota']) ?></td>
                 </tr>
                 <tr>
-                    <th>聯繫方式</th>
-                    <td><?= htmlspecialchars($school1['Contact']) ?></td>
-                    <td><?= htmlspecialchars($school2['Contact']) ?></td>
+                    <th>能力</th>
+                    <td><?= htmlspecialchars($school1['Talent']) ?></td>
+                    <td><?= htmlspecialchars($school2['Talent']) ?></td>
                 </tr>
                 <tr>
                     <th>詳細資訊</th>
