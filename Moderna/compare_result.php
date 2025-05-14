@@ -1,3 +1,5 @@
+
+
 <?php
 session_start();
 require_once 'db.php'; // 資料庫連接
@@ -40,24 +42,48 @@ $school2 = $schools[1];
 ?>
 
 <?php include('header.php'); ?>
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
-    <meta charset="UTF-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>學校比較</title>
-    <link href="assets/img/favicon.png" rel="icon">
-    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/css/main.css" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>校系簡章</title>
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="assets/css/main.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
     <style>
         /* 防止表格標題換行，保持水平顯示 */
         th {
             white-space: nowrap;
         }
+
+        /* 讓表格保持自動調整，但讓 td 寬度相同 */
+.table {
+    table-layout: auto;  /* 默認的自動調整佈局 */
+}
+
+.table th {
+    white-space: nowrap; /* 防止 th 標題換行 */
+    text-align: center;  /* 使內容居中 */
+}
+
+.table td {
+    width: 50%; /* 保證 td 兩列寬度相等 */
+    text-align: center;  /* 使內容居中 */
+}
+
     </style>
 </head>
-<body class="result-page">
+<body class="about-page">
 
 <main class="main">
     <div class="page-title dark-background">
@@ -65,6 +91,8 @@ $school2 = $schools[1];
             <h2>學校資料比較</h2>
         </div>
     </div>
+
+
 
     <div class="container mt-5">
         <table class="table table-striped">
@@ -124,4 +152,31 @@ $school2 = $schools[1];
 
 <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
+
+<!-- Footer -->
+<?php include('footer.php'); ?>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="assets/vendor/waypoints/noframework.waypoints.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>
+
+
 </html>
