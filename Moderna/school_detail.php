@@ -129,7 +129,7 @@ $conn->close();
             <h5 class="card-title">補充</h5>
           </div>
           <div class="card-body">
-            <p><strong>學類：</strong><?= htmlspecialchars($data['Disc_Cluster']) ?></p>
+            <p><strong>學群：</strong><?= htmlspecialchars($data['Disc_Cluster']) ?></p>
             <p><strong>能力：</strong><?= htmlspecialchars($data['Talent']) ?></p>
             <p><strong>備註：</strong><?= htmlspecialchars($data['note']) ?></p>
           </div>
