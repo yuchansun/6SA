@@ -81,6 +81,34 @@ $school2 = $schools[1];
     text-align: center;  /* 使內容居中 */
 }
 
+/* 調整表格的內邊距，增加左右的留白 */
+.table th, .table td {
+    padding: 15px 40px; /* 12px 上下，20px 左右 */
+    text-align: center;  /* 使內容居中 */
+}
+
+/* 防止表格標題換行，保持水平顯示 */
+.table th {
+    white-space: nowrap;
+}
+
+/* 覆蓋 .table-dark 類的背景顏色為藍色 */
+.table-dark, .table-dark th, .table-dark td {
+            background-color: #1e4356 !important; /* 藍色背景 */
+            color: white !important;  /* 文字顏色設為白色 */
+        }
+
+/* 新增專屬樣式給左欄的項目 */
+.table th.item-label {
+    background-color: #1e4356 !important;
+    color: white !important;
+    font-weight: bold;
+    width: 15%; /* 可視情況調整 */
+    text-align: center;
+}
+
+
+
     </style>
 </head>
 <body class="about-page">
@@ -105,39 +133,49 @@ $school2 = $schools[1];
             </thead>
             <tbody>
                 <tr>
-                    <th>學校</th>
-                    <td><?= htmlspecialchars($school1['School_Name']) ?></td>
-                    <td><?= htmlspecialchars($school2['School_Name']) ?></td>
-                </tr>
-                <tr>
-                    <th>科系</th>
+                    <th class="item-label">科系</th>
                     <td><?= htmlspecialchars($school1['Department']) ?></td>
                     <td><?= htmlspecialchars($school2['Department']) ?></td>
                 </tr>
                 <tr>
-                    <th>地區</th>
+                    <th class="item-label">地區</th>
                     <td><?= htmlspecialchars($school1['Region']) ?></td>
                     <td><?= htmlspecialchars($school2['Region']) ?></td>
                 </tr>
                 <tr>
-                    <th>學群</th>
+                    <th class="item-label">考試項目</th>
+                    <td><?= htmlspecialchars($school1['Exam_Item']) ?></td>
+                    <td><?= htmlspecialchars($school2['Exam_Item']) ?></td>
+                </tr>
+                <tr>
+                    <th class="item-label">考試時間</th>
+                    <td><?= htmlspecialchars($school1['exam_date']) ?></td>
+                    <td><?= htmlspecialchars($school2['exam_date']) ?></td>
+                </tr>
+                <tr>
+                    <th class="item-label">學群</th>
                     <td><?= htmlspecialchars($school1['Disc_Cluster']) ?></td>
                     <td><?= htmlspecialchars($school2['Disc_Cluster']) ?></td>
                 </tr>
                 <tr>
-                    <th>名額</th>
+                    <th class="item-label">名額</th>
                     <td><?= htmlspecialchars($school1['Quota']) ?></td>
                     <td><?= htmlspecialchars($school2['Quota']) ?></td>
-                </tr>
+                </tr>                               
                 <tr>
-                    <th>能力</th>
+                    <th class="item-label">能力</th>
                     <td><?= htmlspecialchars($school1['Talent']) ?></td>
                     <td><?= htmlspecialchars($school2['Talent']) ?></td>
                 </tr>
                 <tr>
-                    <th>詳細資訊</th>
+                    <th class="item-label">詳細資訊</th>
                     <td><?= htmlspecialchars($school1['requirement']) ?></td>
                     <td><?= htmlspecialchars($school2['requirement']) ?></td>
+                </tr>
+                <tr>
+                    <th class="item-label">備註</th>
+                    <td><?= htmlspecialchars($school1['note']) ?></td>
+                    <td><?= htmlspecialchars($school2['note']) ?></td>
                 </tr>
             </tbody>
         </table>
@@ -146,7 +184,7 @@ $school2 = $schools[1];
 
 <footer class="footer mt-5">
     <div class="container text-center">
-        <p>© 2025 學校比較系統</p>
+        <p>  </p>
     </div>
 </footer>
 
