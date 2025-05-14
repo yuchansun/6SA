@@ -1,5 +1,8 @@
 <?php
-session_start();
+
+include('header.php');
+
+
 
 if (!isset($_SESSION['user_id'])) {
     die("無權訪問：session 中找不到 user_id");
@@ -261,12 +264,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 $conn->close();
 ?>
-
-
-
-
-
-<?php include('header.php'); ?>
 
 <!DOCTYPE html>
 <html lang="en">
