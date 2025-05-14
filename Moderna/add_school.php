@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 session_start();
 require_once 'db.php';
 
@@ -35,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (!empty($emptyFields)) {
-            throw new Exception(implode('、', $emptyFields) . '需要填寫相對應資料');
+            throw new Exception('新增失敗 應填入' . implode('、', $emptyFields) . '。');
         }
 
         // 取得校系標號
@@ -122,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception($stmt->error);
         }
     } catch (Exception $e) {
-        $response['message'] = '新增失敗：' . $e->getMessage();
+        $response['message'] = $e->getMessage();
     }
     
     header('Content-Type: application/json');
@@ -157,6 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body class="about-page">
 <?php include('header.php'); ?>
+
     <main class="main">
         <div class="page-title dark-background">
             <div class="container position-relative">
@@ -316,12 +319,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     alert(data.message);
                     window.location.href = data.redirect;
                 } else {
-                    alert('新增失敗：' + data.message);
+                    // 創建一個 div 來顯示錯誤訊息
+                    const errorDiv = document.createElement('div');
+                    errorDiv.innerHTML = data.message;
+                    errorDiv.style.color = 'red';
+                    errorDiv.style.padding = '10px';
+                    errorDiv.style.marginBottom = '20px';
+                    errorDiv.style.backgroundColor = '#fff3f3';
+                    errorDiv.style.border = '1px solid #ffcdd2';
+                    errorDiv.style.borderRadius = '4px';
+                    
+                    // 找到表單並在開頭插入錯誤訊息
+                    const form = document.getElementById('addSchoolForm');
+                    const existingError = form.querySelector('.error-message');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                    errorDiv.className = 'error-message';
+                    form.insertBefore(errorDiv, form.firstChild);
+                    
+                    // 滾動到錯誤訊息
+                    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('新增失敗，請稍後再試');
+                alert('系統錯誤，請稍後再試');
             });
         });
     </script>

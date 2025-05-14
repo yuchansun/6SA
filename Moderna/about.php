@@ -423,6 +423,7 @@ function updateSelectOptions(target) {
 
 
 </div>
+<br>
       <div style="display: flex; justify-content: flex-end;">
         <?php if ($showAdminInterface): ?>
           <a href="add_school.php" class="btn btn-primary me-2" style="background-color: var(--accent-color); border: none;">
