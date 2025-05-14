@@ -317,7 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     alert(data.message);
                     window.location.href = data.redirect;
                 } else {
-                    alert('新增失敗：' + data.message);
+                    alert(data.message);
                 }
             })
             .catch(error => {
