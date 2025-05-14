@@ -1,5 +1,6 @@
 <?php
-session_start();
+include('header.php');
+
 require_once 'db.php';
 
 // 檢查是否為管理者
@@ -156,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body class="about-page">
-<?php include('header.php'); ?>
+
     <main class="main">
         <div class="page-title dark-background">
             <div class="container position-relative">
