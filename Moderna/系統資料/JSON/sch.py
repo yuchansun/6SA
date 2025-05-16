@@ -1,6 +1,9 @@
 import json
 import pandas as pd
 
+# 定義學校系所對應字典
+school_dept_map = {}
+
 # 定義學校地址對應字典
 school_addresses = {
     "國立臺灣大學": "臺北市大安區羅斯福路四段1號",
@@ -427,26 +430,6 @@ def get_department_cluster(dept_name):
     
     return "其他學群"  # 如果找不到對應的學群，返回"其他學群"
 
-# 讀取各年度資料
-years_data = {}
-for year in range(110, 115):
-    try:
-        with open(f"Moderna/系統資料/JSON/{year}.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if isinstance(data, list):
-                years_data[str(year)] = data
-            elif isinstance(data, dict):
-                years_data[str(year)] = [data]
-            else:
-                years_data[str(year)] = []
-            print(f"成功讀取 {year} 年度資料")
-    except FileNotFoundError:
-        print(f"找不到 {year} 年度資料")
-        years_data[str(year)] = []
-
-# 建立學校系所對應字典
-school_dept_map = {}
-
 # 處理 114 年度資料
 with open("Moderna/系統資料/JSON/114.json", "r", encoding="utf-8") as f:
     raw_data = json.load(f)
@@ -543,49 +526,128 @@ print(f"待辦事項筆數: {len(df_todos)}筆")
 df_todos.to_csv("todos.csv", index=False, na_rep="NULL")
 
 # --- Part 3: 產出歷年名額資訊 ---
-# 建立歷年名額資料
-years_records = []
-for _, row in df.iterrows():
-    school = row["School"]
-    dept = row["Department"]
-    sch_num = row["Sch_num"]
+def normalize_text(text):
+    # 移除所有空格
+    text = text.strip().replace(" ", "")
     
-    # 建立年度名額字典
-    quotas = {}
-    for year in range(110, 115):
-        year_str = str(year)
-        quota = 0
-        # 在該年度的資料中尋找對應的學校和系所
-        for item in years_data.get(year_str, []):
-            if not isinstance(item, dict):
+    # 全形字元轉換為半形
+    full_to_half = {
+        "０": "0", "１": "1", "２": "2", "３": "3", "４": "4",
+        "５": "5", "６": "6", "７": "7", "８": "8", "９": "9",
+        "Ａ": "A", "Ｂ": "B", "Ｃ": "C", "Ｄ": "D", "Ｅ": "E",
+        "Ｆ": "F", "Ｇ": "G", "Ｈ": "H", "Ｉ": "I", "Ｊ": "J",
+        "Ｋ": "K", "Ｌ": "L", "Ｍ": "M", "Ｎ": "N", "Ｏ": "O",
+        "Ｐ": "P", "Ｑ": "Q", "Ｒ": "R", "Ｓ": "S", "Ｔ": "T",
+        "Ｕ": "U", "Ｖ": "V", "Ｗ": "W", "Ｘ": "X", "Ｙ": "Y",
+        "Ｚ": "Z", "ａ": "a", "ｂ": "b", "ｃ": "c", "ｄ": "d",
+        "ｅ": "e", "ｆ": "f", "ｇ": "g", "ｈ": "h", "ｉ": "i",
+        "ｊ": "j", "ｋ": "k", "ｌ": "l", "ｍ": "m", "ｎ": "n",
+        "ｏ": "o", "ｐ": "p", "ｑ": "q", "ｒ": "r", "ｓ": "s",
+        "ｔ": "t", "ｕ": "u", "ｖ": "v", "ｗ": "w", "ｘ": "x",
+        "ｙ": "y", "ｚ": "z", "（": "(", "）": ")", "［": "[",
+        "］": "]", "｛": "{", "｝": "}", "【": "[", "】": "]",
+        "「": "\"", "」": "\"", "『": "'", "』": "'", "、": ",",
+        "，": ",", "。": ".", "：": ":", "；": ";", "？": "?",
+        "！": "!", "～": "~", "＠": "@", "＃": "#", "＄": "$",
+        "％": "%", "＆": "&", "＊": "*", "＋": "+", "－": "-",
+        "＝": "=", "＜": "<", "＞": ">", "／": "/", "＼": "\\",
+        "｜": "|", "＿": "_", "＾": "^", "｀": "`", "　": " ",
+        "⽴": "立", "⼤": "大", "學": "學", "系": "系", "所": "所"
+    }
+    
+    for full, half in full_to_half.items():
+        text = text.replace(full, half)
+    
+    # 移除其他可能的特殊字元
+    text = ''.join(char for char in text if ord(char) < 65536)
+    return text
+
+# 建立一個空的DataFrame來儲存所有年度的資料
+all_years_data = []
+
+# 分別處理每年的名額資料
+for year in range(110, 115):
+    try:
+        with open(f"Moderna/系統資料/JSON/{year}.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+            print(f"\n=== 處理 {year} 年度資料 ===")
+            
+            # 檢查資料結構
+            if isinstance(data, dict) and "Table 1" in data:
+                year_data = data["Table 1"]
+            elif isinstance(data, list):
+                year_data = data
+            else:
+                print(f"{year} 年度資料結構不符合預期")
                 continue
                 
-            # 移除多餘的空格和特殊字元
-            item_school = item.get("學校", "").strip().replace(" ", "")
-            item_dept = item.get("系所", "").strip().replace(" ", "")
-            target_school = school.strip().replace(" ", "")
-            target_dept = dept.strip().replace(" ", "")
+            print(f"資料筆數：{len(year_data)}")
             
-            # 比對學校和系所名稱
-            if item_school == target_school and item_dept == target_dept:
-                quota = int(item.get("招生名額") or 0)
-                print(f"找到 {year} 年度 {school} {dept} 的名額：{quota}")
-                break
-        
-        quotas[year_str] = quota
-    
-    years_records.append({
-        "sch_num": sch_num,
-        "School_Name": school,
-        "dep": dept,
-        "110": quotas["110"],
-        "111": quotas["111"],
-        "112": quotas["112"],
-        "113": quotas["113"],
-        "114": quotas["114"]
-    })
+            # 建立該年度的名額資料
+            found_count = 0
+            
+            for _, row in df.iterrows():
+                school = row["School"]
+                dept = row["Department"]
+                sch_num = row["Sch_num"]
+                
+                # 在該年度的資料中尋找對應的學校和系所
+                quota = 0
+                for item in year_data:
+                    if not isinstance(item, dict):
+                        continue
+                        
+                    # 根據年份選擇正確的欄位名稱
+                    if year == 114:
+                        item_school = normalize_text(item.get("學校", ""))
+                        item_dept = normalize_text(item.get("系所", ""))
+                    else:
+                        item_school = normalize_text(item.get("學校名稱", ""))
+                        item_dept = normalize_text(item.get("招生學系", ""))
+                    
+                    target_school = normalize_text(school)
+                    target_dept = normalize_text(dept)
+                    
+                    # 比對學校和系所名稱
+                    if item_school == target_school and item_dept == target_dept:
+                        quota = int(item.get("招生名額") or 0)
+                        found_count += 1
+                        break
+                
+                # 將資料加入all_years_data
+                all_years_data.append({
+                    "sch_num": sch_num,
+                    "School_Name": school,
+                    "dep": dept,
+                    "year": year,
+                    "quota": quota
+                })
+            
+            print(f"成功找到 {found_count} 筆名額資料")
+            
+    except FileNotFoundError:
+        print(f"找不到 {year} 年度資料")
+    except json.JSONDecodeError as e:
+        print(f"{year} 年度資料JSON格式錯誤：{str(e)}")
+    except Exception as e:
+        print(f"處理 {year} 年度資料時發生錯誤：{str(e)}")
 
-df_years = pd.DataFrame(years_records)
-print(f"歷年名額資料筆數: {len(df_years)}筆")
-df_years.to_csv("admi_thro_years.csv", index=False)
+# 將所有年度的資料合併成一個DataFrame
+df_all_years = pd.DataFrame(all_years_data)
+
+# 將資料透視，使每年的名額成為獨立的欄位
+df_pivot = df_all_years.pivot(
+    index=["sch_num", "School_Name", "dep"],
+    columns="year",
+    values="quota"
+).reset_index()
+
+# 重新命名欄位
+df_pivot.columns = ["sch_num", "School_Name", "dep", "quota_110", "quota_111", "quota_112", "quota_113", "quota_114"]
+
+# 將合併後的資料存成CSV
+df_pivot.to_csv("admi_quota_all_years.csv", index=False)
+print("\n已將所有年度資料合併存至 admi_quota_all_years.csv")
+
+print("\n所有年度資料處理完成")
 
