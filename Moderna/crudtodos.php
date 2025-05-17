@@ -251,10 +251,16 @@ while ($row = $todos->fetch_assoc()) {
         $has_data = false;
 
         echo "<section id='" . htmlspecialchars($current_sch_num, ENT_QUOTES) . "' class='portfolio-details section'>";
-        echo '<h3 style="color:white; display:inline-block; margin-right:10px;">' . 
-             htmlspecialchars($current_sch_num . ' ' . $row["School_Name"] . ' ' . $row["Department"]) . 
-             '</h3>';
-        echo "<button class='add-todo-btn' data-sch_num='" . htmlspecialchars($current_sch_num, ENT_QUOTES) . "' title='新增 TODO' style='font-size:20px; cursor:pointer;'>＋</button>";
+       echo "<div style='display: flex; justify-content: space-between; align-items: center; background-color: var(--heading-color); padding: 10px; margin-top: 0;'>";
+
+echo '<h3 style="color:white; margin: 0;">' .
+     htmlspecialchars($current_sch_num . ' ' . $row["School_Name"] . ' ' . $row["Department"]) .
+     '</h3>';
+
+echo "<button class='add-todo-btn' data-sch_num='" . htmlspecialchars($current_sch_num, ENT_QUOTES) . "' title='新增 TODO' style='font-size:20px; cursor:pointer; background: none; border: none; color: white;'>＋</button>";
+
+echo "</div>";
+
 
         echo "<table class='todo-table' data-sch_num='" . htmlspecialchars($current_sch_num, ENT_QUOTES) . "'>
                 <thead>
@@ -306,25 +312,23 @@ ob_end_flush();
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>校系簡章</title>
-  <link href="assets/img/favicon.png" rel="icon">
-  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <title>我的最愛</title>
+
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
   <link href="assets/css/main.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+<body class="portfolio-details-page">
 
-<body>
+  <main class="main">
 
+  </main>
+  
 <style>
+
 /* 頁首固定樣式 */
 body #header {
     position: fixed;
@@ -387,7 +391,7 @@ table {
 th, td {
     padding: 10px;
     word-wrap: break-word;
-    width: 20%; /* 假設表格有5列，這裡將每列寬度設為20% */
+    width: 20%; /* 假設表格有5列 */
 }
 
 /* 標題樣式 */
@@ -439,13 +443,34 @@ h3 {
         text-align: center;
     }
 
-    .crud-buttons button {
+    .crud-buttons button,
+    .submit-btn,
+    .cancel-btn {
         display: block;
         margin: 5px 0;
         width: 100%;
     }
 }
+
+/* 新增待辦列，看起來像正在編輯中 */
+.new-todo-row td {
+    background-color: #fffbe6;
+    padding: 10px;
+}
+
+.new-todo-row input[type="text"],
+.new-todo-row input[type="datetime-local"] {
+    width: 100%;
+    padding: 6px 10px;
+    border: none;
+    outline: none;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #fffbe6;
+    box-sizing: border-box;
+}
 </style>
+
 
 <script>
     // 格式化日期時間
@@ -696,19 +721,19 @@ h3 {
                 const tbody = table.querySelector('.todo-body');
 
                 if (tbody.querySelector('.new-todo-row')) return;
-
                 const newRow = document.createElement('tr');
                 newRow.classList.add('new-todo-row');
                 newRow.innerHTML = `
-                    <td>新</td>
-                    <td><input type="text" class="new-title" placeholder="標題"></td>
-                    <td><input type="datetime-local" class="new-start-time"></td>
-                    <td><input type="datetime-local" class="new-end-time"></td>
-                    <td style="text-align:center;">
-                        <button class="save-new-btn">送出</button>
-                        <button class="cancel-new-btn">取消</button>
-                    </td>
-                `;
+                <td>新增todo</td>
+                <td><input type="text" class="new-title" placeholder="標題"></td>
+                <td><input type="datetime-local" class="new-start-time"></td>
+                <td><input type="datetime-local" class="new-end-time"></td>
+                <td>
+                 <button class="save-new-btn submit-btn">送出</button>
+                  <button class="cancel-new-btn cancel-btn">取消</button>
+                  </td>
+                  `;
+
                 tbody.appendChild(newRow);
 
                 const saveBtn = newRow.querySelector('.save-new-btn');
@@ -767,10 +792,27 @@ h3 {
 });
 </script>
 
-
-</body>
-
-</html>
+  <!-- Footer -->
 <?php include('footer.php'); ?>
 
-<?php
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="assets/vendor/waypoints/noframework.waypoints.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>
