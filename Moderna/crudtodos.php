@@ -1,8 +1,5 @@
 <?php
-
 include('header.php');
-
-
 
 if (!isset($_SESSION['user_id'])) {
     die("無權訪問：session 中找不到 user_id");
@@ -39,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
     $stmt->close();
 }
+
 // 更新 TODO
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] === 'update') {
     $todo_id = intval($_POST['todo_id']);
@@ -62,18 +60,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     exit;
 }
 
-
-
 // 新增 TODO
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {
-    $error_message = ''; // 用來儲存錯誤訊息
+    $error_message = '';
 
-    // 檢查標題和學校編號是否填寫
     if (empty($_POST['title']) || empty($_POST['Sch_num'])) {
         $error_message = "請填寫標題和學校編號";
     }
 
-    // 檢查至少填寫 start_time 或 end_time
     $start_time = $_POST['start_time'] ?: NULL;
     $end_time = $_POST['end_time'] ?: NULL;
 
@@ -81,21 +75,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
         $error_message = "請填寫開始時間或結束時間其中一個";
     }
 
-    // 檢查時間格式
     if ($start_time && $end_time && strtotime($start_time) > strtotime($end_time)) {
         echo "<script>alert('開始時間不能晚於結束時間');</script>";
         exit;
     }
 
-    // 如果沒有錯誤，進行資料庫操作
     if ($error_message) {
-        // 顯示錯誤訊息並停止執行
         echo "<script>alert('$error_message');</script>";
     } else {
         $title = $_POST['title'];
         $sch_num = $_POST['Sch_num'];
 
-        // 確認 Sch_num 是否是有效選項
         $stmt = $conn->prepare("SELECT COUNT(*) FROM sch_description WHERE Sch_num = ?");
         $stmt->bind_param("s", $sch_num);
         $stmt->execute();
@@ -106,13 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
         if ($count == 0) {
             echo "<script>alert('無效的學校編號');</script>";
         } else {
-            // 新增 TODO
             $stmt = $conn->prepare("INSERT INTO todos (title, start_time, end_time, Sch_num) VALUES (?, ?, ?, ?)");
             $stmt->bind_param("ssss", $title, $start_time, $end_time, $sch_num);
 
             if ($stmt->execute()) {
                 echo "<script>alert('新增成功！');</script>";
-                // 跳轉回目標頁面，並傳遞學校編號
                 echo "<script>window.location.href='crudtodos.php?sch_num=$sch_num';</script>";
             } else {
                 echo "<script>alert('新增失敗：" . $stmt->error . "');</script>";
@@ -123,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
-// 搜尋條件
+// 取得搜尋關鍵字
 $search_terms = [];
 $params = [];
 $types = '';
@@ -131,42 +119,36 @@ $where_clauses = [];
 
 if (isset($_GET['search']) && trim($_GET['search']) !== '') {
     $search_input = trim($_GET['search']);
-    $search_terms = preg_split('/\s+/', $search_input); // 支援多關鍵字
+    $search_terms = preg_split('/\s+/', $search_input);
 
     foreach ($search_terms as $term) {
-        $like_term = "%" . $term . "%";
-        $where_clauses[] = "(s.Sch_num LIKE ? OR s.School_Name LIKE ? OR s.Department LIKE ?)";
-        array_push($params, $like_term, $like_term, $like_term);
-        $types .= 'sss'; // 每個 term 有三個欄位需要比對
-    }
+    $like_term = "%" . $term . "%";
+    $where_clauses[] = "(Sch_num LIKE ? OR School_Name LIKE ? OR Department LIKE ?)";
+    array_push($params, $like_term, $like_term, $like_term);
+    $types .= 'sss';
 }
 
-$sql = "
-    SELECT t.todo_id, t.title, t.start_time, t.end_time, t.Sch_num, s.School_Name, s.Department
-    FROM todos t
-    JOIN sch_description s ON t.Sch_num = s.Sch_num
-";
+}
 
+// 先撈出所有校系（依搜尋條件）
+$sql_sch = "SELECT Sch_num, School_Name, Department FROM sch_description";
 if (!empty($where_clauses)) {
-    $sql .= " WHERE " . implode(" AND ", $where_clauses);
+    $sql_sch .= " WHERE " . implode(" AND ", $where_clauses);
 }
+$sql_sch .= " ORDER BY Sch_num";
 
-$sql .= " ORDER BY t.Sch_num, COALESCE(t.start_time, t.end_time)";
-
-$stmt = $conn->prepare($sql);
+$stmt_sch = $conn->prepare($sql_sch);
 if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
+    $stmt_sch->bind_param($types, ...$params);
 }
-$stmt->execute();
-$todos = $stmt->get_result();
+$stmt_sch->execute();
+$sch_result = $stmt_sch->get_result();
 
-if (!$todos) {
-    die("查詢 todos 失敗：" . $conn->error);
+$school_list = [];
+while ($sch = $sch_result->fetch_assoc()) {
+    $school_list[] = $sch;
 }
-
-$current_sch_num = null;
-
-
+$stmt_sch->close();
 
 echo "<div class='container'>";
 
@@ -185,16 +167,15 @@ echo "
 <div style='margin-bottom: 20px;'>
   <h4>新增 TODO</h4>
   <form action='' method='POST'>
-    <input type='hidden' name='action' value='add'> <!-- 加上這一行讓 PHP 知道是新增 -->
-    
+    <input type='hidden' name='action' value='add'>
     <input list='sch_num_list' name='Sch_num' placeholder='學校代碼' required>
     <datalist id='sch_num_list'>
 ";
 
-$result = $conn->query("SELECT Sch_num, School_Name, Department FROM sch_description");
+$result = $conn->query("SELECT Sch_num, School_Name, Department FROM sch_description ORDER BY Sch_num");
 while ($row = $result->fetch_assoc()) {
-    echo "<option value='" . htmlspecialchars($row['Sch_num']) . "'>" . 
-         htmlspecialchars($row['School_Name']) . " - " . 
+    echo "<option value='" . htmlspecialchars($row['Sch_num']) . "'>" .
+         htmlspecialchars($row['School_Name']) . " - " .
          htmlspecialchars($row['Department']) . "</option>";
 }
 
@@ -210,57 +191,54 @@ echo "
 </div>
 ";
 
-while ($row = $todos->fetch_assoc()) {
-    if ($row["Sch_num"] !== $current_sch_num) {
-        if ($current_sch_num !== null) {
-            echo "</table></section>";
-        }
-        echo "<section id='{$row["Sch_num"]}' class='portfolio-details section'>";
-        echo '<h3 style="color:white">' . $row["Sch_num"] . ' ' . $row["School_Name"] . ' ' . $row["Department"] . '</h3>';
+// 針對每個校系，撈出該校系的待辦事項並顯示，若無資料顯示「暫無資料」
+foreach ($school_list as $school) {
+    $sch_num = $school['Sch_num'];
+
+    $todo_sql = "SELECT todo_id, title, start_time, end_time FROM todos WHERE Sch_num = ? ORDER BY COALESCE(start_time, end_time)";
+    $todo_stmt = $conn->prepare($todo_sql);
+    $todo_stmt->bind_param("s", $sch_num);
+    $todo_stmt->execute();
+    $todo_result = $todo_stmt->get_result();
+
+    echo "<section id='" . htmlspecialchars($sch_num) . "' class='portfolio-details section'>";
+    echo '<h3 style="color:white">' . htmlspecialchars($sch_num) . ' ' . htmlspecialchars($school['School_Name']) . ' ' . htmlspecialchars($school['Department']) . '</h3>';
+
+    if ($todo_result->num_rows === 0) {
+        echo "<p>暫無資料</p>";
+    } else {
         echo "<table class='todo-table'>
                 <tr>
                     <th>ID</th><th>標題</th><th>開始</th><th>結束</th><th>操作</th>
                 </tr>";
+        while ($todo = $todo_result->fetch_assoc()) {
+            echo "<tr class='todo-item' id='todo-{$todo["todo_id"]}'>";
+            echo "<td>" . $todo["todo_id"] . "</td>";
+            echo "<td class='todo-title'>" . htmlspecialchars($todo["title"]) . "</td>";
+            echo "<td class='todo-start-time'>" . $todo["start_time"] . "</td>";
+            echo "<td class='todo-end-time'>" . $todo["end_time"] . "</td>";
 
-        $current_sch_num = $row["Sch_num"];
-    }
+            echo "<td class='crud-buttons'>
+                <form method='POST' action='' onsubmit='return confirm(\"確定要刪除這筆 TODO 嗎？\")' style='display:inline;'>
+                    <input type='hidden' name='action' value='delete'>
+                    <input type='hidden' name='delete_todo_id' value='" . $todo["todo_id"] . "'>
+                    <button type='submit' class='delete-btn'>刪除</button>
+                </form>
 
-    // 顯示待辦事項
-    echo "<tr class='todo-item' id='todo-{$row["todo_id"]}'>";
-    echo "<td>" . $row["todo_id"] . "</td>";
-    echo "<td class='todo-title'>" . htmlspecialchars($row["title"]) . "</td>";
-    echo "<td class='todo-start-time'>" . $row["start_time"] . "</td>";
-    echo "<td class='todo-end-time'>" . $row["end_time"] . "</td>";
-    
-    echo "<td class='crud-buttons'>
-        <form method='POST' action='' onsubmit='return confirm(\"確定要刪除這筆 TODO 嗎？\")' style='display:inline;'>
-            <input type='hidden' name='action' value='delete'>
-            <input type='hidden' name='delete_todo_id' value='" . $row["todo_id"] . "'>
-            <button type='submit' class='delete-btn'>刪除</button>
-        </form>
+                <button class='edit-btn' data-id='" . $todo["todo_id"] . "'>編輯</button>
+            </td>";
 
-        <button class='edit-btn' data-id='" . $row["todo_id"] . "'>修改</button>
-        <button class='cancel-btn' data-id='" . $row["todo_id"] . "' style='display:none;'>取消</button>
-        <button class='submit-btn' data-id='" . $row["todo_id"] . "' style='display:none;'>送出</button>
-    </td>";
-
-    echo "</tr>";
-}
-echo "</table></section>";
-echo "</div>";
-echo "
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const hash = window.location.hash;
-    if (hash) {
-        const target = document.querySelector(hash);
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
+            echo "</tr>";
         }
+        echo "</table>";
     }
-});
-</script>
-";
+
+    $todo_stmt->close();
+
+    echo "</section>";
+}
+
+echo "</div>";
 
 $conn->close();
 ?>
