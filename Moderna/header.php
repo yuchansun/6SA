@@ -189,10 +189,10 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
   margin: 0;
   padding: 0;
   list-style-type: none; /* 取消無序列表的圓點或標記 */
-}
+  }
 
-.notification-sidebar {
-position: fixed;
+  .notification-sidebar {
+ position: fixed;
   top: 80px; /* 根據 header 高度調整 */
   right: -350px;
   width: 300px;
@@ -203,9 +203,9 @@ position: fixed;
   transition: right 0.3s ease;
   overflow-y: auto;
   border-radius: 10px;
-}
+  }
 
-.notification-row {
+  .notification-row {
   display: flex;
   padding: 8px 12px;
   border-bottom: 1px solid #ddd;
@@ -214,17 +214,17 @@ position: fixed;
   cursor: pointer;
   background-color: #fff;
   margin: 0!important;
-}
+  }
 
-.notification-row:hover {
+ .notification-row:hover {
   background-color: #f5f5f5;
-}
+  }
 
-.notification-text {
+  .notification-text {
   flex: 1;
   color: #333;
   margin: 0!important;
-}
+ }
 
 
 </style>
