@@ -150,6 +150,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 ?>
+<?php include('header.php'); ?>
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -177,7 +179,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body class="about-page">
-<?php include('header.php'); ?>
 
     <main class="main">
         <div class="page-title dark-background">
