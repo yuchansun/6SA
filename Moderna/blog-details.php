@@ -272,25 +272,27 @@ $searchResults = [];
 if (isset($_GET['search'])) {
   $searchTerm = $conn->real_escape_string($_GET['search']);
   $searchQuery = $conn->query(
-    "SELECT DISTINCT p.*, a.Nickname 
-         FROM posts p 
-         JOIN account a ON p.User_ID = a.User_ID 
-         LEFT JOIN comments c ON p.Post_ID = c.Post_ID 
-         WHERE p.is_deleted = 0 AND (p.Title LIKE '%$searchTerm%' 
-            OR p.Content LIKE '%$searchTerm%' 
-            OR c.Content LIKE '%$searchTerm%') 
-         ORDER BY p.Post_Time DESC"
+    "SELECT DISTINCT p.*, a.Nickname, a.Roles, a.Photo, t.verified 
+     FROM posts p 
+     JOIN account a ON p.User_ID = a.User_ID 
+     LEFT JOIN teacher_info t ON a.User_ID = t.account_id 
+     LEFT JOIN comments c ON p.Post_ID = c.Post_ID 
+     WHERE p.is_deleted = 0 AND (p.Title LIKE '%$searchTerm%' 
+        OR p.Content LIKE '%$searchTerm%' 
+        OR c.Content LIKE '%$searchTerm%') 
+     ORDER BY p.Post_Time DESC"
   );
   while ($row = $searchQuery->fetch_assoc()) {
     // 獲取每篇文章的留言及其點讚數，並按點讚數排序，若點讚數相同則按發布時間排序
     $postId = $row['Post_ID'];
     $commentsQuery = $conn->prepare(
-      "SELECT c.*, a.Nickname, 
-                    (SELECT COUNT(*) FROM likes WHERE Comment_ID = c.Comment_ID) AS Likes 
-             FROM comments c 
-             JOIN account a ON c.User_ID = a.User_ID 
-             WHERE c.Post_ID = ? AND c.is_deleted = 0 
-             ORDER BY Likes DESC, c.Comment_Time ASC"
+      "SELECT c.*, a.Nickname, a.Roles, a.Photo, t.verified,
+              (SELECT COUNT(*) FROM likes WHERE Comment_ID = c.Comment_ID) AS Likes 
+       FROM comments c 
+       JOIN account a ON c.User_ID = a.User_ID 
+       LEFT JOIN teacher_info t ON a.User_ID = t.account_id 
+       WHERE c.Post_ID = ? AND c.is_deleted = 0 
+       ORDER BY Likes DESC, c.Comment_Time ASC"
     );
     $commentsQuery->bind_param("i", $postId);
     $commentsQuery->execute();

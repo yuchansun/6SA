@@ -36,6 +36,8 @@ if (isset($_GET['admin']) && !$isAdmin) {
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>校系簡章</title>
+
+  <!-- 圖示與樣式 -->
   <link href="assets/img/favicon.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -44,10 +46,56 @@ if (isset($_GET['admin']) && !$isAdmin) {
   <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
   <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
   <link href="assets/css/main.css" rel="stylesheet">
+
+  <!-- 額外樣式 -->
+  <link rel="stylesheet" href="style.css">
+<style>
+  body.loading > *:not(#loading-spinner) {
+    /*visibility: hidden;*/
+  }
+
+  #loading-spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+  }
+</style>
+
+
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body class="about-page">
+<body class="loading about-page">
+ 
+
+
+<!-- Loading Spinner -->
+<div id="loading-spinner"
+     style="text-align: center; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); z-index: 9999;">
+  <div class="spinner-border" role="status" aria-hidden="true"></div>
+  <div style="margin-top: 10px;">載入中...</div>
+</div>
+
+
+<script>
+  window.addEventListener('load', () => {
+    // 移除 body 的 loading class
+    document.body.classList.remove('loading');
+
+    // 隱藏 spinner
+    const spinner = document.getElementById('loading-spinner');
+    if (spinner) {
+      spinner.style.display = 'none';
+    }
+  });
+</script>
+
+
+
 
 <main class="main">
   <div class="page-title dark-background">
@@ -56,22 +104,34 @@ if (isset($_GET['admin']) && !$isAdmin) {
       <p>基本的特殊選才資訊查詢功能，讓使用者可以透過關鍵字與篩選條件找到適合的學校與學程。</p>
     </div>
   </div>
+  
 
   <section id="about" class="about section">
     <div class="container">
     <?php
 include 'db.php';
 
-// 取得所有才能名稱
 function getTalentOptions($conn) {
-    $sql = "SELECT name FROM talents";
+    $sql = "SELECT Talent FROM sch_description WHERE Talent IS NOT NULL AND Talent <> ''";
     $result = $conn->query($sql);
-    $options = [];
+    $allTalents = [];
+
     while ($row = $result->fetch_assoc()) {
-        $options[] = $row['name'];
+        $talents = explode('、', $row['Talent']);
+        foreach ($talents as $talent) {
+            $trimmed = trim($talent);
+            if ($trimmed !== "") {
+                $allTalents[] = $trimmed;
+            }
+        }
     }
-    return $options;
+
+    // 去除重複並排序
+    $uniqueTalents = array_unique($allTalents);
+    sort($uniqueTalents);
+    return $uniqueTalents;
 }
+
 
 // 取得單一欄位的唯一值（下拉選單用）
 function getDistinctOptions($conn, $column, $table = "sch_description", $filterColumn = null, $filterValue = null) {
@@ -118,18 +178,21 @@ if (!empty($filters["school_name"])) {
 // SQL 組合開始
 $params = [];
 $types = "";
+$sql = "SELECT sd.* FROM sch_description sd WHERE 1=1";
 
-$sql = "SELECT sd.* FROM sch_description sd";
-
+// 處理才能（多選）
 if (!empty($filters["talent"])) {
-    // 有才能條件才 JOIN
-    $sql .= "
-        JOIN department_talents dt ON sd.Sch_num = dt.sch_num
-        JOIN talents t ON dt.talent_id = t.id
-    ";
+    foreach ($filters["talent"] as $talent) {
+        $sql .= " AND sd.Talent LIKE ?";
+        $params[] = "%$talent%";
+        $types .= "s";
+    }
 }
 
-$sql .= " WHERE sd.is_deleted = 0";
+// 關鍵字搜尋與其他條件照舊接在後面
+$sql .= " AND sd.is_deleted = 0";
+
+
 
 // 處理關鍵字搜尋
 if (!empty($filters["q"])) {
@@ -148,19 +211,14 @@ if (!empty($filters["q"])) {
     }
 }
 
+
 // 處理才能（多選）
 if (!empty($filters["talent"])) {
-    $placeholders = implode(",", array_fill(0, count($filters["talent"]), "?"));
-    $sql .= " AND t.name IN ($placeholders)";
     foreach ($filters["talent"] as $talent) {
-        $params[] = $talent;
+        $sql .= " AND sd.Talent LIKE ?";
+        $params[] = "%$talent%";
         $types .= "s";
     }
-
-    // 確保同一個科系同時擁有這些才能
-    $sql .= " GROUP BY sd.Sch_num HAVING COUNT(DISTINCT t.name) = ?";
-    $params[] = count($filters["talent"]);
-    $types .= "i";
 }
 
 // 處理其他欄位條件
@@ -243,8 +301,8 @@ $conn->close();
  .filter-form {
     position: relative;
     display: inline-block;
-}
-.talent-dropdown {
+ }
+  .talent-dropdown {
     display: none;
     margin-top: 5px;
     border: 1px solid #ccc;
@@ -264,11 +322,11 @@ $conn->close();
     border-radius: 0.375rem; /* Bootstrap 預設圓角 */
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Bootstrap dropdown 陰影 */
    
-}
+ }
 
-.talent-dropdown input {
+ .talent-dropdown input {
     margin-right: 5px;
-}
+ }
 
 
 
@@ -423,6 +481,7 @@ function updateSelectOptions(target) {
 
 
 </div>
+<br>
       <div style="display: flex; justify-content: flex-end;">
         <?php if ($showAdminInterface): ?>
           <a href="add_school.php" class="btn btn-primary me-2" style="background-color: var(--accent-color); border: none;">

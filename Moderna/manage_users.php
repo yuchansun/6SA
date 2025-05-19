@@ -198,7 +198,7 @@ $result = $stmt->get_result();
                 <?php if ($row["Roles"] !== "管理者"): ?>
                 <form method="post" style="margin:0;">
                     <input type="hidden" name="user_id" value="<?= $row["User_ID"] ?>">
-                    <button type="submit" name="make_admin">變改管理者</button>
+                    <button type="submit" name="make_admin">變更爲管理者</button>
                 </form>
                 <?php else: ?>
                     <button class="disabled-btn" disabled>已管理者</button>
