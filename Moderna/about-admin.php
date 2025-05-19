@@ -165,7 +165,7 @@ include('header.php');
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>校系資料管理</title>
     <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">

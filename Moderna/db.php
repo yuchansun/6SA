@@ -14,12 +14,6 @@ if ($conn->connect_error) {
     die("資料庫連接失敗: " . $conn->connect_error);
 }
 
-// 設定字符集
 $conn->set_charset("utf8mb4");
 
-$result = $conn->query("SELECT * FROM latest_news LIMIT 1");
-$row = $result->fetch_assoc();
-var_dump($row);
-
-$conn->close();
 ?>

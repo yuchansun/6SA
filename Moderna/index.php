@@ -12,9 +12,9 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Index - Moderna Bootstrap Template</title>
+  <title>特殊選才</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
 
@@ -51,13 +51,8 @@
 
   <?php
   // 資料庫連線設定
-  $servername = "localhost";
-  $username = "root";
-  $password = "";
-  $dbname = "sa-6"; // 替換為你的資料庫名稱
-  // 建立連線
-  $conn = new mysqli($servername, $username, $password, $dbname);
-
+  require 'db.php';
+  
   // 檢查連線
   if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);

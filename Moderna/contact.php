@@ -79,7 +79,7 @@ if ($password === $user['Password']) {
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>登入 - 特殊選材網站</title>
   <meta name="description" content="">
