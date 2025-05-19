@@ -186,49 +186,56 @@ if ($currentPage === 'blog-details.php' && !isset($_SESSION['user'])) {
 
 <style>
   #notificationList {
-  margin: 0;
-  padding: 0;
-  list-style-type: none; /* 取消無序列表的圓點或標記 */
+    margin: 0;
+    padding: 0;
+    list-style-type: none; /* 取消無序列表的圓點或標記 */
   }
 
   .notification-sidebar {
- position: fixed;
-  top: 80px; /* 根據 header 高度調整 */
-  right: -350px;
-  width: 300px;
-  height: calc(100% - 150px);
-  background: #fff;
- 
-  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-  transition: right 0.3s ease;
-  overflow-y: auto;
-  border-radius: 10px;
+    position: fixed;
+    top: 80px; /* 根據 header 高度調整 */
+    right: -350px;
+    width: 300px;
+    height: calc(100% - 150px);
+    background: #fff;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    overflow-y: auto;
+    border-radius: 10px;
+  }
+
+  .notification-sidebar.open {
+    right: 0;
   }
 
   .notification-row {
-  display: flex;
-  padding: 8px 12px;
-  border-bottom: 1px solid #ddd;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-  background-color: #fff;
-  margin: 0!important;
+    display: flex;
+    padding: 8px 12px;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    background-color: #fff;
+    margin: 0!important;
   }
 
- .notification-row:hover {
-  background-color: #f5f5f5;
+  .notification-row:hover {
+    background-color: #f5f5f5;
   }
 
   .notification-text {
-  flex: 1;
-  color: #333;
-  margin: 0!important;
- }
+    flex: 1;
+    color: #333;
+    margin: 0!important;
+  }
 
-
+  .notification-empty {
+    padding: 12px;
+    color: #888;
+    font-style: italic;
+  }
 </style>
-<!-- 其他 HTML 內容 -->
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const bell = document.getElementById('openNotifications');
@@ -242,6 +249,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 日期格式化函數
   function formatDate(dateString) {
+    if (!dateString) return '';
     const date = new Date(dateString);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -249,10 +257,16 @@ document.addEventListener('DOMContentLoaded', function () {
     return `${year}-${month}-${day}`;
   }
 
-  // 跳轉到我的最愛對應項目
-  function redirectToFavorite(todoId) {
-    window.location.href = `/6SA/Moderna/favorite.php#todo-${todoId}`;
+function shouldNotify(notification) {
+    const now = new Date();
 
+    if (notification.end_time) {
+      const endDate = new Date(notification.end_time);
+      const diffDays = (endDate - now) / (1000 * 60 * 60 * 24);
+      return diffDays >= 0 && diffDays <= 3.5; // 只提醒快截止
+    }
+
+    return false; // 沒截止日期不提醒
   }
 
   // 載入通知
@@ -260,23 +274,33 @@ document.addEventListener('DOMContentLoaded', function () {
     .then(res => res.json())
     .then(data => {
       const list = document.getElementById('notificationList');
-      list.innerHTML = ''; // 清空通知列表
+      list.innerHTML = '';
 
-      if (data.length === 0) {
+      const filtered = data.filter(shouldNotify);
+
+      if (filtered.length === 0) {
         list.innerHTML = '<div class="notification-empty">目前沒有提醒事項。</div>';
       } else {
-        data.forEach(n => {
+        filtered.forEach(n => {
           const item = document.createElement('div');
-item.className = 'notification-row'; // 用新的 class 取代 .notification-card
-item.id = `notify-${n.id}`;
-item.innerHTML = `
-  <div class="notification-text">
-    <strong>${n.School_Name} ${n.Department}</strong>：${n.title} 快到期囉！（${formatDate(n.end_time)} 截止）
-  </div>
-`;
+          item.className = 'notification-row';
+          item.id = `notify-${n.id}`;
 
+          let timeLabel = '';
+          let statusText = '';
 
-          item.style.cursor = 'pointer'; // 滑鼠指標顯示為可點擊
+          if (n.end_time) {
+            timeLabel = `${formatDate(n.end_time)} 截止`;
+            statusText = '快到期囉';
+          }
+
+          item.innerHTML = `
+            <div class="notification-text">
+              <strong>${n.School_Name} ${n.Department}</strong>：${n.title} ${statusText}！（${timeLabel}）
+            </div>
+          `;
+
+          item.style.cursor = 'pointer';
           item.onclick = () => redirectToFavorite(n.id);
 
           list.appendChild(item);
@@ -285,7 +309,7 @@ item.innerHTML = `
     })
     .catch(error => console.error('載入通知時發生錯誤：', error));
 });
-
 </script>
+
 </body>
 </html>
