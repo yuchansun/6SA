@@ -454,28 +454,21 @@ function updateNotificationStatus(userId, todoId, isNotified) {
     console.error('更新通知狀態時出錯:', error);
   });
 }
-
-
 </script>
+
 <style>
-.wrap-link {
+  .wrap-link {
   display: -webkit-box;
   -webkit-line-clamp: 1; /* 限制顯示2行 */
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-all;
-}
-</style>
-<style>
- 
-  .portfolio-title {
+ }
+    .portfolio-title {
    
     color: var(--heading-color); /* 這裡指定顏色 */
   }
-</style>
-
-<style>
     table {
       width: 100%;
       border-collapse: collapse;
