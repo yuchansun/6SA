@@ -15,13 +15,29 @@
   <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
   <link href="assets/css/main.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Apply dark background and white text color to card headers */
+    .card-header {
+      background-color: #1e4356; /* Dark background */
+      color: white; /* White text */
+    }
+
+    /* Chart and title styling */
+    #trendChart {
+      background-color: rgb(255, 255, 255);
+      color: rgb(9, 37, 75);
+    }
+
+    .card h4 {
+      color: rgb(9, 37, 75);
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body class="about-page">
 
-
-
-  <?php
+<?php
 $sch_num = $_GET['sch_num'] ?? '';
 
 if (empty($sch_num)) {
@@ -33,62 +49,41 @@ if ($conn->connect_error) {
     die("資料庫連線失敗: " . $conn->connect_error);
 }
 
-$sql = "SELECT sd.*, aty.110, aty.111, aty.112, aty.113, aty.114 
-        FROM sch_description sd 
-        LEFT JOIN admi_thro_years aty ON sd.Sch_num = aty.sch_num 
-        WHERE sd.Sch_num = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $sch_num);
-$stmt->execute();
-$result = $stmt->get_result();
-$data = $result->fetch_assoc();
+// 取得 sch_description 的基本資料
+$sql1 = "SELECT * FROM sch_description WHERE Sch_num = ?";
+$stmt1 = $conn->prepare($sql1);
+$stmt1->bind_param("s", $sch_num);
+$stmt1->execute();
+$result1 = $stmt1->get_result();
+$schoolData = $result1->fetch_assoc();
+
+if (!$schoolData) {
+    die("查無學校資料");
+}
+
+// 取得正規化歷年人數資料
+$sql2 = "SELECT year, student_count FROM admi_thro_years_normalized WHERE sch_num = ? ORDER BY year ASC";
+$stmt2 = $conn->prepare($sql2);
+$stmt2->bind_param("s", $sch_num);
+$stmt2->execute();
+$result2 = $stmt2->get_result();
+
+$studentCounts = [];
+while ($row = $result2->fetch_assoc()) {
+    $studentCounts[$row['year']] = $row['student_count'];
+}
+
 $conn->close();
 ?>
 
 <main class="main">
   <div class="page-title dark-background">
     <div class="container position-relative">
-      <?php if ($data): ?>
-        <h1><?= htmlspecialchars($data['School_Name']) . ' - ' . htmlspecialchars($data['Department']) ?> 詳細介紹</h1>
-      <?php else: ?>
-        <h1>學校詳細介紹</h1>
-      <?php endif; ?>
+      <h1><?= htmlspecialchars($schoolData['School_Name']) . ' - ' . htmlspecialchars($schoolData['Department']) ?> 詳細介紹</h1>
     </div>
   </div>
-  <!-- 這裡是其他頁面內容 -->
-</main>
 
-
-<style>
-  
-  /* Apply dark background and white text color to card headers */
-  .card-header {
-    background-color:var(--heading-color); /* Dark background */
-    color: white; /* White text */
-  }
-  <style>
-  /* Apply dark background and white text color to card headers */
-  .card-header {
-    background-color: #343a40; /* Dark background */
-    color: white; /* White text */
-  }
-
-  /* Apply dark background and white color to the chart title */
-  #trendChart {
-    background-color:rgb(255, 255, 255);
-    color:rgb(9, 37, 75);
-  }
-
-  .card h4 {
-    color: rgb(9, 37, 75); /* Ensure the title of the chart is white */
-    text-align: center;
-  }
-
-</style>
-
-
-<div class="container mt-5">
-  <?php if ($data): ?>
+  <div class="container mt-5">
     <div class="row">
       <!-- 學校基本資料卡片 -->
       <div class="col-md-4 d-flex align-items-stretch">
@@ -97,61 +92,59 @@ $conn->close();
             <h5 class="card-title">學校資訊</h5>
           </div>
           <div class="card-body">
-            <p><strong>學校名稱：</strong><?= htmlspecialchars($data['School_Name']) ?></p>
-            <p><strong>公私立：</strong><?= htmlspecialchars($data['p_type']) ?></p>
-            <p><strong>科系：</strong><?= htmlspecialchars($data['Department']) ?></p>
-            <p><strong>名額：</strong><?= htmlspecialchars($data['Quota']) ?></p>
-            <p><strong>地區：</strong><?= htmlspecialchars($data['Region']) ?></p>
+            <p><strong>學校名稱：</strong><?= htmlspecialchars($schoolData['School_Name']) ?></p>
+            <p><strong>公私立：</strong><?= htmlspecialchars($schoolData['p_type']) ?></p>
+            <p><strong>科系：</strong><?= htmlspecialchars($schoolData['Department']) ?></p>
+            <p><strong>名額：</strong><?= htmlspecialchars($schoolData['Quota']) ?></p>
+            <p><strong>地區：</strong><?= htmlspecialchars($schoolData['Region']) ?></p>
           </div>
         </div>
       </div>
 
-      <!-- 名額與聯繫方式卡片 -->
+      <!-- 報考資訊卡片 -->
       <div class="col-md-4 d-flex align-items-stretch">
         <div class="card w-100">
           <div class="card-header">
             <h5 class="card-title">報考資訊</h5>
           </div>
           <div class="card-body">
-            <p><strong>考試項目：</strong><?= htmlspecialchars($data['Exam_Item']) ?></p>
-            <p><strong>考試時間：</strong><?= htmlspecialchars($data['exam_date']) ?></p>  
-            <p><strong>地址：</strong><?= htmlspecialchars($data['address']) ?></p>
-            <p><strong>電話：</strong><?= htmlspecialchars($data['Contact']) ?></p>
-            <p><strong>官方連結：</strong><a href="<?= htmlspecialchars($data['link']) ?>" target="_blank"><?= htmlspecialchars($data['link']) ?></a></p>
+            <p><strong>考試項目：</strong><?= htmlspecialchars($schoolData['Exam_Item']) ?></p>
+            <p><strong>考試時間：</strong><?= htmlspecialchars($schoolData['exam_date']) ?></p>
+            <p><strong>地址：</strong><?= htmlspecialchars($schoolData['address']) ?></p>
+            <p><strong>電話：</strong><?= htmlspecialchars($schoolData['Contact']) ?></p>
+            <p><strong>官方連結：</strong><a href="<?= htmlspecialchars($schoolData['link']) ?>" target="_blank"><?= htmlspecialchars($schoolData['link']) ?></a></p>
           </div>
         </div>
       </div>
 
-      <!-- 興趣、能力與身份卡片 -->
+      <!-- 補充資料卡片 -->
       <div class="col-md-4 d-flex align-items-stretch">
         <div class="card w-100">
           <div class="card-header">
             <h5 class="card-title">補充</h5>
           </div>
           <div class="card-body">
-            <p><strong>學群：</strong><?= htmlspecialchars($data['Disc_Cluster']) ?></p>
-            <p><strong>能力：</strong><?= htmlspecialchars($data['Talent']) ?></p>
-            <p><strong>備註：</strong><?= htmlspecialchars($data['note']) ?></p>
+            <p><strong>學群：</strong><?= htmlspecialchars($schoolData['Disc_Cluster']) ?></p>
+            <p><strong>能力：</strong><?= htmlspecialchars($schoolData['Talent']) ?></p>
+            <p><strong>備註：</strong><?= htmlspecialchars($schoolData['note']) ?></p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 備註與歷年區域圖表並排顯示 -->
-    <div class="row mt-4 mb-5"> <!-- Added mb-4 here for spacing -->
-      <!-- 備註卡片 -->
+    <!-- 篩選條件與圖表 -->
+    <div class="row mt-4 mb-5">
       <div class="col-md-6 d-flex align-items-stretch">
         <div class="card w-100">
           <div class="card-header">
             <h5 class="card-title">篩選條件</h5>
           </div>
           <div class="card-body">
-            <p><strong>資格：</strong><?= htmlspecialchars($data['requirement']) ?></p>
+            <p><strong>資格：</strong><?= htmlspecialchars($schoolData['requirement']) ?></p>
           </div>
         </div>
       </div>
 
-      <!-- 錄取人數趨勢圖表 -->
       <div class="col-md-6 d-flex align-items-stretch">
         <div class="card w-100">
           <h4 class="mt-4 text-center">近五年錄取人數趨勢</h4>
@@ -161,43 +154,45 @@ $conn->close();
         </div>
       </div>
     </div>
+  </div>
+</main>
 
-    <script>
-      new Chart(document.getElementById("trendChart"), {
-        type: "line",
-        data: {
-          labels: ["110", "111", "112", "113", "114"],
-          datasets: [{
-            label: "錄取人數",
-            data: [
-              <?= (int)($data['110'] ?? 0) ?>,
-              <?= (int)($data['111'] ?? 0) ?>,
-              <?= (int)($data['112'] ?? 0) ?>,
-              <?= (int)($data['113'] ?? 0) ?>,
-              <?= (int)($data['114'] ?? 0) ?>
-            ],
-            borderColor: "#007bff",
-            backgroundColor: "rgba(0,123,255,0.2)",
-            fill: true,
-            tension: 0.3
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { precision: 0 }
-            }
-          }
+<script>
+  const labels = ["110", "111", "112", "113", "114"];
+  const data = [
+    <?php
+      foreach (["110", "111", "112", "113", "114"] as $year) {
+          echo isset($studentCounts[$year]) ? (int)$studentCounts[$year] : 0;
+          echo ",";
+      }
+    ?>
+  ];
+
+  new Chart(document.getElementById("trendChart"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "錄取人數",
+        data: data,
+        borderColor: "#007bff",
+        backgroundColor: "rgba(0,123,255,0.2)",
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 }
         }
-      });
-    </script>
+      }
+    }
+  });
+</script>
 
-  <?php else: ?>
-    <p>查無此學校資料。</p>
-  <?php endif; ?>
-</div>
 
 
 
