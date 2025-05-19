@@ -14,7 +14,16 @@ if ($conn->connect_error) {
 }
 
 // 查詢資料：抓取成功大學、輔仁大學和中興大學的科系錄取人數
-$sql = "SELECT school, dep, `110`, `111`, `112`, `113`, `114` FROM admi_thro_years WHERE school IN ('國防醫學院', '國防大學', '台灣大學', '清華大學', '中山大學', '成功大學')";
+$sql = "SELECT sd.School_Name as school, sd.Department as dep,
+        MAX(CASE WHEN aty.year = 110 THEN aty.student_count END) as '110',
+        MAX(CASE WHEN aty.year = 111 THEN aty.student_count END) as '111',
+        MAX(CASE WHEN aty.year = 112 THEN aty.student_count END) as '112',
+        MAX(CASE WHEN aty.year = 113 THEN aty.student_count END) as '113',
+        MAX(CASE WHEN aty.year = 114 THEN aty.student_count END) as '114'
+        FROM sch_description sd
+        LEFT JOIN admi_thro_years_normalized aty ON sd.Sch_num = aty.sch_num
+        WHERE sd.School_Name IN ('國防醫學院', '國防大學', '台灣大學', '清華大學', '中山大學', '成功大學')
+        GROUP BY sd.Sch_num, sd.School_Name, sd.Department";
 $result = $conn->query($sql);
 
 $schools_data = [];
