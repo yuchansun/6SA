@@ -49,10 +49,15 @@ $filters = [
   "disc_cluster" => $_GET['disc_cluster'] ?? ""
 ];
 
-// 查詢語法包含 JOIN admi_thro_years
-$sql = "SELECT sd.*, aty.110, aty.111, aty.112, aty.113, aty.114 
+// 查詢語法包含 JOIN admi_thro_years_normalized
+$sql = "SELECT sd.*, 
+        MAX(CASE WHEN aty.year = 110 THEN aty.student_count END) as '110',
+        MAX(CASE WHEN aty.year = 111 THEN aty.student_count END) as '111',
+        MAX(CASE WHEN aty.year = 112 THEN aty.student_count END) as '112',
+        MAX(CASE WHEN aty.year = 113 THEN aty.student_count END) as '113',
+        MAX(CASE WHEN aty.year = 114 THEN aty.student_count END) as '114'
         FROM sch_description sd 
-        LEFT JOIN admi_thro_years aty ON sd.Sch_num = aty.sch_num 
+        LEFT JOIN admi_thro_years_normalized aty ON sd.Sch_num = aty.sch_num 
         WHERE 1=1";
 $params = [];
 $types = "";

@@ -26,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'exam_date' => '考試日期',
             'Contact' => '聯絡方式',
             'link' => '簡章連結',
-            'Sch_num' => '校系標號'
+            'Sch_num' => '校系標號',
+            'Talent' => '能力要求'
         ];
         
         $emptyFields = [];
@@ -50,7 +51,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_num->execute();
         $result_num = $stmt_num->get_result();
         if ($result_num->num_rows > 0) {
-            throw new Exception("主鍵重複，不可新增");
+            throw new Exception("校系編號 '{$sch_num}' 已存在，請使用其他編號");
+        }
+
+        // 檢查歷年錄取人數表中是否已存在該校系編號
+        $check_admission = "SELECT DISTINCT sch_num FROM admi_thro_years_normalized WHERE sch_num LIKE ?";
+        $stmt_admission = $conn->prepare($check_admission);
+        $search_pattern = $sch_num . '%';
+        $stmt_admission->bind_param("s", $search_pattern);
+        $stmt_admission->execute();
+        $result_admission = $stmt_admission->get_result();
+        if ($result_admission->num_rows > 0) {
+            $existing_nums = [];
+            while($row = $result_admission->fetch_assoc()) {
+                $existing_nums[] = $row['sch_num'];
+            }
+            throw new Exception("校系編號 '{$sch_num}' 在歷年錄取人數表中已存在（包含：".implode(', ', $existing_nums)."），請使用其他編號");
         }
         
         // 先檢查學校是否存在，不存在則新增
@@ -97,29 +113,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($stmt->execute()) {
             // 新增歷年錄取人數
-            $sql_admission = "INSERT INTO admi_thro_years (
-                sch_num, School_Name, dep, `110`, `111`, `112`, `113`, `114`
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            
+            $years = [110, 111, 112, 113, 114];
+            $sql_admission = "INSERT INTO admi_thro_years_normalized (sch_num, year, student_count) VALUES (?, ?, ?)";
             $stmt_admission = $conn->prepare($sql_admission);
-            $stmt_admission->bind_param("sssiiiii", 
-                $sch_num,
-                $_POST['School_Name'],
-                $_POST['Department'],
-                $_POST['110'],
-                $_POST['111'],
-                $_POST['112'],
-                $_POST['113'],
-                $_POST['114']
-            );
-            
-            if ($stmt_admission->execute()) {
-                $response['success'] = true;
-                $response['message'] = '校系資料新增成功';
-                $response['redirect'] = 'about.php?admin=1';
-            } else {
-                throw new Exception($stmt_admission->error);
+
+            foreach ($years as $year) {
+                if (isset($_POST[$year]) && $_POST[$year] !== '') {
+                    // 使用原始校系編號，不加上年份
+                    $stmt_admission->bind_param("sii", 
+                        $sch_num,
+                        $year,
+                        $_POST[$year]
+                    );
+                    if (!$stmt_admission->execute()) {
+                        throw new Exception("新增歷年錄取人數失敗：" . $stmt_admission->error);
+                    }
+                }
             }
+            
+            $response['success'] = true;
+            $response['message'] = '校系資料新增成功';
+            $response['redirect'] = 'about.php?admin=1';
         } else {
             throw new Exception($stmt->error);
         }
@@ -141,6 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
     <link href="assets/css/main.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
     #header, .header {
       position: fixed !important;
@@ -235,6 +250,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         </div>
 
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">能力要求 *</label>
+                                <textarea class="form-control" name="Talent" rows="4" required></textarea>
+                            </div>
+                        </div>
+
                         <div class="text-muted mb-3">
                             * 為必填欄位
                         </div>
@@ -252,13 +274,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="col-12">
                                 <label class="form-label">考試項目</label>
                                 <textarea class="form-control" name="Exam_Item" rows="4" required></textarea>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <label class="form-label">特殊才能</label>
-                                <textarea class="form-control" name="Talent" rows="4" required></textarea>
                             </div>
                         </div>
 
@@ -316,35 +331,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    window.location.href = data.redirect;
+                    // 使用 SweetAlert2 顯示成功訊息
+                    Swal.fire({
+                        title: '成功！',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonText: '確定'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = data.redirect;
+                        }
+                    });
                 } else {
-                    // 創建一個 div 來顯示錯誤訊息
-                    const errorDiv = document.createElement('div');
-                    errorDiv.innerHTML = data.message;
-                    errorDiv.style.color = 'red';
-                    errorDiv.style.padding = '10px';
-                    errorDiv.style.marginBottom = '20px';
-                    errorDiv.style.backgroundColor = '#fff3f3';
-                    errorDiv.style.border = '1px solid #ffcdd2';
-                    errorDiv.style.borderRadius = '4px';
-                    
-                    // 找到表單並在開頭插入錯誤訊息
-                    const form = document.getElementById('addSchoolForm');
-                    const existingError = form.querySelector('.error-message');
-                    if (existingError) {
-                        existingError.remove();
-                    }
-                    errorDiv.className = 'error-message';
-                    form.insertBefore(errorDiv, form.firstChild);
-                    
-                    // 滾動到錯誤訊息
-                    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // 使用 SweetAlert2 顯示錯誤訊息
+                    Swal.fire({
+                        title: '錯誤！',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonText: '確定'
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('系統錯誤，請稍後再試');
+                Swal.fire({
+                    title: '系統錯誤！',
+                    text: '系統發生錯誤，請稍後再試',
+                    icon: 'error',
+                    confirmButtonText: '確定'
+                });
             });
         });
     </script>

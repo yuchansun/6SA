@@ -551,7 +551,7 @@ for _, row in df.iterrows():
     sch_num = row["Sch_num"]
     
     # 建立年度名額字典
-    quotas = {}
+    quotas = []
     for year in range(110, 115):
         year_str = str(year)
         quota = 0
@@ -572,20 +572,24 @@ for _, row in df.iterrows():
                 print(f"找到 {year} 年度 {school} {dept} 的名額：{quota}")
                 break
         
-        quotas[year_str] = quota
-    
+        quotas.append({
+            "sch_num": sch_num,
+            "year": year,
+            "student_count": quota
+        })
+
     years_records.append({
         "sch_num": sch_num,
         "School_Name": school,
         "dep": dept,
-        "110": quotas["110"],
-        "111": quotas["111"],
-        "112": quotas["112"],
-        "113": quotas["113"],
-        "114": quotas["114"]
+        "110": quotas[0]["student_count"],
+        "111": quotas[1]["student_count"],
+        "112": quotas[2]["student_count"],
+        "113": quotas[3]["student_count"],
+        "114": quotas[4]["student_count"]
     })
 
 df_years = pd.DataFrame(years_records)
 print(f"歷年名額資料筆數: {len(df_years)}筆")
-df_years.to_csv("admi_thro_years.csv", index=False)
+df_years.to_csv("admi_thro_years_normalized.csv", index=False)
 

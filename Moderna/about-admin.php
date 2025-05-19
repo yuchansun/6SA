@@ -16,10 +16,16 @@ if (empty($sch_num)) {
 }
 
 // 獲取校系資料
-$sql = "SELECT sd.*, aty.110, aty.111, aty.112, aty.113, aty.114 
+$sql = "SELECT sd.*, 
+        MAX(CASE WHEN aty.year = 110 THEN aty.student_count END) as '110',
+        MAX(CASE WHEN aty.year = 111 THEN aty.student_count END) as '111',
+        MAX(CASE WHEN aty.year = 112 THEN aty.student_count END) as '112',
+        MAX(CASE WHEN aty.year = 113 THEN aty.student_count END) as '113',
+        MAX(CASE WHEN aty.year = 114 THEN aty.student_count END) as '114'
         FROM sch_description sd 
-        LEFT JOIN admi_thro_years aty ON sd.Sch_num = aty.sch_num 
-        WHERE sd.Sch_num = ? AND sd.is_deleted = 0";
+        LEFT JOIN admi_thro_years_normalized aty ON sd.Sch_num = aty.sch_num 
+        WHERE sd.Sch_num = ? AND sd.is_deleted = 0
+        GROUP BY sd.Sch_num";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $sch_num);
 $stmt->execute();
@@ -85,10 +91,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                             exam_date = ?, 
                             Contact = ?, 
                             link = ?, 
-                            note = ? 
+                            note = ?,
+                            Talent = ?
                             WHERE Sch_num = ?";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("ssssssissss", 
+                    $stmt->bind_param("ssssssisssss", 
                         $_POST['School_Name'],
                         $_POST['Department'],
                         $_POST['Region'],
@@ -99,6 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                         $_POST['Contact'],
                         $_POST['link'],
                         $_POST['note'],
+                        $_POST['Talent'],
                         $sch_num
                     );
                     $stmt->execute();
@@ -109,14 +117,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                 case 'update_requirement':
                     $sql = "UPDATE sch_description SET 
                             requirement = ?, 
-                            Exam_Item = ?, 
-                            Talent = ? 
+                            Exam_Item = ? 
                             WHERE Sch_num = ?";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("ssss", 
+                    $stmt->bind_param("sss", 
                         $_POST['requirement'],
                         $_POST['Exam_Item'],
-                        $_POST['Talent'],
                         $sch_num
                     );
                     $stmt->execute();
@@ -125,26 +131,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                     break;
 
                 case 'update_admission':
-                    $sql = "INSERT INTO admi_thro_years (sch_num, School_Name, dep, 110, 111, 112, 113, 114) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
-                            ON DUPLICATE KEY UPDATE 
-                            110 = VALUES(110), 
-                            111 = VALUES(111), 
-                            112 = VALUES(112), 
-                            113 = VALUES(113), 
-                            114 = VALUES(114)";
+                    // 先刪除該校系的所有錄取人數記錄
+                    $sql = "DELETE FROM admi_thro_years_normalized WHERE sch_num = ?";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("sssiiiii", 
-                        $sch_num,
-                        $_POST['School_Name'],
-                        $_POST['Department'],
-                        $_POST['110'],
-                        $_POST['111'],
-                        $_POST['112'],
-                        $_POST['113'],
-                        $_POST['114']
-                    );
+                    $stmt->bind_param("s", $sch_num);
                     $stmt->execute();
+
+                    // 插入新的錄取人數記錄
+                    $years = [110, 111, 112, 113, 114];
+                    $sql = "INSERT INTO admi_thro_years_normalized (sch_num, year, student_count) VALUES (?, ?, ?)";
+                    $stmt = $conn->prepare($sql);
+
+                    foreach ($years as $year) {
+                        if (isset($_POST[$year]) && $_POST[$year] !== '') {
+                            $stmt->bind_param("sii", $sch_num, $year, $_POST[$year]);
+                            $stmt->execute();
+                        }
+                    }
+
                     $response['success'] = true;
                     $response['message'] = '錄取人數更新成功';
                     break;
@@ -306,6 +310,13 @@ include('header.php');
                             </div>
                         </div>
 
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">能力要求 *</label>
+                                <textarea class="form-control" name="Talent" rows="4" required><?= htmlspecialchars($data['Talent']) ?></textarea>
+                            </div>
+                        </div>
+
                         <div class="text-end">
                             <small class="text-muted mb-2 d-block">* 為必填欄位</small>
                             <button type="submit" class="btn btn-primary">更新基本資料</button>
@@ -335,13 +346,6 @@ include('header.php');
                             <div class="col-12">
                                 <label class="form-label">考試項目</label>
                                 <textarea class="form-control" name="Exam_Item" rows="4" required><?= htmlspecialchars($data['Exam_Item']) ?></textarea>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <label class="form-label">特殊才能</label>
-                                <textarea class="form-control" name="Talent" rows="4" required><?= htmlspecialchars($data['Talent']) ?></textarea>
                             </div>
                         </div>
 
