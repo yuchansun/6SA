@@ -18,16 +18,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 檢查必填欄位
         $requiredFields = [
             'School_Name' => '學校名稱',
-            'Department' => '科系名稱',
+            'Department' => '校系',
             'Region' => '地區',
             'address' => '地址',
             'Disc_Cluster' => '學群',
             'Quota' => '招生名額',
-            'exam_date' => '考試日期',
-            'Contact' => '聯絡方式',
+            'exam_date' => '考試時間',
+            'Contact' => '電話',
             'link' => '簡章連結',
             'Sch_num' => '校系標號',
-            'Talent' => '能力要求'
+            'p_type' => '公私立',
+            'Exam_Item' => '考試項目',
+            'requirement' => '資格',
+            'Talent' => '能力'
         ];
         
         $emptyFields = [];
@@ -51,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_num->execute();
         $result_num = $stmt_num->get_result();
         if ($result_num->num_rows > 0) {
-            throw new Exception("校系編號 '{$sch_num}' 已存在，請使用其他編號");
+            throw new Exception("校系標號重複 請修改");
         }
 
         // 檢查歷年錄取人數表中是否已存在該校系編號
@@ -90,11 +93,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql = "INSERT INTO sch_description (
             Sch_num, School_Name, Department, Region, address, 
             Disc_Cluster, Quota, exam_date, Contact, link, 
-            note, requirement, Exam_Item, Talent, is_deleted
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
+            note, requirement, Exam_Item, Talent, p_type, is_deleted
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
         
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssssisssssss", 
+        $stmt->bind_param("ssssssissssssss", 
             $sch_num,
             $_POST['School_Name'],
             $_POST['Department'],
@@ -108,7 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['note'],
             $_POST['requirement'],
             $_POST['Exam_Item'],
-            $_POST['Talent']
+            $_POST['Talent'],
+            $_POST['p_type']
         );
         
         if ($stmt->execute()) {
@@ -190,15 +194,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h3 class="mb-3">基本資料</h3>
                         <div class="row mb-3">
                             <div class="col-md-6">
+                                <label class="form-label">校系標號 *</label>
+                                <input type="text" class="form-control" name="Sch_num" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">公私立 *</label>
+                                <select class="form-control" name="p_type" required>
+                                    <option value="">請選擇</option>
+                                    <option value="國立">國立</option>
+                                    <option value="私立">私立</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
                                 <label class="form-label">學校名稱 *</label>
                                 <input type="text" class="form-control" name="School_Name" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">科系名稱 *</label>
+                                <label class="form-label">校系 *</label>
                                 <input type="text" class="form-control" name="Department" required>
                             </div>
                         </div>
-
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">地區 *</label>
@@ -209,7 +226,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <input type="text" class="form-control" name="address" required>
                             </div>
                         </div>
-
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">學群 *</label>
@@ -220,21 +236,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <input type="number" class="form-control" name="Quota" required>
                             </div>
                         </div>
-
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">考試日期 *</label>
+                                <label class="form-label">考試時間 *</label>
                                 <input type="date" class="form-control" name="exam_date" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">聯絡方式 *</label>
+                                <label class="form-label">電話 *</label>
                                 <input type="text" class="form-control" name="Contact" required>
                             </div>
                         </div>
-
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">簡章連結 *</label>
+                                <label class="form-label">官方連結 *</label>
                                 <input type="url" class="form-control" name="link" required>
                             </div>
                             <div class="col-md-6">
@@ -242,41 +256,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <textarea class="form-control" name="note"></textarea>
                             </div>
                         </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">校系標號 *</label>
-                                <input type="text" class="form-control" name="Sch_num" required>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <label class="form-label">能力要求 *</label>
-                                <textarea class="form-control" name="Talent" rows="4" required></textarea>
-                            </div>
-                        </div>
-
                         <div class="text-muted mb-3">
                             * 為必填欄位
                         </div>
-
                         <!-- 報考資訊區塊 -->
                         <h3 class="mb-3 mt-4">報考資訊</h3>
                         <div class="row mb-3">
                             <div class="col-12">
-                                <label class="form-label">報考資格</label>
+                                <label class="form-label">資格 *</label>
                                 <textarea class="form-control" name="requirement" rows="4" required></textarea>
                             </div>
                         </div>
-
                         <div class="row mb-3">
                             <div class="col-12">
-                                <label class="form-label">考試項目</label>
+                                <label class="form-label">考試項目 *</label>
                                 <textarea class="form-control" name="Exam_Item" rows="4" required></textarea>
                             </div>
                         </div>
-
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">能力 *</label>
+                                <textarea class="form-control" name="Talent" rows="4" required></textarea>
+                            </div>
+                        </div>
                         <!-- 歷年錄取人數區塊 -->
                         <h3 class="mb-3 mt-4">歷年錄取人數</h3>
                         <div class="row mb-3">

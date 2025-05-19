@@ -58,26 +58,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                     // 檢查必填欄位
                     $requiredFields = [
                         'School_Name' => '學校名稱',
-                        'Department' => '科系名稱',
+                        'Department' => '校系',
                         'Region' => '地區',
                         'address' => '地址',
                         'Disc_Cluster' => '學群',
                         'Quota' => '招生名額',
-                        'exam_date' => '考試日期',
-                        'Contact' => '聯絡方式',
-                        'link' => '簡章連結'
+                        'exam_date' => '考試時間',
+                        'Contact' => '電話',
+                        'link' => '官方連結'
                     ];
                     
                     $emptyFields = [];
+                    if (!isset($_POST['Sch_num']) || trim($_POST['Sch_num']) === '') {
+                        $emptyFields[] = '校系標號';
+                    }
                     foreach ($requiredFields as $field => $fieldName) {
                         if (empty($_POST[$field])) {
                             $emptyFields[] = $fieldName;
                         }
                     }
-                    
                     if (!empty($emptyFields)) {
                         $response['success'] = false;
                         $response['message'] = implode('、', $emptyFields) . '需要填寫相對應資料';
+                        break;
+                    }
+
+                    // 檢查校系標號是否重複（不含自己）
+                    $check_num = "SELECT Sch_num FROM sch_description WHERE Sch_num = ? AND Sch_num != ?";
+                    $stmt_num = $conn->prepare($check_num);
+                    $stmt_num->bind_param("ss", $_POST['Sch_num'], $sch_num);
+                    $stmt_num->execute();
+                    $result_num = $stmt_num->get_result();
+                    if ($result_num->num_rows > 0) {
+                        $response['success'] = false;
+                        $response['message'] = '校系標號重複 請修改';
                         break;
                     }
 
@@ -92,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                             Contact = ?, 
                             link = ?, 
                             note = ?,
-                            Talent = ?
+                            p_type = ?
                             WHERE Sch_num = ?";
                     $stmt = $conn->prepare($sql);
                     $stmt->bind_param("ssssssisssss", 
@@ -106,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                         $_POST['Contact'],
                         $_POST['link'],
                         $_POST['note'],
-                        $_POST['Talent'],
+                        $_POST['p_type'],
                         $sch_num
                     );
                     $stmt->execute();
@@ -115,14 +129,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
                     break;
 
                 case 'update_requirement':
+                    // 必填欄位檢查
+                    $requiredFields = [
+                        'requirement' => '資格',
+                        'Exam_Item' => '考試項目',
+                        'Talent' => '能力'
+                    ];
+                    $emptyFields = [];
+                    foreach ($requiredFields as $field => $fieldName) {
+                        if (empty($_POST[$field])) {
+                            $emptyFields[] = $fieldName;
+                        }
+                    }
+                    if (!empty($emptyFields)) {
+                        $response['success'] = false;
+                        $response['message'] = implode('、', $emptyFields) . '需要填寫相對應資料';
+                        break;
+                    }
                     $sql = "UPDATE sch_description SET 
                             requirement = ?, 
-                            Exam_Item = ? 
+                            Exam_Item = ?,
+                            Talent = ?
                             WHERE Sch_num = ?";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("sss", 
+                    $stmt->bind_param("ssss", 
                         $_POST['requirement'],
                         $_POST['Exam_Item'],
+                        $_POST['Talent'],
                         $sch_num
                     );
                     $stmt->execute();
@@ -176,6 +209,7 @@ include('header.php');
     <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
     <link href="assets/css/main.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* 導覽列背景色修正為深藍色 */
         #header,
@@ -250,8 +284,16 @@ include('header.php');
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">校系標號</label>
-                                <input type="text" class="form-control" name="Sch_num" value="<?= htmlspecialchars($data['Sch_num']) ?>" readonly>
+                                <label class="form-label">校系標號 *</label>
+                                <input type="text" class="form-control" name="Sch_num" value="<?php echo htmlspecialchars($data['Sch_num']); ?>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">公私立</label>
+                                <select class="form-control" name="p_type">
+                                    <option value="">請選擇</option>
+                                    <option value="國立" <?php echo $data['p_type'] === '國立' ? 'selected' : ''; ?>>國立</option>
+                                    <option value="私立" <?php echo $data['p_type'] === '私立' ? 'selected' : ''; ?>>私立</option>
+                                </select>
                             </div>
                         </div>
 
@@ -261,7 +303,7 @@ include('header.php');
                                 <input type="text" class="form-control" name="School_Name" value="<?= htmlspecialchars($data['School_Name']) ?>" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">科系名稱 *</label>
+                                <label class="form-label">校系 *</label>
                                 <input type="text" class="form-control" name="Department" value="<?= htmlspecialchars($data['Department']) ?>" required>
                             </div>
                         </div>
@@ -290,30 +332,23 @@ include('header.php');
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">考試日期 *</label>
+                                <label class="form-label">考試時間 *</label>
                                 <input type="date" class="form-control" name="exam_date" value="<?= htmlspecialchars($data['exam_date']) ?>" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">聯絡方式 *</label>
+                                <label class="form-label">電話 *</label>
                                 <input type="text" class="form-control" name="Contact" value="<?= htmlspecialchars($data['Contact']) ?>" required>
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">簡章連結 *</label>
+                                <label class="form-label">官方連結 *</label>
                                 <input type="url" class="form-control" name="link" value="<?= htmlspecialchars($data['link']) ?>" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">備註</label>
                                 <textarea class="form-control" name="note"><?= htmlspecialchars($data['note']) ?></textarea>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <label class="form-label">能力要求 *</label>
-                                <textarea class="form-control" name="Talent" rows="4" required><?= htmlspecialchars($data['Talent']) ?></textarea>
                             </div>
                         </div>
 
@@ -337,15 +372,22 @@ include('header.php');
                         
                         <div class="row mb-3">
                             <div class="col-12">
-                                <label class="form-label">報考資格</label>
-                                <textarea class="form-control" name="requirement" rows="4" required><?= htmlspecialchars($data['requirement']) ?></textarea>
+                                <label class="form-label">資格 *</label>
+                                <textarea class="form-control" name="requirement" rows="4" required><?php echo htmlspecialchars($data['requirement']); ?></textarea>
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-12">
-                                <label class="form-label">考試項目</label>
-                                <textarea class="form-control" name="Exam_Item" rows="4" required><?= htmlspecialchars($data['Exam_Item']) ?></textarea>
+                                <label class="form-label">考試項目 *</label>
+                                <textarea class="form-control" name="Exam_Item" rows="4" required><?php echo htmlspecialchars($data['Exam_Item']); ?></textarea>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">能力 *</label>
+                                <textarea class="form-control" name="Talent" rows="4" required><?php echo htmlspecialchars($data['Talent']); ?></textarea>
                             </div>
                         </div>
 
@@ -419,14 +461,31 @@ include('header.php');
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
+                        Swal.fire({
+                            title: '成功！',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: '確定'
+                        }).then(() => {
+                            // 若有需要可加上頁面刷新或跳轉
+                        });
                     } else {
-                        alert('更新失敗：' + data.message);
+                        Swal.fire({
+                            title: '錯誤！',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonText: '確定'
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('更新失敗，請稍後再試');
+                    Swal.fire({
+                        title: '系統錯誤！',
+                        text: '更新失敗，請稍後再試',
+                        icon: 'error',
+                        confirmButtonText: '確定'
+                    });
                 });
             });
         });
@@ -445,15 +504,31 @@ include('header.php');
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
-                        window.location.href = 'about.php?admin=1';
+                        Swal.fire({
+                            title: '成功！',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: '確定'
+                        }).then(() => {
+                            window.location.href = 'about.php?admin=1';
+                        });
                     } else {
-                        alert('刪除失敗：' + data.message);
+                        Swal.fire({
+                            title: '錯誤！',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonText: '確定'
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('刪除失敗，請稍後再試');
+                    Swal.fire({
+                        title: '系統錯誤！',
+                        text: '刪除失敗，請稍後再試',
+                        icon: 'error',
+                        confirmButtonText: '確定'
+                    });
                 });
             }
         }
