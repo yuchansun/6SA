@@ -329,7 +329,6 @@ $conn->close();
  }
 
 
-
 </style>
 
     <input type="text" name="q" value="<?= htmlspecialchars($filters['q']) ?>" placeholder="輸入關鍵字..." class="search-input">
@@ -506,7 +505,7 @@ function updateSelectOptions(target) {
 <?php foreach ($results as $row): ?>
 <tr>
 
-  <!-- ✅ 新增「比較」欄位 -->
+  <!--  新增「比較」欄位 -->
   <td>
     <input type="checkbox" class="compare-checkbox" value="<?= htmlspecialchars($row['Sch_num']) ?>">
   </td>
@@ -629,7 +628,7 @@ function toggleStar(button) {
         .then(response => response.text())
         .then(data => console.log(data));
 
-        // ✅ 同時新增到 user_todos
+        //  同時新增到 user_todos
         fetch('add_user_todos.php', {
           method: 'POST',
           headers: {
@@ -640,7 +639,7 @@ function toggleStar(button) {
         })
         .then(response => response.text())
         .then(data => console.log('加入 user_todos 結果：', data));
-              // 🎯 加上這段即時更新收藏人數與進度條
+              //  加上這段即時更新收藏人數與進度條
       fetch('get_fav_count.php?sch_num=' + encodeURIComponent(schNum))
         .then(res => res.json())
         .then(data => {
@@ -679,7 +678,7 @@ function toggleStar(button) {
     credentials: 'include'
   })
   .then(() => {
-    // 🎯 這段會即時更新收藏人數和進度條
+    //  這段會即時更新收藏人數和進度條
     fetch('get_fav_count.php?sch_num=' + encodeURIComponent(schNum))
       .then(res => res.json())
       .then(data => {
