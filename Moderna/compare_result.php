@@ -61,7 +61,7 @@ $school2 = $schools[1];
 
 
     <style>
-        /* 防止表格標題換行，保持水平顯示 */
+        /*防止表格標題換行，保持水平顯示 */
         th {
             white-space: nowrap;
         }
@@ -83,7 +83,7 @@ $school2 = $schools[1];
 
 /* 調整表格的內邊距，增加左右的留白 */
 .table th, .table td {
-    padding: 15px 40px; /* 12px 上下，20px 左右 */
+    padding: 15px 40px; /* 15px 上下，40px 左右 */
     text-align: center;  /* 使內容居中 */
 }
 
