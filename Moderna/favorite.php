@@ -13,12 +13,6 @@ while ($row = $result->fetch_assoc()) {
         'Sch_num' => $row['Sch_num'],
         'School_Name' => $row['School_Name'],
         'Department' => $row['Department'],
-        'Region' => $row['Region'],
-        'Disc_Cluster' => $row['Disc_Cluster'],
-        'Talent' => $row['Talent'],
-      
-        'Quota' => $row['Quota'],
-        'Contact' => $row['Contact'],
         'link' => $row['link']
     ];
 }
@@ -370,30 +364,30 @@ bellIcon.style.cursor = 'pointer';
 bellIcon.style.marginLeft = '10px';
 
 // 初始化鈴鐺顏色與樣式
-bellIcon.style.transition = 'color 0.3s ease';  // 添加過渡動畫
+bellIcon.style.transition = 'color 0.3s ease';  
 if (todo.is_notified == 1) {
-  bellIcon.style.color = 'gold';  // 如果已通知，顯示金色鈴鐺
-  bellIcon.className = 'bi bi-bell';  // 已通知，填滿鈴鐺
-  bellIcon.title = '關閉通知';  // 顯示「關閉通知」的提示文字
+  bellIcon.style.color = 'gold';  
+  bellIcon.className = 'bi bi-bell';  
+  bellIcon.title = '關閉通知';  
 } else {
-  bellIcon.style.color = 'gray';  // 如果未通知，顯示灰色鈴鐺
-  bellIcon.className = 'bi bi-bell-slash';  // 未通知，顯示劃線鈴鐺
-  bellIcon.title = '開啟通知';  // 顯示「開啟通知」的提示文字
+  bellIcon.style.color = 'gray';  
+  bellIcon.className = 'bi bi-bell-slash';  
+  bellIcon.title = '開啟通知';  
 }
 
 // 點擊鈴鐺圖示後更新通知狀態
 bellIcon.addEventListener('click', () => {
-  const newStatus = bellIcon.style.color === 'gray';  // 如果鈴鐺是灰色，則視為未通知，點擊後應該變為已通知
+  const newStatus = bellIcon.style.color === 'gray';  
 
   // 更新鈴鐺顏色與樣式
-  bellIcon.style.color = newStatus ? 'gold' : 'gray';  // 更新顏色
-  bellIcon.className = newStatus ? 'bi bi-bell' : 'bi bi-bell-slash';  // 切換為填滿或劃線鈴鐺
+  bellIcon.style.color = newStatus ? 'gold' : 'gray';  
+  bellIcon.className = newStatus ? 'bi bi-bell' : 'bi bi-bell-slash';  
 
   // 更新提示文字
-  bellIcon.title = newStatus ? '關閉通知' : '開啟通知';  // 根據狀態改變 tooltip 提示文字
+  bellIcon.title = newStatus ? '關閉通知' : '開啟通知'; 
 
   // 更新資料庫
-  updateNotificationStatus(userId, todo.todo_id, newStatus ? 1 : 0);  // 傳遞新狀態到後端
+  updateNotificationStatus(userId, todo.todo_id, newStatus ? 1 : 0);  
 });
 
         rightContent.appendChild(calendarIcon);
