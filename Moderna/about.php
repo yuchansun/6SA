@@ -117,9 +117,9 @@ function getTalentOptions($conn) {
     $allTalents = [];
 
     while ($row = $result->fetch_assoc()) {
-        $talents = explode('、', $row['Talent']);
+        $talents = explode('、', $row['Talent']); // 使用 explode 分割才能
         foreach ($talents as $talent) {
-            $trimmed = trim($talent);
+            $trimmed = trim($talent); // 去除前後空白
             if ($trimmed !== "") {
                 $allTalents[] = $trimmed;
             }
@@ -516,11 +516,11 @@ function updateSelectOptions(target) {
   <td><?= htmlspecialchars($row['Quota']); ?></td>
   <td>
   <?php if ($showAdminInterface): ?>
-    <a href="about-admin.php?sch_num=<?= urlencode($row['Sch_num']) ?>" class="btn btn-sm" style="background-color: var(--accent-color); color:white;">
+    <a href="about-admin.php?sch_num=<?= ($row['Sch_num']) ?>" class="btn btn-sm" style="background-color: var(--accent-color); color:white;">
       管理校系簡章
     </a>
   <?php else: ?>
-    <a href="school_detail.php?sch_num=<?= urlencode($row['Sch_num']) ?>" class="btn btn-sm" style="background-color: var(--accent-color); color:white;">
+    <a href="school_detail.php?sch_num=<?= ($row['Sch_num']) ?>" class="btn btn-sm" style="background-color: var(--accent-color); color:white;">
       詳細介紹
     </a>
   <?php endif; ?>
